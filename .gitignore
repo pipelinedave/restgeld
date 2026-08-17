@@ -1,0 +1,25 @@
+# Go
+backend/restgeld-backend
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Vue / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+*.test
+
+# OS
+.DS_Store
+Thumbs.db
