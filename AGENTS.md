@@ -64,11 +64,10 @@ curl -s http://localhost:8080/api/expenses | jq .
 - Bei Test-Fail: Stacktrace analysieren → fix → zurück zu Schritt 4
 - Bei DevTools-Fehlern: Console/Network-Tab auswerten → fix → zurück zu Schritt 4
 
-### 6. Commit
-- Erst committen, wenn:
-  - Alle Tests passen (Go test, npm build, Docker build)
-  - Lokaler Testlauf bestanden
-  - Keine offenen Fehler in Console/Network
+### 6. Commit (Entwicklerlog)
+- Commit nach **jeder logischen Einheit** (Backend, Frontend, K8s, Config)
+- Nicht warten bis alles fertig ist – Git-Log = Entwicklungstagebuch
+- Voraussetzung: Die Einheit ist für sich funktionsfähig (kompiliert, Tests grün)
 - Commit-Message: `git commit -m "restgeld: <scope> - <kurzbeschreibung>"`
 - Scope: `backend`, `frontend`, `k8s`, `docker`, `docs`
 

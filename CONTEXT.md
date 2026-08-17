@@ -83,14 +83,19 @@ restgeld/
 ## Status
 
 ### ✅ Erledigt
-- AGENTS.md erstellt (Workflow-Definition)
+- AGENTS.md erstellt (Workflow-Definition mit EZE-Dev-Zyklen)
 - CONTEXT.md erstellt (Plan-Dokument)
+- Backend: Go REST API (models, store-interface, postgres-store, handlers, main, Dockerfile)
+- Backend-Tests: 10 httptest-Tests (in-memory store) ✅
+- Docker-Build backend:test ✅
+- Frontend: Vue 3 + Vite + PWA (MonthProgress, BudgetDisplay, Numpad, RecentExpenses)
+- Frontend-Build (vue-tsc + vite build) ✅
+- K8s-Manifeste: postgres/backend/frontend/ingress/flux-kustomization in k8s/restgeld/
+- Git-Log mit 3 Commits (backend, frontend, k8s)
+- AGENTS.md: Commit-Regel auf "nach jeder logischen Einheit" aktualisiert
 
 ### 🔄 Nächste Schritte
-1. **Backend-Implementierung** (models.go, db.go, handlers.go, main.go, go.mod, Dockerfile)
-2. **Backend-Tests** (httptest-Handler-Tests)
-3. **Frontend-Implementierung** (Vue 3 Komponenten + PWA)
-4. **Docker-Build-Test** (beide Images)
-5. **Lokaler Testlauf** (Postgres + Backend + Frontend + DevTools)
-6. **Kubernetes-Manifeste** (k3s-config-ready)
-7. **Deployment** (k3s + Flux + Domain verifizieren)
+1. **Lokaler Testlauf** (Postgres + Backend + Frontend + DevTools) – nach Docker-Desktop-Fix
+2. **Deployment auf k3s** (kubectl create namespace, kubeseal secrets, Flux sync)
+3. **Domain verifizieren** (restgeld.stillon.top)
+4. **PWA-End-to-End-Test** (add/delete expenses, Budget-Update, Neustart-Period)
