@@ -4,7 +4,8 @@
       <div class="numpad-display">
         <span class="numpad-value">{{ display }}</span>
       </div>
-      <div class="numpad-grid">
+
+      <div v-if="!showNote" class="numpad-grid">
         <button class="numpad-btn" @click="press('7')">7</button>
         <button class="numpad-btn" @click="press('8')">8</button>
         <button class="numpad-btn" @click="press('9')">9</button>
@@ -18,22 +19,43 @@
         <button class="numpad-btn" @click="press('0')">0</button>
         <button class="numpad-btn numpad-btn-del" @click="deleteChar">⌫</button>
         <button class="numpad-btn numpad-btn-cancel" @click="cancel">Abbrechen</button>
-        <button class="numpad-btn numpad-btn-confirm" @click="confirm">Bestätigen</button>
+        <button class="numpad-btn numpad-btn-confirm" @click="confirmBetrag">Bestätigen</button>
+      </div>
+
+      <div v-else class="note-section">
+        <input
+          ref="noteInput"
+          v-model="noteText"
+          class="note-input"
+          type="text"
+          inputmode="text"
+          placeholder="Notiz (optional)"
+          maxlength="50"
+          @keydown.enter="confirmAll"
+        />
+        <div class="note-actions">
+          <button class="numpad-btn numpad-btn-cancel" @click="backToBetrag">Zurück</button>
+          <button class="numpad-btn numpad-btn-confirm" @click="confirmAll">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits<{
-  confirm: [value: number]
+  confirm: [value: number, note: string]
   cancel: []
 }>()
 
 const input = ref('')
+const noteText = ref('')
+const showNote = ref(false)
+const noteInput = ref<HTMLInputElement | null>(null)
+const pendingAmount = ref(0)
 
 const display = computed(() => input.value || '0')
 
@@ -53,15 +75,30 @@ function deleteChar() {
 
 function cancel() {
   input.value = ''
+  noteText.value = ''
+  showNote.value = false
   emit('cancel')
 }
 
-function confirm() {
+function confirmBetrag() {
   if (!input.value) return
   const num = parseFloat(input.value.replace(',', '.'))
   if (isNaN(num) || num <= 0) return
-  emit('confirm', num)
+  pendingAmount.value = num
+  showNote.value = true
+  nextTick(() => noteInput.value?.focus())
+}
+
+function backToBetrag() {
+  showNote.value = false
+  noteText.value = ''
+}
+
+function confirmAll() {
+  emit('confirm', pendingAmount.value, noteText.value)
   input.value = ''
+  noteText.value = ''
+  showNote.value = false
 }
 </script>
 
@@ -140,5 +177,37 @@ function confirm() {
 
 .numpad-grid > :last-child {
   grid-column: 2 / 4;
+}
+
+.note-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1rem;
+  border: 2px solid #233554;
+  border-radius: 8px;
+  background: #0a192f;
+  color: #ccd6f6;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.note-input:focus {
+  border-color: #64ffda;
+}
+
+.note-input::placeholder {
+  color: #495670;
+}
+
+.note-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
 }
 </style>

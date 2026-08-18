@@ -52,10 +52,10 @@ async function loadBudget() {
   }
 }
 
-async function handleConfirm(amount: number) {
+async function handleConfirm(amount: number, note: string) {
   showNumpad.value = false
   try {
-    await api.addExpense(amount, '')
+    await api.addExpense(amount, note)
     await loadBudget()
   } catch (e: any) {
     console.error('Fehler beim Speichern:', e.message)
