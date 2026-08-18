@@ -1,0 +1,86 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+const mockFetch = vi.fn()
+globalThis.fetch = mockFetch
+
+beforeEach(() => {
+  mockFetch.mockReset()
+})
+
+import { useApi, type BudgetData, type Expense } from '../composables/useApi'
+
+const api = useApi()
+
+function mockResponse(data: unknown, status = 200) {
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(data)
+  } as Response)
+}
+
+describe('useApi', () => {
+  it('getBudget ruft /api/budget auf', async () => {
+    const data: BudgetData = {
+      day: 17, monthDays: 31, baseBudget: 14.52, currentBudget: 19.24,
+      savings: 61.36, color: 'green', periodId: '2026-08', expenses: []
+    }
+    mockFetch.mockResolvedValueOnce(mockResponse(data))
+    const result = await api.getBudget()
+    expect(mockFetch).toHaveBeenCalledWith('/api/budget', expect.any(Object))
+    expect(result).toEqual(data)
+  })
+
+  it('addExpense ruft POST /api/expenses auf', async () => {
+    const expense: Expense = { id: 'e1', periodId: '2026-08', amount: 8.5, note: 'Test', createdAt: '2026-08-18T06:35:43Z' }
+    mockFetch.mockResolvedValueOnce(mockResponse(expense, 201))
+    const result = await api.addExpense(8.5, 'Test')
+    expect(mockFetch).toHaveBeenCalledWith('/api/expenses', expect.objectContaining({
+      method: 'POST',
+      body: JSON.stringify({ amount: 8.5, note: 'Test' })
+    }))
+    expect(result).toEqual(expense)
+  })
+
+  it('deleteExpense ruft DELETE /api/expenses/{id} auf', async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse({ status: 'ok' }))
+    const result = await api.deleteExpense('e1')
+    expect(mockFetch).toHaveBeenCalledWith('/api/expenses/e1', expect.objectContaining({
+      method: 'DELETE'
+    }))
+    expect(result).toEqual({ status: 'ok' })
+  })
+
+  it('newPeriod ruft POST /api/period auf', async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse({ id: '2026-08' }))
+    const result = await api.newPeriod()
+    expect(mockFetch).toHaveBeenCalledWith('/api/period', expect.objectContaining({
+      method: 'POST'
+    }))
+    expect(result).toEqual({ id: '2026-08' })
+  })
+
+  it('updateBudget ruft PATCH /api/budget auf', async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse({ status: 'ok' }))
+    const result = await api.updateBudget(600)
+    expect(mockFetch).toHaveBeenCalledWith('/api/budget', expect.objectContaining({
+      method: 'PATCH',
+      body: JSON.stringify({ monthlyTotal: 600 })
+    }))
+    expect(result).toEqual({ status: 'ok' })
+  })
+
+  it('wirft fehler bei nicht-ok response', async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse({ error: 'kaputt' }, 400))
+    await expect(api.getBudget()).rejects.toThrow('kaputt')
+  })
+
+  it('wirft fehler bei leerem error-body', async () => {
+    mockFetch.mockResolvedValueOnce(Promise.resolve({
+      ok: false,
+      status: 500,
+      json: () => Promise.reject(new Error('kein json'))
+    } as Response))
+    await expect(api.getBudget()).rejects.toThrow('api-fehler')
+  })
+})
