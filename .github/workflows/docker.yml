@@ -1,0 +1,19 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**', 'frontend/**']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**', 'frontend/**']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Backend
+        run: docker build -t restgeld-backend:ci backend/
+      - name: Build Frontend
+        run: docker build -t restgeld-frontend:ci frontend/
