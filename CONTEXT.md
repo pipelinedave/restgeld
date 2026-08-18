@@ -87,15 +87,29 @@ restgeld/
 - CONTEXT.md erstellt (Plan-Dokument)
 - Backend: Go REST API (models, store-interface, postgres-store, handlers, main, Dockerfile)
 - Backend-Tests: 10 httptest-Tests (in-memory store) ✅
-- Docker-Build backend:test ✅
+- Docker-Build backend:test + frontend:test ✅
 - Frontend: Vue 3 + Vite + PWA (MonthProgress, BudgetDisplay, Numpad, RecentExpenses)
 - Frontend-Build (vue-tsc + vite build) ✅
 - K8s-Manifeste: postgres/backend/frontend/ingress/flux-kustomization in k8s/restgeld/
-- Git-Log mit 3 Commits (backend, frontend, k8s)
-- AGENTS.md: Commit-Regel auf "nach jeder logischen Einheit" aktualisiert
+- Git-Log mit 6 Commits (backend, frontend, k8s, docs, fixes)
+- AGENTS.md: Commit-Regel auf "nach jeder logischen Einheit"
+- **Lokaler Testlauf vollstaendig** ✅
+  - GET/POST/PATCH/DELETE API getestet
+  - Neue Periode starten (reset)
+  - Numpad-Eingabe via DevTools (keine native Tastatur)
+  - Ausgabe buchen + löschen via UI
+  - Budget-Konfiguration aendern
+  - SPA-Routing funktioniert
+  - Console 0 errors/0 warnings
+  - PWA Service Worker registriert
+- Backend-Fixes:
+  - createPeriod: ON CONFLICT + expenses löschen
+  - DELETE: ungültige UUID → 404 statt 500
 
 ### 🔄 Nächste Schritte
-1. **Lokaler Testlauf** (Postgres + Backend + Frontend + DevTools) – nach Docker-Desktop-Fix
-2. **Deployment auf k3s** (kubectl create namespace, kubeseal secrets, Flux sync)
-3. **Domain verifizieren** (restgeld.stillon.top)
-4. **PWA-End-to-End-Test** (add/delete expenses, Budget-Update, Neustart-Period)
+1. **Deployment auf k3s**
+   - `kubectl create namespace restgeld`
+   - SealedSecret für Postgres-Passwort erstellen
+   - Flux Kustomization in k3s-config repo übernehmen
+2. **Domain verifizieren** (restgeld.stillon.top)
+3. **PWA-End-to-End-Test** im Produktions-Setup
