@@ -189,7 +189,8 @@ func (s *server) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {
 	expenseID := parts[3]
 
 	if err := s.store.DeleteExpense(expenseID); err != nil {
-		if strings.Contains(err.Error(), "nicht gefunden") {
+		msg := err.Error()
+		if strings.Contains(msg, "nicht gefunden") || strings.Contains(msg, "uuid") {
 			writeError(w, http.StatusNotFound, "ausgabe nicht gefunden")
 		} else {
 			log.Printf("fehler beim löschen: %v", err)

@@ -101,12 +101,27 @@ func (s *postgresStore) createPeriodInternal(now time.Time) (*Period, error) {
 	baseBudget := parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
 	baseDaily := mathRound(baseBudget/monthDays, 2)
 
-	_, err := s.db.Exec(
-		"INSERT INTO periods (id, start_date, month_days, base_budget, monthly_total) VALUES ($1, $2, $3, $4, $5)",
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("transaction start: %w", err)
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(
+		"INSERT INTO periods (id, start_date, month_days, base_budget, monthly_total) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET start_date=$2, month_days=$3, base_budget=$4, monthly_total=$5",
 		periodID, startOfMonth, int(monthDays), baseDaily, baseBudget,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("period erstellen: %w", err)
+		return nil, fmt.Errorf("period upsert: %w", err)
+	}
+
+	_, err = tx.Exec("DELETE FROM expenses WHERE period_id = $1", periodID)
+	if err != nil {
+		return nil, fmt.Errorf("expenses löschen: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("transaction commit: %w", err)
 	}
 
 	return &Period{
