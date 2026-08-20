@@ -1,0 +1,74 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot: BudgetDisplay > gruen mit ersparnis 1`] = `
+"<section data-v-f796b773="" class="budget-display">
+  <div data-v-f796b773="" class="budget-amount color-green">19,24 €</div>
+  <div data-v-f796b773="" class="savings color-green">+61,36 € angespart </div>
+</section>"
+`;
+
+exports[`Snapshot: BudgetDisplay > rot bei minus 1`] = `
+"<section data-v-f796b773="" class="budget-display">
+  <div data-v-f796b773="" class="budget-amount color-red">11,55 €</div>
+  <div data-v-f796b773="" class="savings color-red">-38,64 € angespart </div>
+</section>"
+`;
+
+exports[`Snapshot: BudgetDisplay > weiss bei 0 ersparnis 1`] = `
+"<section data-v-f796b773="" class="budget-display">
+  <div data-v-f796b773="" class="budget-amount color-white">14,52 €</div>
+  <!--v-if-->
+</section>"
+`;
+
+exports[`Snapshot: MonthProgress > tag 1/28 (februar) 1`] = `
+"<header data-v-3c333b10="" class="month-progress">
+  <div data-v-3c333b10="" class="progress-label">Tag 1 von 28</div>
+  <div data-v-3c333b10="" class="progress-bar">
+    <div data-v-3c333b10="" class="progress-fill" style="width: 4%;"></div>
+  </div>
+</header>"
+`;
+
+exports[`Snapshot: MonthProgress > tag 17/31 1`] = `
+"<header data-v-3c333b10="" class="month-progress">
+  <div data-v-3c333b10="" class="progress-label">Tag 17 von 31</div>
+  <div data-v-3c333b10="" class="progress-bar">
+    <div data-v-3c333b10="" class="progress-fill" style="width: 55%;"></div>
+  </div>
+</header>"
+`;
+
+exports[`Snapshot: Numpad > sichtbar 1`] = `
+"<div data-v-0450a0c5="" class="numpad-overlay">
+  <div data-v-0450a0c5="" class="numpad">
+    <div data-v-0450a0c5="" class="numpad-display"><span data-v-0450a0c5="" class="numpad-value">0</span></div>
+    <div data-v-0450a0c5="" class="numpad-grid"><button data-v-0450a0c5="" class="numpad-btn">7</button><button data-v-0450a0c5="" class="numpad-btn">8</button><button data-v-0450a0c5="" class="numpad-btn">9</button><button data-v-0450a0c5="" class="numpad-btn">4</button><button data-v-0450a0c5="" class="numpad-btn">5</button><button data-v-0450a0c5="" class="numpad-btn">6</button><button data-v-0450a0c5="" class="numpad-btn">1</button><button data-v-0450a0c5="" class="numpad-btn">2</button><button data-v-0450a0c5="" class="numpad-btn">3</button><button data-v-0450a0c5="" class="numpad-btn">,</button><button data-v-0450a0c5="" class="numpad-btn">0</button><button data-v-0450a0c5="" class="numpad-btn numpad-btn-del">⌫</button><button data-v-0450a0c5="" class="numpad-btn numpad-btn-cancel">Abbrechen</button><button data-v-0450a0c5="" class="numpad-btn numpad-btn-confirm">Bestätigen</button></div>
+  </div>
+</div>"
+`;
+
+exports[`Snapshot: Numpad > versteckt 1`] = `"<!--v-if-->"`;
+
+exports[`Snapshot: RecentExpenses > leer 1`] = `
+"<section data-v-180b477d="" class="recent-expenses">
+  <h3 data-v-180b477d="" class="section-title">Letzte Ausgaben</h3>
+  <p data-v-180b477d="" class="empty-state">Noch keine Ausgaben heute</p>
+</section>"
+`;
+
+exports[`Snapshot: RecentExpenses > mit ausgaben 1`] = `
+"<section data-v-180b477d="" class="recent-expenses">
+  <h3 data-v-180b477d="" class="section-title">Letzte Ausgaben</h3>
+  <ul data-v-180b477d="" class="expense-list">
+    <li data-v-180b477d="" class="expense-item"><span data-v-180b477d="" class="expense-note">Frühstück</span><span data-v-180b477d="" class="expense-amount">-8,50 €</span><button data-v-180b477d="" class="delete-btn" aria-label="Löschen"><svg data-v-180b477d="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline data-v-180b477d="" points="3 6 5 6 21 6"></polyline>
+          <path data-v-180b477d="" d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+        </svg></button></li>
+    <li data-v-180b477d="" class="expense-item"><span data-v-180b477d="" class="expense-note">Ausgabe</span><span data-v-180b477d="" class="expense-amount">-5,50 €</span><button data-v-180b477d="" class="delete-btn" aria-label="Löschen"><svg data-v-180b477d="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline data-v-180b477d="" points="3 6 5 6 21 6"></polyline>
+          <path data-v-180b477d="" d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+        </svg></button></li>
+  </ul>
+</section>"
+`;
