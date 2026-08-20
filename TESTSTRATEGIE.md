@@ -18,6 +18,27 @@ Testlauf erfolgt automatisch via GitHub Actions bei jedem Push/PR auf `main`.
 ╱─────────────────────╲
 ```
 
+## Backend – Gesamtüberblick
+
+| Test-Typ | Datei | Tag | DB? | Count |
+|---|---|---|---|---|
+| Handler-Unit | `handlers_test.go` | – | memoryStore | 15 |
+| Store-Integration | `db_test.go` | `integration` | echte Postgres | 8 |
+| API-Integration | `api_test.go` | `integration` | echte Postgres | 6 |
+| Konkurrenz (Race) | `api_test.go` | `integration` | echte Postgres | 1 |
+
+## Frontend – Gesamtüberblick
+
+| Test-Typ | Datei(en) | Count |
+|---|---|---|
+| Komponenten-Unit | `MonthProgress.test.ts`, `BudgetDisplay.test.ts`, `RecentExpenses.test.ts`, `Numpad.test.ts` | 31 |
+| Snapshot | `snapshots.test.ts` | 9 |
+| App-Integration | `App.test.ts` | 7 |
+| API-Mock | `useApi.test.ts` | 7 |
+| E2E | `e2e/example.spec.ts` | 4 |
+
+---
+
 ## 1. Backend – Handler-Unit-Tests
 
 **Framework:** `testing` + `net/http/httptest`  
@@ -193,28 +214,125 @@ jobs:
 
 ---
 
-## 5. Coverage
+## 5. Backend – API-Integrationstests
+
+**Framework:** `testing` (Tag: `integration`)  
+**Datei:** `api_test.go`
+
+Echte HTTP-Requests durch den ganzen Stack (Handler → store → Postgres).
+
+| Test | Szenario |
+|---|---|
+| `TestAPI_GetBudget_CreatesPeriod` | GET erzeugt Periode bei Leerstand |
+| `TestAPI_FullFlow` | Budget → Ausgabe → Budget ↓ → Löschen → Budget = Initial |
+| `TestAPI_ConcurrentExpenses` | 3 parallele POST → alle 3 gespeichert |
+| `TestAPI_UpdateBudgetAndReset` | PATCH Budget → POST period → Budget zurückgesetzt |
+| `TestAPI_DeleteNonexistent` | DELETE ungültige UUID → 404 |
+| `TestAPI_InvalidAmount` | POST mit negativem/0 amount → 400 |
+
+---
+
+## 6. Frontend – Snapshot-Tests
+
+**Framework:** `vitest` + `expect().toMatchSnapshot()`  
+**Datei:** `snapshots.test.ts`
+
+Erfasst HTML-Struktur jeder Komponente in verschiedenen Zuständen.  
+Bei unbeabsichtigten Änderungen schlagen Tests an – Update via `vitest --update`.
+
+| Komponente | Snapshots |
+|---|---|
+| MonthProgress | Tag 17/31, Tag 1/28 |
+| BudgetDisplay | grün, weiss, rot |
+| RecentExpenses | leer, mit Ausgaben |
+| Numpad | versteckt, sichtbar |
+
+---
+
+## 7. Frontend – App-Integrationstests
+
+**Framework:** `vitest` + `@vue/test-utils`  
+**Datei:** `App.test.ts`  
+**Mock:** `useApi` via `vi.mock`
+
+| Test | Szenario |
+|---|---|
+| Budget laden beim Mount | getBudget aufgerufen, Budget sichtbar |
+| Budget und Ersparnis anzeigen | Tag, Betrag, Savings im DOM |
+| Numpad öffnen | Klick "Ausgabe" → Overlay sichtbar |
+| Ausgabe buchen | Numpad-Eingabe → addExpense aufgerufen |
+| Ausgabe löschen | Klick delete-btn → deleteExpense aufgerufen |
+| Ladestatus | Initial "Lade..." sichtbar |
+| API-Fehler | console.error bei Fehlschlag |
+
+---
+
+## 8. Frontend – E2E-Tests (Playwright)
+
+**Framework:** `@playwright/test`  
+**Datei:** `e2e/example.spec.ts`  
+**Setup:** `playwright.config.ts` startet `npm run preview` als webServer
+
+Laufen im CI via `npm run test:e2e` (separater Workflow oder manuell).
+
+| Test | Szenario |
+|---|---|
+| Seite lädt | Budget-Zahl und Ersparnis sichtbar |
+| Numpad öffnen | Button-Klick → Bestätigen-Button sichtbar |
+| Ausgabe buchen | Zifferneingabe → Notiz → Speichern → Liste aktualisiert |
+| Ausgabe löschen | Anlegen → Löschen → verschwunden |
+
+```bash
+# Lokal (erfordert laufendes Backend + Postgres)
+cd frontend && npx playwright install chromium && npm run test:e2e
+```
+
+---
+
+## 9. Coverage
 
 - **Backend:** `go test -coverprofile=coverage.out` → `go tool cover -func=coverage.out`
-- **Frontend:** `vitest --coverage`
+- **Frontend:** `vitest --coverage` → `coverage/lcov.info`
 
 Coverage-Badges via **Codecov**:
 - README.md: `[![codecov](https://codecov.io/gh/pipelinedave/restgeld/branch/main/graph/badge.svg)](https://codecov.io/gh/pipelinedave/restgeld)`
 
 ---
 
-## 6. Lokale Ausführung (Dev)
+## 10. CI/CD – GitHub Actions Workflows
+
+### backend.yml
+```yaml
+- go vet ./...
+- go test -short ./...          # Unit-Tests (15)
+- go test -tags=integration ./... # Integration-Tests (14)
+- codecov/codecov-action
+```
+
+### frontend.yml
+```yaml
+- npm run build                  # vue-tsc + vite build
+- npm run test:unit               # vitest (51 Tests)
+- codecov/codecov-action
+```
+
+---
+
+## 11. Lokale Ausführung
 
 ```bash
-# Backend-Tests (schnell, ohne DB)
-cd backend && go test ./... -v -count=1 -short
+# Backend Unit
+cd backend && go test -short ./... -v -count=1
 
-# Backend-Integration (mit Postgres)
+# Backend Integration (Postgres erforderlich)
 docker run -d --name restgeld-db-test -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=test -p 5433:5432 postgres:16-alpine
-DB_PORT=5433 DB_USER=test DB_PASSWORD=test DB_NAME=test go test -tags=integration ./... -v
+DB_PORT=5433 go test -tags=integration ./... -v
 
-# Frontend
+# Frontend Unit + Snapshot
 cd frontend && npm run test:unit
+
+# Frontend E2E (Playwright, erfordert Backend)
+cd frontend && npx playwright install chromium && npm run test:e2e
 
 # Alles
 ./scripts/test-all.sh  # TODO
@@ -222,7 +340,6 @@ cd frontend && npm run test:unit
 
 ---
 
-## 7. Noch nicht geplant (ausgeschlossen)
+## 12. Ausgeschlossen (vorerst)
 - Last- / Performance-Tests
-- E2E-Tests (Playwright/Cypress) – später bei Bedarf
 - Security-Scans (Trivy/Snyk) – optional
