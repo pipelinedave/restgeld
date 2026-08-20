@@ -14,6 +14,11 @@ type postgresStore struct {
 	db *sql.DB
 }
 
+func newPostgresStoreFromDB(db *sql.DB) Store {
+	createTables(db)
+	return &postgresStore{db: db}
+}
+
 func newPostgresStore() Store {
 	host := envOrDefault("DB_HOST", "localhost")
 	port := envOrDefault("DB_PORT", "5432")

@@ -5,5 +5,10 @@ export default mergeConfig(viteConfig, defineConfig({
   test: {
     environment: 'happy-dom',
     include: ['src/__tests__/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
+    },
   }
 }))

@@ -27,3 +27,9 @@ jobs:
       - name: Unit Tests
         run: npm run test:unit -- --coverage
         working-directory: frontend
+      - uses: codecov/codecov-action@v5
+        if: success()
+        with:
+          directory: frontend/coverage
+          flags: frontend
+          fail_ci_if_error: false

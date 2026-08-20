@@ -208,3 +208,120 @@ func TestMethodNotAllowed(t *testing.T) {
 		t.Errorf("erwartet 405, bekommen %d", rec.Code)
 	}
 }
+
+func TestGetBudgetOnFirstDay(t *testing.T) {
+	store := newMemoryStore()
+	now := time.Date(2026, 8, 1, 6, 0, 0, 0, time.UTC)
+	srv := &server{store: store, now: func() time.Time { return now }}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/budget", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	var resp BudgetResponse
+	decodeJSON(t, rec.Body, &resp)
+
+	if resp.Day != 1 {
+		t.Errorf("erwartet Tag 1, bekommen %d", resp.Day)
+	}
+	if resp.Savings != resp.BaseBudget {
+		t.Errorf("erwartet savings = baseBudget (%.2f) an tag 1, bekommen %.2f", resp.BaseBudget, resp.Savings)
+	}
+	if resp.CurrentBudget <= resp.BaseBudget {
+		t.Errorf("erwartet current > base (%.2f) wegen rollover, bekommen %.2f", resp.BaseBudget, resp.CurrentBudget)
+	}
+}
+
+func TestGetBudgetAfterAllSpent(t *testing.T) {
+	store := newMemoryStore()
+	for i := 0; i < 18; i++ {
+		store.AddExpense("2026-08", 14.52, "tag")
+	}
+	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
+	srv := &server{store: store, now: func() time.Time { return now }}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/budget", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	var resp BudgetResponse
+	decodeJSON(t, rec.Body, &resp)
+
+	if resp.Color != "white" {
+		t.Errorf("erwartet white bei genau aufgebraucht, bekommen %s", resp.Color)
+	}
+	if resp.Savings != 0 {
+		t.Errorf("erwartet savings 0 bei genau aufgebraucht, bekommen %.2f", resp.Savings)
+	}
+}
+
+func TestGetBudgetInDebt(t *testing.T) {
+	store := newMemoryStore()
+	for i := 0; i < 18; i++ {
+		store.AddExpense("2026-08", 14.52, "tag")
+	}
+	store.AddExpense("2026-08", 50, "extra")
+	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
+	srv := &server{store: store, now: func() time.Time { return now }}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/budget", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	var resp BudgetResponse
+	decodeJSON(t, rec.Body, &resp)
+
+	if resp.Color != "red" {
+		t.Errorf("erwartet red bei überschuss, bekommen %s", resp.Color)
+	}
+	if resp.Savings >= 0 {
+		t.Errorf("erwartet negative savings, bekommen %.2f", resp.Savings)
+	}
+}
+
+func TestUpdateBudgetInvalid(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	body := `{"monthlyTotal": 0}`
+	req := httptest.NewRequest(http.MethodPatch, "/api/budget", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("erwartet 400 für monthlyTotal=0, bekommen %d", rec.Code)
+	}
+
+	body = `{"monthlyTotal": -100}`
+	req = httptest.NewRequest(http.MethodPatch, "/api/budget", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec = httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("erwartet 400 für monthlyTotal=-100, bekommen %d", rec.Code)
+	}
+}
+
+func TestDeleteExpenseInvalidUUID(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/expenses/keine-uuid", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("erwartet 404 für ungültige UUID, bekommen %d", rec.Code)
+	}
+}
+
+func decodeJSON(t *testing.T, body interface{ Read([]byte) (int, error) }, v interface{}) {
+	t.Helper()
+	b := make([]byte, 4096)
+	n, _ := body.Read(b)
+	if n > 0 {
+		json.Unmarshal(b[:n], v)
+	}
+}
