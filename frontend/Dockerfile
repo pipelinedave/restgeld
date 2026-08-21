@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install
 COPY . .
+ENV NODE_OPTIONS="--experimental-require-module"
 RUN npm run build
 
 FROM nginx:alpine
