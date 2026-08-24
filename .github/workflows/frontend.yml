@@ -21,11 +21,17 @@ jobs:
       - name: Dependencies
         run: npm install --frozen-lockfile
         working-directory: frontend
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: frontend
       - name: Type Check & Build
         run: npm run build
         working-directory: frontend
       - name: Unit Tests
         run: npm run test:unit -- --coverage
+        working-directory: frontend
+      - name: E2E Tests
+        run: npm run test:e2e
         working-directory: frontend
       - uses: codecov/codecov-action@v5
         if: success()
