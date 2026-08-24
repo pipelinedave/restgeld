@@ -203,6 +203,29 @@ func TestIntegrationCreatePeriodClearsExpenses(t *testing.T) {
 	}
 }
 
+func TestIntegrationCreatePeriodWithStart(t *testing.T) {
+	store := newIntegrationStore(t)
+	start := time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)
+	p, err := store.CreatePeriodWithStart(start, 400.0)
+	if err != nil {
+		t.Fatalf("create period with start: %v", err)
+	}
+
+	if p.ID != "2026-08-25" {
+		t.Errorf("erwartet ID '2026-08-25', bekommen '%s'", p.ID)
+	}
+	if p.MonthDays != 31 {
+		t.Errorf("erwartet 31 Tage (25. Aug bis 25. Sep), bekommen %d", p.MonthDays)
+	}
+	if p.MonthlyTotal != 400.0 {
+		t.Errorf("erwartet monthly_total 400, bekommen %.2f", p.MonthlyTotal)
+	}
+	expectedBase := mathRound(400.0/31.0, 2)
+	if p.BaseBudget != expectedBase {
+		t.Errorf("erwartet base_budget %.2f, bekommen %.2f", expectedBase, p.BaseBudget)
+	}
+}
+
 func newIntegrationStore(t *testing.T) Store {
 	t.Helper()
 	host := getEnv("DB_HOST", "localhost")

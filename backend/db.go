@@ -54,16 +54,25 @@ func newPostgresStore() Store {
 
 func (s *postgresStore) GetOrCreatePeriod() (*Period, error) {
 	now := time.Now()
-	periodID := fmt.Sprintf("%d-%02d", now.Year(), now.Month())
 
 	var p Period
 	err := s.db.QueryRow(
-		"SELECT id, start_date, month_days, base_budget, monthly_total FROM periods WHERE id = $1",
-		periodID,
+		`SELECT id, start_date, month_days, base_budget, monthly_total 
+		 FROM periods 
+		 WHERE start_date <= $1 AND (start_date + (month_days || ' days')::interval) > $1 
+		 ORDER BY start_date DESC LIMIT 1`,
+		now,
 	).Scan(&p.ID, &p.StartDate, &p.MonthDays, &p.BaseBudget, &p.MonthlyTotal)
 
 	if err == sql.ErrNoRows {
-		return s.createPeriodInternal(now)
+		// Falls keine aktive Periode existiert, prüfe ob es eine Vorperiode gibt, um das Budget zu übernehmen
+		var lastTotal float64
+		err = s.db.QueryRow("SELECT monthly_total FROM periods ORDER BY start_date DESC LIMIT 1").Scan(&lastTotal)
+		if err != nil {
+			defaultBudget := 450.0
+			lastTotal = parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
+		}
+		return s.CreatePeriodWithStart(now, lastTotal)
 	}
 
 	if err != nil {
@@ -73,14 +82,16 @@ func (s *postgresStore) GetOrCreatePeriod() (*Period, error) {
 	return &p, nil
 }
 
-func (s *postgresStore) createPeriodInternal(now time.Time) (*Period, error) {
-	periodID := fmt.Sprintf("%d-%02d", now.Year(), now.Month())
-	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	nextMonth := startOfMonth.AddDate(0, 1, 0)
-	monthDays := nextMonth.Sub(startOfMonth).Hours() / 24
-	defaultBudget := 450.0
-	baseBudget := parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
-	baseDaily := mathRound(baseBudget/monthDays, 2)
+func (s *postgresStore) CreatePeriodWithStart(start time.Time, monthlyTotal float64) (*Period, error) {
+	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	periodID := startDay.Format("2006-01-02")
+	monthDays := calcPeriodDays(startDay)
+
+	if monthlyTotal <= 0 {
+		defaultBudget := 450.0
+		monthlyTotal = parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
+	}
+	baseDaily := mathRound(monthlyTotal/float64(monthDays), 2)
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -89,8 +100,10 @@ func (s *postgresStore) createPeriodInternal(now time.Time) (*Period, error) {
 	defer tx.Rollback()
 
 	_, err = tx.Exec(
-		"INSERT INTO periods (id, start_date, month_days, base_budget, monthly_total) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET start_date=$2, month_days=$3, base_budget=$4, monthly_total=$5",
-		periodID, startOfMonth, int(monthDays), baseDaily, baseBudget,
+		`INSERT INTO periods (id, start_date, month_days, base_budget, monthly_total) 
+		 VALUES ($1, $2, $3, $4, $5) 
+		 ON CONFLICT (id) DO UPDATE SET start_date=$2, month_days=$3, base_budget=$4, monthly_total=$5`,
+		periodID, startDay, monthDays, baseDaily, monthlyTotal,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("period upsert: %w", err)
@@ -107,28 +120,33 @@ func (s *postgresStore) createPeriodInternal(now time.Time) (*Period, error) {
 
 	return &Period{
 		ID:           periodID,
-		StartDate:    startOfMonth,
-		MonthDays:    int(monthDays),
+		StartDate:    startDay,
+		MonthDays:    monthDays,
 		BaseBudget:   baseDaily,
-		MonthlyTotal: baseBudget,
+		MonthlyTotal: monthlyTotal,
 	}, nil
 }
 
 func (s *postgresStore) CreatePeriod() (*Period, error) {
-	return s.createPeriodInternal(time.Now())
+	var lastTotal float64
+	err := s.db.QueryRow("SELECT monthly_total FROM periods ORDER BY start_date DESC LIMIT 1").Scan(&lastTotal)
+	if err != nil {
+		defaultBudget := 450.0
+		lastTotal = parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
+	}
+	return s.CreatePeriodWithStart(time.Now(), lastTotal)
 }
 
 func (s *postgresStore) UpdateBudget(newTotal float64) error {
-	now := time.Now()
-	periodID := fmt.Sprintf("%d-%02d", now.Year(), now.Month())
-	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	nextMonth := startOfMonth.AddDate(0, 1, 0)
-	monthDays := nextMonth.Sub(startOfMonth).Hours() / 24
-	baseDaily := mathRound(newTotal/monthDays, 2)
+	p, err := s.GetOrCreatePeriod()
+	if err != nil {
+		return err
+	}
 
-	_, err := s.db.Exec(
-		"INSERT INTO periods (id, start_date, month_days, base_budget, monthly_total) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET base_budget=$4, monthly_total=$5",
-		periodID, startOfMonth, int(monthDays), baseDaily, newTotal,
+	baseDaily := mathRound(newTotal/float64(p.MonthDays), 2)
+	_, err = s.db.Exec(
+		"UPDATE periods SET base_budget = $1, monthly_total = $2 WHERE id = $3",
+		baseDaily, newTotal, p.ID,
 	)
 	return err
 }

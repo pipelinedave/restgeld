@@ -208,7 +208,22 @@ func (s *server) handleNewPeriod(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	period, err := s.store.CreatePeriod()
+	var req NewPeriodRequest
+	if r.Body != nil {
+		_ = json.NewDecoder(r.Body).Decode(&req)
+	}
+
+	startDate := s.now()
+	if req.StartDate != "" {
+		if t, err := time.Parse("2006-01-02", req.StartDate); err == nil {
+			startDate = t
+		}
+	}
+
+	var period *Period
+	var err error
+	period, err = s.store.CreatePeriodWithStart(startDate, req.MonthlyTotal)
+
 	if err != nil {
 		log.Printf("fehler beim erstellen der periode: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim erstellen der periode")

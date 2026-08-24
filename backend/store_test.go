@@ -34,9 +34,25 @@ func (m *memoryStore) GetOrCreatePeriod() (*Period, error) {
 }
 
 func (m *memoryStore) CreatePeriod() (*Period, error) {
+	return m.CreatePeriodWithStart(time.Now(), m.period.MonthlyTotal)
+}
+
+func (m *memoryStore) CreatePeriodWithStart(start time.Time, monthlyTotal float64) (*Period, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.expenses = nil
+	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	days := calcPeriodDays(startDay)
+	if monthlyTotal <= 0 {
+		monthlyTotal = 450
+	}
+	m.period = &Period{
+		ID:           startDay.Format("2006-01-02"),
+		StartDate:    startDay,
+		MonthDays:    days,
+		BaseBudget:   mathRound(monthlyTotal/float64(days), 2),
+		MonthlyTotal: monthlyTotal,
+	}
 	cp := *m.period
 	return &cp, nil
 }

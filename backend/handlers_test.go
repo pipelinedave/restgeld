@@ -191,8 +191,9 @@ func TestDeleteExpenseNotFound(t *testing.T) {
 
 func TestNewPeriod(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-08", 50.00, "Alt")
-	srv := &server{store: store, now: time.Now}
+	store.AddExpense("2026-08-01", 50.00, "Alt")
+	now := time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)
+	srv := &server{store: store, now: func() time.Time { return now }}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/period", nil)
 	rec := httptest.NewRecorder()
@@ -202,9 +203,40 @@ func TestNewPeriod(t *testing.T) {
 		t.Fatalf("erwartet 201, bekommen %d", rec.Code)
 	}
 
-	total, _ := store.GetTotalExpenses("2026-08")
+	var p Period
+	json.NewDecoder(rec.Body).Decode(&p)
+	if p.ID != "2026-08-25" {
+		t.Errorf("erwartet period ID '2026-08-25', bekommen '%s'", p.ID)
+	}
+
+	total, _ := store.GetTotalExpenses("2026-08-25")
 	if total != 0 {
 		t.Errorf("erwartet 0 nach reset, bekommen %.2f", total)
+	}
+}
+
+func TestNewPeriodWithCustomBudget(t *testing.T) {
+	store := newMemoryStore()
+	now := time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)
+	srv := &server{store: store, now: func() time.Time { return now }}
+
+	body := `{"monthlyTotal": 400, "startDate": "2026-08-25"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/period", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("erwartet 201, bekommen %d", rec.Code)
+	}
+
+	var p Period
+	json.NewDecoder(rec.Body).Decode(&p)
+	if p.MonthlyTotal != 400 {
+		t.Errorf("erwartet monthlyTotal 400, bekommen %.2f", p.MonthlyTotal)
+	}
+	if p.ID != "2026-08-25" {
+		t.Errorf("erwartet period ID '2026-08-25', bekommen '%s'", p.ID)
 	}
 }
 

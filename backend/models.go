@@ -42,10 +42,26 @@ type UpdateBudgetRequest struct {
 	MonthlyTotal float64 `json:"monthlyTotal"`
 }
 
+type NewPeriodRequest struct {
+	MonthlyTotal float64 `json:"monthlyTotal,omitempty"`
+	StartDate    string  `json:"startDate,omitempty"`
+}
+
+func calcPeriodDays(start time.Time) int {
+	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	nextMonth := startDay.AddDate(0, 1, 0)
+	days := int(nextMonth.Sub(startDay).Hours() / 24)
+	if days < 28 {
+		days = 30
+	}
+	return days
+}
+
 func (p Period) dayOfMonth(now time.Time) int {
 	startInLoc := p.StartDate.In(now.Location())
 	start := time.Date(startInLoc.Year(), startInLoc.Month(), startInLoc.Day(), 0, 0, 0, 0, now.Location())
-	diff := now.Sub(start)
+	nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	diff := nowDay.Sub(start)
 	day := int(diff.Hours()/24) + 1
 	if day < 1 {
 		day = 1
