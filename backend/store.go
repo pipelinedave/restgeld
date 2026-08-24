@@ -8,4 +8,5 @@ type Store interface {
 	GetRecentExpenses(periodID string, limit int) ([]Expense, error)
 	AddExpense(periodID string, amount float64, note string) (*Expense, error)
 	DeleteExpense(expenseID string) error
+	Ping() error
 }

@@ -2,12 +2,60 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestHealthEndpoint(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("json decode fehler: %v", err)
+	}
+
+	if resp["status"] != "ok" {
+		t.Errorf("erwartet status 'ok', bekommen '%s'", resp["status"])
+	}
+}
+
+type failingStore struct {
+	*memoryStore
+	pingErr error
+}
+
+func (f *failingStore) Ping() error {
+	return f.pingErr
+}
+
+func TestHealthEndpointError(t *testing.T) {
+	store := &failingStore{
+		memoryStore: newMemoryStore(),
+		pingErr:     fmt.Errorf("db verbindung unterbrochen"),
+	}
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("erwartet 503, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+}
 
 func TestGetBudget(t *testing.T) {
 	store := newMemoryStore()

@@ -226,6 +226,10 @@ func (s *postgresStore) DeleteExpense(expenseID string) error {
 	return nil
 }
 
+func (s *postgresStore) Ping() error {
+	return s.db.Ping()
+}
+
 func envOrDefault(key, fallback string) string {
 	if val := os.Getenv(key); val != "" {
 		return val

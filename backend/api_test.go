@@ -43,6 +43,25 @@ func newIntegrationServer(t *testing.T) *server {
 	return &server{store: store, now: time.Now}
 }
 
+func TestAPI_Health(t *testing.T) {
+	srv := newIntegrationServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]string
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("json decode fehler: %v", err)
+	}
+	if resp["status"] != "ok" {
+		t.Errorf("erwartet status 'ok', bekommen '%s'", resp["status"])
+	}
+}
+
 func TestAPI_GetBudget_CreatesPeriod(t *testing.T) {
 	srv := newIntegrationServer(t)
 	req := httptest.NewRequest(http.MethodGet, "/api/budget", nil)

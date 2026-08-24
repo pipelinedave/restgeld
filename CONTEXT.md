@@ -20,6 +20,7 @@ Betrieben auf lokalem single-node k3s-Cluster.
 
 | Methode | Pfad | Funktion |
 |---|---|---|
+| GET | /api/health | Health-Check (DB-Connectivity) |
 | GET | /api/budget | Aktuelle Periode + Tagesbudget + Ersparnis |
 | POST | /api/period | Neue Periode starten (reset) |
 | PATCH | /api/budget | Monatsbudget ändern |
@@ -115,6 +116,7 @@ restgeld/
 - Backend-Fixes:
   - createPeriod: ON CONFLICT + expenses löschen
   - DELETE: ungültige UUID → 404 statt 500
+- Backend: Health-Endpoint `/api/health` implementiert (DB-Ping) und K8s-Probes umgestellt ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**

@@ -99,3 +99,7 @@ func (m *memoryStore) DeleteExpense(expenseID string) error {
 	}
 	return fmt.Errorf("ausgabe nicht gefunden")
 }
+
+func (m *memoryStore) Ping() error {
+	return nil
+}

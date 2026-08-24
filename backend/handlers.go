@@ -219,8 +219,25 @@ func (s *server) handleNewPeriod(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, period)
 }
 
+func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	if err := s.store.Ping(); err != nil {
+		log.Printf("health check fehler: %v", err)
+		writeError(w, http.StatusServiceUnavailable, "datenbank nicht erreichbar")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func (s *server) router() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/health", s.handleHealth)
 	mux.HandleFunc("/api/budget", s.handleBudget)
 	mux.HandleFunc("/api/expenses", s.handleExpenses)
 	mux.HandleFunc("/api/expenses/", s.handleDeleteExpense)
