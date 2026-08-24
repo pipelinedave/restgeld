@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
     trace: 'on-first-retry',
   },
   projects: [
@@ -15,9 +15,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run preview',
-    port: 4173,
-    reuseExistingServer: false,
-    timeout: 10000,
+    command: 'npm run dev -- --port 5173',
+    port: 5173,
+    reuseExistingServer: !process.env.CI,
+    timeout: 15000,
   },
 })
