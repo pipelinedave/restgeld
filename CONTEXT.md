@@ -132,6 +132,7 @@ restgeld/
 - Hero-Card Redesign & intuitive Tages-Restgeld-Logik: Große Hero-Zahl zeigt nun immer exakt das heute noch verfügbare Budget (`HEUTE VERFÜGBAR`), subtiler Status-Badge zeigt den echten Monats-Puffer (Grün) bzw. Überzug (Rot). Ausgabe buchen zieht direkt vom heutigen Restgeld ab ✅
 - Mobile Numpad & Keyboard UX: Ausgaben-Erfassung auf native Mobile-Tastatur (`inputmode="decimal"`) umgestellt, 1-stufiger kompakter Dialog mit Betrag + Notiz, Vermeidung von Überdeckungen durch `interactive-widget=resizes-content` und `dvh`-Viewport-Handling ✅
 - Konfigurierbare Periodendauer (Tage): Periodendauer kann im Einstellungs-Dialog sowohl mit sofortiger Wirkung für die laufende Periode angepasst als auch für neue Abrechnungszyklen frei definiert werden (z. B. 14 Tage, 20 Tage, etc.) ✅
+- UX- & Micro-Feedback Upgrade: Taktiles haptisches Feedback (`useHaptics` via Web Vibration API) bei Tastendruck, erfolgreichem Buchen/Löschen und Warnungen; schwebende Toast-Benachrichtigungen (`ToastNotification.vue`), Lade-Spinner & Button-Blockierung beim Buchen zur Vermeidung von Doppelbuchungen sowie Zahlen-Puls-Animation bei Budgetänderungen implementiert und mit 74 Vitest-Tests abgedeckt ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**

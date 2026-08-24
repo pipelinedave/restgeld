@@ -64,6 +64,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useApi, type Expense } from '../composables/useApi'
+import { useHaptics } from '../composables/useHaptics'
 
 const props = defineProps<{
   visible: boolean
@@ -75,11 +76,13 @@ const emit = defineEmits<{
 }>()
 
 const api = useApi()
+const haptics = useHaptics()
 const expenses = ref<Expense[]>([])
 const currentPage = ref(1)
 const totalPages = ref(1)
 const totalCount = ref(0)
 const isLoading = ref(false)
+const deletingId = ref<string | null>(null)
 const pageSize = 6
 
 async function loadExpenses(page: number) {
@@ -123,22 +126,30 @@ watch(
 
 function changePage(page: number) {
   if (page >= 1 && page <= totalPages.value) {
+    haptics.tap()
     loadExpenses(page)
   }
 }
 
 async function handleDelete(id: string) {
+  if (deletingId.value) return
+  deletingId.value = id
+  haptics.tap()
   try {
     await api.deleteExpense(id)
+    haptics.success()
     emit('expense-deleted', id)
     // Wenn das letzte Element der Seite gelöscht wurde und wir auf einer höheren Seite sind
     if (expenses.value.length === 1 && currentPage.value > 1) {
-      loadExpenses(currentPage.value - 1)
+      await loadExpenses(currentPage.value - 1)
     } else {
-      loadExpenses(currentPage.value)
+      await loadExpenses(currentPage.value)
     }
   } catch (err: any) {
+    haptics.error()
     console.error('Fehler beim Löschen der Ausgabe:', err.message)
+  } finally {
+    deletingId.value = null
   }
 }
 

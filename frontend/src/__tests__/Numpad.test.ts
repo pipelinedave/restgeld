@@ -73,5 +73,13 @@ describe('Numpad / Ausgabe-Modal', () => {
     expect(wrapper.emitted('confirm')).toBeTruthy()
     expect(wrapper.emitted('confirm')![0]).toEqual([8.99, ''])
   })
+
+  it('zeigt Lade-Zustand und blockiert Eingaben wenn isSaving=true', async () => {
+    const wrapper = mount(Numpad, { props: { visible: true, isSaving: true } })
+    expect(wrapper.find('.spinner-inline').exists()).toBe(true)
+    expect(wrapper.find('.btn-confirm').text()).toContain('Wird gebucht...')
+    expect(wrapper.find<HTMLButtonElement>('.btn-confirm').element.disabled).toBe(true)
+    expect(wrapper.find<HTMLInputElement>('#expense-amount-input').element.disabled).toBe(true)
+  })
 })
 

@@ -3,7 +3,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>Ausgabe buchen</h2>
-        <button class="close-btn" aria-label="Schließen" @click="cancel">&times;</button>
+        <button class="close-btn" aria-label="Schließen" :disabled="isSaving" @click="cancel">&times;</button>
       </div>
 
       <form class="modal-body" @submit.prevent="confirmAll">
@@ -19,6 +19,7 @@
               placeholder="0,00"
               enterkeyhint="next"
               autocomplete="off"
+              :disabled="isSaving"
               class="amount-input"
               @keydown="handleAmountKeydown"
             />
@@ -36,16 +37,18 @@
             placeholder="z. B. Kaffee, Mittagessen"
             maxlength="50"
             enterkeyhint="done"
+            :disabled="isSaving"
             class="note-input"
           />
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-cancel" @click="cancel">
+          <button type="button" class="btn btn-cancel" :disabled="isSaving" @click="cancel">
             Abbrechen
           </button>
-          <button type="submit" class="btn btn-confirm" :disabled="!isValidAmount">
-            Speichern
+          <button type="submit" class="btn btn-confirm" :disabled="!isValidAmount || isSaving">
+            <span v-if="isSaving" class="spinner-inline" aria-label="Wird gespeichert..."></span>
+            <span>{{ isSaving ? 'Wird gebucht...' : 'Speichern' }}</span>
           </button>
         </div>
       </form>
@@ -55,13 +58,24 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 
-const props = defineProps<{ visible: boolean }>()
+const props = withDefaults(
+  defineProps<{
+    visible: boolean
+    isSaving?: boolean
+  }>(),
+  {
+    isSaving: false,
+  }
+)
+
 const emit = defineEmits<{
   confirm: [value: number, note: string]
   cancel: []
 }>()
 
+const haptics = useHaptics()
 const amountInput = ref('')
 const noteInput = ref('')
 const amountInputRef = ref<HTMLInputElement | null>(null)
@@ -96,16 +110,17 @@ function handleAmountKeydown(e: KeyboardEvent) {
 }
 
 function cancel() {
+  if (props.isSaving) return
+  haptics.tap()
   amountInput.value = ''
   noteInput.value = ''
   emit('cancel')
 }
 
 function confirmAll() {
-  if (!isValidAmount.value) return
+  if (!isValidAmount.value || props.isSaving) return
+  haptics.tap()
   emit('confirm', parsedAmount.value, noteInput.value.trim())
-  amountInput.value = ''
-  noteInput.value = ''
 }
 </script>
 
@@ -275,6 +290,10 @@ function confirmAll() {
 .btn-confirm {
   background: var(--accent, #64ffda);
   color: #0a192f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-confirm:hover:not(:disabled) {
@@ -284,5 +303,20 @@ function confirmAll() {
 .btn-confirm:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.spinner-inline {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(10, 25, 47, 0.3);
+  border-top-color: #0a192f;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

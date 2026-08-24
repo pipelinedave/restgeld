@@ -1,7 +1,7 @@
 <template>
   <section class="budget-display">
     <div class="budget-header-label">HEUTE VERFÜGBAR</div>
-    <div class="budget-amount" :class="'color-' + color">
+    <div class="budget-amount" :class="['color-' + color, { 'budget-pulse': isPulsing }]">
       {{ formatted }}
     </div>
     <div class="savings-badge" :class="'badge-' + color">
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps<{
   currentBudget: number
@@ -30,6 +30,20 @@ const props = defineProps<{
   savings: number
   color: string
 }>()
+
+const isPulsing = ref(false)
+
+watch(
+  () => props.currentBudget,
+  (newVal, oldVal) => {
+    if (oldVal !== undefined && newVal !== oldVal) {
+      isPulsing.value = true
+      setTimeout(() => {
+        isPulsing.value = false
+      }, 400)
+    }
+  }
+)
 
 const formatted = computed(() =>
   props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
@@ -63,7 +77,17 @@ const savingsFormatted = computed(() =>
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.5px;
-  transition: color 0.3s ease;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.budget-pulse {
+  animation: budget-bump 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes budget-bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
 }
 
 .color-green { color: #64ffda; }

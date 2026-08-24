@@ -18,22 +18,25 @@ exports[`Snapshot: AppHeader > standard 1`] = `
 
 exports[`Snapshot: BudgetDisplay > gruen mit ersparnis 1`] = `
 "<section data-v-f796b773="" class="budget-display">
+  <div data-v-f796b773="" class="budget-header-label">HEUTE VERFÜGBAR</div>
   <div data-v-f796b773="" class="budget-amount color-green">19,24 €</div>
-  <div data-v-f796b773="" class="savings color-green">+61,36 € angespart </div>
+  <div data-v-f796b773="" class="savings-badge badge-green"><span data-v-f796b773=""> +61,36 € Monats-Puffer </span></div>
 </section>"
 `;
 
 exports[`Snapshot: BudgetDisplay > rot bei minus 1`] = `
 "<section data-v-f796b773="" class="budget-display">
+  <div data-v-f796b773="" class="budget-header-label">HEUTE VERFÜGBAR</div>
   <div data-v-f796b773="" class="budget-amount color-red">11,55 €</div>
-  <div data-v-f796b773="" class="savings color-red">-38,64 € angespart </div>
+  <div data-v-f796b773="" class="savings-badge badge-red"><span data-v-f796b773="">-38,64 € überzogen </span></div>
 </section>"
 `;
 
 exports[`Snapshot: BudgetDisplay > weiss bei 0 ersparnis 1`] = `
 "<section data-v-f796b773="" class="budget-display">
+  <div data-v-f796b773="" class="budget-header-label">HEUTE VERFÜGBAR</div>
   <div data-v-f796b773="" class="budget-amount color-white">14,52 €</div>
-  <!--v-if-->
+  <div data-v-f796b773="" class="savings-badge badge-white"><span data-v-f796b773=""> Perfekt im Plan </span></div>
 </section>"
 `;
 
@@ -62,17 +65,19 @@ exports[`Snapshot: MonthProgress > tag 17/31 1`] = `
 `;
 
 exports[`Snapshot: Numpad > sichtbar 1`] = `
-"<div class="modal-overlay">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Ausgabe buchen</h2><button class="close-btn" aria-label="Schließen">×</button>
+"<div data-v-0450a0c5="" class="modal-overlay">
+  <div data-v-0450a0c5="" class="modal-content">
+    <div data-v-0450a0c5="" class="modal-header">
+      <h2 data-v-0450a0c5="">Ausgabe buchen</h2><button data-v-0450a0c5="" class="close-btn" aria-label="Schließen">×</button>
     </div>
-    <form class="modal-body">
-      <div class="form-group"><label for="expense-amount-input" class="form-label">Betrag (€)</label>
-        <div class="amount-input-wrap"><input id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input"><span class="currency-symbol">€</span></div>
+    <form data-v-0450a0c5="" class="modal-body">
+      <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-amount-input" class="form-label">Betrag (€)</label>
+        <div data-v-0450a0c5="" class="amount-input-wrap"><input data-v-0450a0c5="" id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input"><span data-v-0450a0c5="" class="currency-symbol">€</span></div>
       </div>
-      <div class="form-group"><label for="expense-note-input" class="form-label">Notiz (optional)</label><input id="expense-note-input" type="text" inputmode="text" placeholder="z. B. Kaffee, Mittagessen" maxlength="50" enterkeyhint="done" class="note-input"></div>
-      <div class="form-actions"><button type="button" class="btn btn-cancel"> Abbrechen </button><button type="submit" class="btn btn-confirm" disabled=""> Speichern </button></div>
+      <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-note-input" class="form-label">Notiz (optional)</label><input data-v-0450a0c5="" id="expense-note-input" type="text" inputmode="text" placeholder="z. B. Kaffee, Mittagessen" maxlength="50" enterkeyhint="done" class="note-input"></div>
+      <div data-v-0450a0c5="" class="form-actions"><button data-v-0450a0c5="" type="button" class="btn btn-cancel"> Abbrechen </button><button data-v-0450a0c5="" type="submit" class="btn btn-confirm" disabled="">
+          <!--v-if--><span data-v-0450a0c5="">Speichern</span>
+        </button></div>
     </form>
   </div>
 </div>"
