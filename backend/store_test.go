@@ -89,6 +89,50 @@ func (m *memoryStore) GetRecentExpenses(periodID string, limit int) ([]Expense, 
 	return result, nil
 }
 
+func (m *memoryStore) GetExpenses(periodID string, page, limit int) (*PaginatedExpenses, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	total := len(m.expenses)
+	offset := (page - 1) * limit
+
+	var items []Expense
+	// Rückwärts sortiert (neueste zuerst)
+	if offset < total {
+		end := offset + limit
+		if end > total {
+			end = total
+		}
+		for i := offset; i < end; i++ {
+			items = append(items, m.expenses[total-1-i])
+		}
+	}
+
+	if items == nil {
+		items = []Expense{}
+	}
+
+	totalPages := 1
+	if total > 0 {
+		totalPages = (total + limit - 1) / limit
+	}
+
+	return &PaginatedExpenses{
+		Items:      items,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}, nil
+}
+
 func (m *memoryStore) AddExpense(periodID string, amount float64, note string) (*Expense, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

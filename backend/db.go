@@ -22,14 +22,17 @@ func newPostgresStoreFromDB(db *sql.DB) Store {
 }
 
 func newPostgresStore() Store {
-	host := envOrDefault("DB_HOST", "localhost")
-	port := envOrDefault("DB_PORT", "5432")
-	user := envOrDefault("DB_USER", "restgeld")
-	password := envOrDefault("DB_PASSWORD", "restgeld")
-	dbname := envOrDefault("DB_NAME", "restgeld")
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		host := envOrDefault("DB_HOST", "localhost")
+		port := envOrDefault("DB_PORT", "5432")
+		user := envOrDefault("DB_USER", "restgeld")
+		password := envOrDefault("DB_PASSWORD", "restgeld")
+		dbname := envOrDefault("DB_NAME", "restgeld")
 
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			host, port, user, password, dbname)
+	}
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -192,6 +195,60 @@ func (s *postgresStore) GetRecentExpenses(periodID string, limit int) ([]Expense
 	}
 
 	return expenses, nil
+}
+
+func (s *postgresStore) GetExpenses(periodID string, page, limit int) (*PaginatedExpenses, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	var total int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM expenses WHERE period_id = $1", periodID).Scan(&total)
+	if err != nil {
+		return nil, fmt.Errorf("anzahl ausgaben ermitteln: %w", err)
+	}
+
+	offset := (page - 1) * limit
+	rows, err := s.db.Query(
+		"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+		periodID, limit, offset,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("ausgaben laden: %w", err)
+	}
+	defer rows.Close()
+
+	var expenses []Expense
+	for rows.Next() {
+		var e Expense
+		if err := rows.Scan(&e.ID, &e.PeriodID, &e.Amount, &e.Note, &e.CreatedAt); err != nil {
+			return nil, fmt.Errorf("ausgabe scannen: %w", err)
+		}
+		expenses = append(expenses, e)
+	}
+
+	if expenses == nil {
+		expenses = []Expense{}
+	}
+
+	totalPages := 1
+	if total > 0 {
+		totalPages = (total + limit - 1) / limit
+	}
+
+	return &PaginatedExpenses{
+		Items:      expenses,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (s *postgresStore) AddExpense(periodID string, amount float64, note string) (*Expense, error) {

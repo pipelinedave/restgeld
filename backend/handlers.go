@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -136,7 +137,22 @@ func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expenses, err := s.store.GetRecentExpenses(period.ID, 3)
+	page := 1
+	limit := 10
+
+	if p := r.URL.Query().Get("page"); p != "" {
+		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
+			page = parsedPage
+		}
+	}
+
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+
+	expenses, err := s.store.GetExpenses(period.ID, page, limit)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
 		return
