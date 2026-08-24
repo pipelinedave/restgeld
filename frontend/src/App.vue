@@ -28,6 +28,8 @@
       </button>
     </div>
 
+    <StreakCard :streak="budget?.streak" />
+
     <SpendingTrend
       :stats="budget?.dailyStats"
       :baseBudget="budget?.baseBudget ?? 15"
@@ -76,6 +78,7 @@ import { useHaptics } from './composables/useHaptics'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
+import StreakCard from './components/StreakCard.vue'
 import SpendingTrend from './components/SpendingTrend.vue'
 import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'

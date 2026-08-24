@@ -36,6 +36,13 @@ type DailyStat struct {
 	Spent float64 `json:"spent"`
 }
 
+type StreakInfo struct {
+	CurrentStreak   int `json:"currentStreak"`
+	LongestStreak   int `json:"longestStreak"`
+	NoSpendDays     int `json:"noSpendDays"`
+	UnderBudgetDays int `json:"underBudgetDays"`
+}
+
 type BudgetResponse struct {
 	Day           int         `json:"day"`
 	MonthDays     int         `json:"monthDays"`
@@ -46,6 +53,44 @@ type BudgetResponse struct {
 	PeriodID      string      `json:"periodId"`
 	Expenses      []Expense   `json:"expenses"`
 	DailyStats    []DailyStat `json:"dailyStats"`
+	Streak        StreakInfo  `json:"streak"`
+}
+
+func calcStreakInfo(stats []DailyStat, baseBudget float64) StreakInfo {
+	if len(stats) == 0 {
+		return StreakInfo{}
+	}
+
+	currentStreak := 0
+	longestStreak := 0
+	noSpendDays := 0
+	underBudgetDays := 0
+	runningStreak := 0
+
+	for _, s := range stats {
+		if s.Spent == 0 {
+			noSpendDays++
+		}
+		if s.Spent <= baseBudget {
+			underBudgetDays++
+			runningStreak++
+			if runningStreak > longestStreak {
+				longestStreak = runningStreak
+			}
+		} else {
+			runningStreak = 0
+		}
+	}
+
+	// Current streak is the streak running up to the last day
+	currentStreak = runningStreak
+
+	return StreakInfo{
+		CurrentStreak:   currentStreak,
+		LongestStreak:   longestStreak,
+		NoSpendDays:     noSpendDays,
+		UnderBudgetDays: underBudgetDays,
+	}
 }
 
 type ExpenseRequest struct {

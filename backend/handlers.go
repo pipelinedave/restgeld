@@ -96,6 +96,8 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 		dailyStats = []DailyStat{}
 	}
 
+	streak := calcStreakInfo(dailyStats, period.BaseBudget)
+
 	resp := BudgetResponse{
 		Day:           day,
 		MonthDays:     period.MonthDays,
@@ -106,6 +108,7 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 		PeriodID:      period.ID,
 		Expenses:      expenses,
 		DailyStats:    dailyStats,
+		Streak:        streak,
 	}
 
 	jsonHeader(w)

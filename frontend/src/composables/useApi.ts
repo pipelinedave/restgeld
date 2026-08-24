@@ -20,6 +20,13 @@ export interface DailyStat {
   spent: number
 }
 
+export interface StreakInfo {
+  currentStreak: number
+  longestStreak: number
+  noSpendDays: number
+  underBudgetDays: number
+}
+
 export interface BudgetData {
   day: number
   monthDays: number
@@ -30,6 +37,7 @@ export interface BudgetData {
   periodId: string
   expenses: Expense[]
   dailyStats?: DailyStat[]
+  streak?: StreakInfo
 }
 
 const BASE = import.meta.env.PROD
