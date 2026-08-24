@@ -17,6 +17,8 @@
       :monthDays="budget?.monthDays ?? 30"
     />
 
+    <MonthProjection :projection="budget?.projection" />
+
     <div class="hero-area">
       <BudgetDisplay
         v-if="budget"
@@ -85,6 +87,7 @@ import { useHaptics } from './composables/useHaptics'
 import { useOfflineSync } from './composables/useOfflineSync'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
+import MonthProjection from './components/MonthProjection.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
 import StreakCard from './components/StreakCard.vue'
 import SpendingTrend from './components/SpendingTrend.vue'

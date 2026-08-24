@@ -27,6 +27,13 @@ export interface StreakInfo {
   underBudgetDays: number
 }
 
+export interface ProjectionInfo {
+  projectedSavings: number
+  projectedTotalSpent: number
+  avgDailySpend: number
+  status: 'saving' | 'deficit'
+}
+
 export interface BudgetData {
   day: number
   monthDays: number
@@ -38,6 +45,7 @@ export interface BudgetData {
   expenses: Expense[]
   dailyStats?: DailyStat[]
   streak?: StreakInfo
+  projection?: ProjectionInfo
 }
 
 const BASE = import.meta.env.PROD

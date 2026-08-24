@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 )
 
@@ -43,17 +44,52 @@ type StreakInfo struct {
 	UnderBudgetDays int `json:"underBudgetDays"`
 }
 
+type ProjectionInfo struct {
+	ProjectedSavings    float64 `json:"projectedSavings"`
+	ProjectedTotalSpent float64 `json:"projectedTotalSpent"`
+	AvgDailySpend       float64 `json:"avgDailySpend"`
+	Status              string  `json:"status"` // "saving" | "deficit"
+}
+
 type BudgetResponse struct {
-	Day           int         `json:"day"`
-	MonthDays     int         `json:"monthDays"`
-	BaseBudget    float64     `json:"baseBudget"`
-	CurrentBudget float64     `json:"currentBudget"`
-	Savings       float64     `json:"savings"`
-	Color         string      `json:"color"`
-	PeriodID      string      `json:"periodId"`
-	Expenses      []Expense   `json:"expenses"`
-	DailyStats    []DailyStat `json:"dailyStats"`
-	Streak        StreakInfo  `json:"streak"`
+	Day           int            `json:"day"`
+	MonthDays     int            `json:"monthDays"`
+	BaseBudget    float64        `json:"baseBudget"`
+	CurrentBudget float64        `json:"currentBudget"`
+	Savings       float64        `json:"savings"`
+	Color         string         `json:"color"`
+	PeriodID      string         `json:"periodId"`
+	Expenses      []Expense      `json:"expenses"`
+	DailyStats    []DailyStat    `json:"dailyStats"`
+	Streak        StreakInfo     `json:"streak"`
+	Projection    ProjectionInfo `json:"projection"`
+}
+
+func calcProjection(totalSpent float64, day, monthDays int, monthlyTotal float64) ProjectionInfo {
+	if day <= 0 || monthDays <= 0 {
+		return ProjectionInfo{Status: "saving"}
+	}
+
+	avgDailySpend := totalSpent / float64(day)
+	remainingDays := monthDays - day
+	if remainingDays < 0 {
+		remainingDays = 0
+	}
+
+	projectedTotalSpent := totalSpent + (avgDailySpend * float64(remainingDays))
+	projectedSavings := monthlyTotal - projectedTotalSpent
+
+	status := "saving"
+	if projectedSavings < 0 {
+		status = "deficit"
+	}
+
+	return ProjectionInfo{
+		ProjectedSavings:    math.Round(projectedSavings*100) / 100,
+		ProjectedTotalSpent: math.Round(projectedTotalSpent*100) / 100,
+		AvgDailySpend:       math.Round(avgDailySpend*100) / 100,
+		Status:              status,
+	}
 }
 
 func calcStreakInfo(stats []DailyStat, baseBudget float64) StreakInfo {

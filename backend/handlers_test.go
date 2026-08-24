@@ -169,6 +169,36 @@ func TestCalcStreakInfo(t *testing.T) {
 	}
 }
 
+func TestCalcProjection(t *testing.T) {
+	// Monat mit 30 Tagen, 300 € Budget (10 €/Tag)
+	// Nach 10 Tagen 50 € ausgegeben (Ø 5 €/Tag)
+	// Resttage: 20 -> Erwartet: 50 + (5 * 20) = 150 € Gesamtausgaben -> 150 € gespart
+	proj := calcProjection(50.0, 10, 30, 300.0)
+
+	if proj.Status != "saving" {
+		t.Errorf("erwartet saving, bekommen %s", proj.Status)
+	}
+	if proj.AvgDailySpend != 5.0 {
+		t.Errorf("erwartet AvgDailySpend=5.0, bekommen %f", proj.AvgDailySpend)
+	}
+	if proj.ProjectedTotalSpent != 150.0 {
+		t.Errorf("erwartet ProjectedTotalSpent=150.0, bekommen %f", proj.ProjectedTotalSpent)
+	}
+	if proj.ProjectedSavings != 150.0 {
+		t.Errorf("erwartet ProjectedSavings=150.0, bekommen %f", proj.ProjectedSavings)
+	}
+
+	// Defizit-Fall: Nach 10 Tagen 200 € ausgegeben (Ø 20 €/Tag)
+	// Resttage: 20 -> 200 + 400 = 600 € Gesamtausgaben -> 300 - 600 = -300 €
+	projDeficit := calcProjection(200.0, 10, 30, 300.0)
+	if projDeficit.Status != "deficit" {
+		t.Errorf("erwartet deficit, bekommen %s", projDeficit.Status)
+	}
+	if projDeficit.ProjectedSavings != -300.0 {
+		t.Errorf("erwartet ProjectedSavings=-300.0, bekommen %f", projDeficit.ProjectedSavings)
+	}
+}
+
 func TestCreateExpense(t *testing.T) {
 	store := newMemoryStore()
 	now := time.Date(2026, 8, 17, 12, 0, 0, 0, time.UTC)
