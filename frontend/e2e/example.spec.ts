@@ -108,22 +108,19 @@ test.describe('Restgeld E2E', () => {
     await expect(page.getByText(/angespart/)).toBeVisible()
   })
 
-  test('numpad oeffnet sich bei klick auf ausgabe-button', async ({ page }) => {
+  test('modal oeffnet sich bei klick auf ausgabe-button', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /ausgabe/i }).click()
-    await expect(page.getByText('Bestätigen')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ausgabe buchen' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Speichern' })).toBeVisible()
   })
 
-  test('ausgabe buchen ueber numpad', async ({ page }) => {
+  test('ausgabe buchen ueber modal', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /ausgabe/i }).click()
 
     // betrag eingeben: 12,50
-    await page.getByRole('button', { name: '1' }).click()
-    await page.getByRole('button', { name: '2' }).click()
-    await page.getByRole('button', { name: ',' }).click()
-    await page.getByRole('button', { name: '5' }).click()
-    await page.getByRole('button', { name: 'Bestätigen' }).click()
+    await page.getByPlaceholder('0,00').fill('12,50')
 
     // notiz eingeben
     await page.getByPlaceholder(/notiz/i).fill('Mittagessen')
@@ -139,9 +136,7 @@ test.describe('Restgeld E2E', () => {
   test('ausgabe loeschen', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: /ausgabe/i }).click()
-    await page.getByRole('button', { name: '1' }).click()
-    await page.getByRole('button', { name: '0' }).click()
-    await page.getByRole('button', { name: 'Bestätigen' }).click()
+    await page.getByPlaceholder('0,00').fill('10')
     await page.getByPlaceholder(/notiz/i).fill('Test')
     await page.getByRole('button', { name: 'Speichern' }).click()
 

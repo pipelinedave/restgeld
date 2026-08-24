@@ -53,23 +53,18 @@ describe('App', () => {
     const wrapper = mount(App)
     await flushPromises()
     await wrapper.find('.add-btn').trigger('click')
-    expect(wrapper.find('.numpad-overlay').exists()).toBe(true)
+    expect(wrapper.find('.modal-overlay').exists()).toBe(true)
   })
 
   it('bucht ausgabe via numpad confirm', async () => {
     const wrapper = mount(App)
     await flushPromises()
     await wrapper.find('.add-btn').trigger('click')
-    const buttons = wrapper.findAll('.numpad-btn')
-    await buttons[6].trigger('click') // 1
-    await buttons[10].trigger('click') // 0
-    await buttons[9].trigger('click') // ,
-    await buttons[11].trigger('click') // 0
-    await buttons[13].trigger('click') // bestätigen
-    await flushPromises()
-    const noteInput = wrapper.find('.note-input')
+    const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
+    const noteInput = wrapper.find<HTMLInputElement>('#expense-note-input')
+    await amountInput.setValue('10')
     await noteInput.setValue('Kaffee')
-    await wrapper.findAll('.note-actions button')[1].trigger('click')
+    await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(mockApi().addExpense).toHaveBeenCalledWith(10, 'Kaffee')
     expect(mockApi().getBudget).toHaveBeenCalledTimes(2)

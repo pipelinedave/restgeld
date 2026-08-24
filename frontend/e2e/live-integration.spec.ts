@@ -16,8 +16,7 @@ test('Live E2E: oeffnet echte Ausgaben-Historie und prueft Console & Modal', asy
 
   // Ausgabe hinzufügen
   await page.getByRole('button', { name: /ausgabe/i }).click()
-  await page.getByRole('button', { name: '5' }).click()
-  await page.getByRole('button', { name: 'Bestätigen' }).click()
+  await page.getByPlaceholder('0,00').fill('5')
   await page.getByPlaceholder(/notiz/i).fill('Live-Test Kaffee')
   await page.getByRole('button', { name: 'Speichern' }).click()
 

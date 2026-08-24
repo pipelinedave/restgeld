@@ -2,98 +2,76 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Numpad from '../components/Numpad.vue'
 
-describe('Numpad', () => {
+describe('Numpad / Ausgabe-Modal', () => {
   it('rendert nichts wenn visible=false', () => {
     const wrapper = mount(Numpad, { props: { visible: false } })
-    expect(wrapper.find('.numpad-overlay').exists()).toBe(false)
+    expect(wrapper.find('.modal-overlay').exists()).toBe(false)
   })
 
-  it('rendert ziffern und steuerbuttons wenn visible=true', () => {
+  it('rendert formularelemente wenn visible=true', () => {
     const wrapper = mount(Numpad, { props: { visible: true } })
-    expect(wrapper.text()).toContain('0')
-    expect(wrapper.text()).toContain('1')
-    expect(wrapper.text()).toContain('7')
-    expect(wrapper.text()).toContain(',')
-    expect(wrapper.text()).toContain('⌫')
-    expect(wrapper.text()).toContain('Bestätigen')
-    expect(wrapper.text()).toContain('Abbrechen')
+    expect(wrapper.find('.modal-overlay').exists()).toBe(true)
+    expect(wrapper.find('h2').text()).toBe('Ausgabe buchen')
+
+    const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
+    expect(amountInput.exists()).toBe(true)
+    expect(amountInput.attributes('inputmode')).toBe('decimal')
+
+    const noteInput = wrapper.find<HTMLInputElement>('#expense-note-input')
+    expect(noteInput.exists()).toBe(true)
+    expect(noteInput.attributes('inputmode')).toBe('text')
+
+    expect(wrapper.find('.btn-confirm').exists()).toBe(true)
+    expect(wrapper.find('.btn-cancel').exists()).toBe(true)
   })
 
-  it('zeigt display 0 initial', () => {
+  it('deaktiviert speichern-button wenn betrag ungueltig oder leer ist', async () => {
     const wrapper = mount(Numpad, { props: { visible: true } })
-    expect(wrapper.find('.numpad-value').text()).toBe('0')
+    const submitBtn = wrapper.find<HTMLButtonElement>('.btn-confirm')
+    expect(submitBtn.element.disabled).toBe(true)
+
+    const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
+    await amountInput.setValue('0')
+    expect(submitBtn.element.disabled).toBe(true)
+
+    await amountInput.setValue('abc')
+    expect(submitBtn.element.disabled).toBe(true)
+
+    await amountInput.setValue('12,50')
+    expect(submitBtn.element.disabled).toBe(false)
   })
 
-  it('fuegt ziffer bei klick hinzu', async () => {
+  it('emittet cancel bei klick auf abbrechen oder close-btn', async () => {
     const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[0].trigger('click') // 7
-    expect(wrapper.find('.numpad-value').text()).toBe('7')
-  })
-
-  it('fuegt komma hinzu', async () => {
-    const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[0].trigger('click') // 7
-    await wrapper.findAll('.numpad-btn')[9].trigger('click') // ,
-    expect(wrapper.find('.numpad-value').text()).toBe('7,')
-    await wrapper.findAll('.numpad-btn')[9].trigger('click') // zweites , ignoriert
-    expect(wrapper.find('.numpad-value').text()).toBe('7,')
-  })
-
-  it('loescht letztes zeichen', async () => {
-    const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[0].trigger('click') // 7
-    await wrapper.findAll('.numpad-btn')[1].trigger('click') // 8
-    expect(wrapper.find('.numpad-value').text()).toBe('78')
-    await wrapper.findAll('.numpad-btn')[11].trigger('click') // backspace
-    expect(wrapper.find('.numpad-value').text()).toBe('7')
-  })
-
-  it('emittet cancel bei abbrechen', async () => {
-    const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[12].trigger('click') // abbrechen
+    await wrapper.find('.btn-cancel').trigger('click')
     expect(wrapper.emitted('cancel')).toBeTruthy()
+
+    await wrapper.find('.close-btn').trigger('click')
+    expect(wrapper.emitted('cancel')?.length).toBe(2)
   })
 
-  it('bestätigen zeigt notiz-eingabe statt confirm-emit', async () => {
+  it('emittet confirm mit geparstem betrag und notiz beim absenden', async () => {
     const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[0].trigger('click') // 7
-    await wrapper.findAll('.numpad-btn')[13].trigger('click') // bestätigen
-    expect(wrapper.find('.note-input').exists()).toBe(true)
-    expect(wrapper.find('.note-section').exists()).toBe(true)
-    expect(wrapper.emitted('confirm')).toBeFalsy()
-  })
+    const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
+    const noteInput = wrapper.find<HTMLInputElement>('#expense-note-input')
 
-  it('notiz eingeben und speichern emittet confirm mit amount + note', async () => {
-    const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[0].trigger('click') // 7
-    await wrapper.findAll('.numpad-btn')[4].trigger('click') // 5
-    await wrapper.findAll('.numpad-btn')[9].trigger('click') // ,
-    await wrapper.findAll('.numpad-btn')[10].trigger('click') // 0
-    await wrapper.findAll('.numpad-btn')[13].trigger('click') // bestätigen
-
-    const noteInput = wrapper.find('.note-input')
-    await noteInput.setValue('Kaffee')
-    await wrapper.findAll('.note-actions button')[1].trigger('click') // speichern
+    await amountInput.setValue('12,50')
+    await noteInput.setValue('Kaffee & Kuchen ')
+    await wrapper.find('form').trigger('submit')
 
     expect(wrapper.emitted('confirm')).toBeTruthy()
-    expect(wrapper.emitted('confirm')![0]).toEqual([75, 'Kaffee']) // 75,0 wird zu 75
+    expect(wrapper.emitted('confirm')![0]).toEqual([12.5, 'Kaffee & Kuchen'])
   })
 
-  it('zurueck vom notiz-modus zeigt numpad wieder', async () => {
+  it('unterstuetzt punkte als dezimaltrennzeichen', async () => {
     const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[0].trigger('click') // 7
-    await wrapper.findAll('.numpad-btn')[13].trigger('click') // bestätigen
-    expect(wrapper.find('.note-section').exists()).toBe(true)
+    const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
 
-    await wrapper.findAll('.note-actions button')[0].trigger('click') // zurück
-    expect(wrapper.find('.numpad-grid').exists()).toBe(true)
-    expect(wrapper.find('.note-section').exists()).toBe(false)
-  })
+    await amountInput.setValue('8.99')
+    await wrapper.find('form').trigger('submit')
 
-  it('bestätigt nicht ohne eingabe', async () => {
-    const wrapper = mount(Numpad, { props: { visible: true } })
-    await wrapper.findAll('.numpad-btn')[13].trigger('click') // bestätigen ohne input
-    expect(wrapper.emitted('confirm')).toBeFalsy()
-    expect(wrapper.find('.numpad-grid').exists()).toBe(true) // immer noch im numpad
+    expect(wrapper.emitted('confirm')).toBeTruthy()
+    expect(wrapper.emitted('confirm')![0]).toEqual([8.99, ''])
   })
 })
+

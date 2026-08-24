@@ -62,10 +62,18 @@ exports[`Snapshot: MonthProgress > tag 17/31 1`] = `
 `;
 
 exports[`Snapshot: Numpad > sichtbar 1`] = `
-"<div data-v-0450a0c5="" class="numpad-overlay">
-  <div data-v-0450a0c5="" class="numpad">
-    <div data-v-0450a0c5="" class="numpad-display"><span data-v-0450a0c5="" class="numpad-value">0</span></div>
-    <div data-v-0450a0c5="" class="numpad-grid"><button data-v-0450a0c5="" class="numpad-btn">7</button><button data-v-0450a0c5="" class="numpad-btn">8</button><button data-v-0450a0c5="" class="numpad-btn">9</button><button data-v-0450a0c5="" class="numpad-btn">4</button><button data-v-0450a0c5="" class="numpad-btn">5</button><button data-v-0450a0c5="" class="numpad-btn">6</button><button data-v-0450a0c5="" class="numpad-btn">1</button><button data-v-0450a0c5="" class="numpad-btn">2</button><button data-v-0450a0c5="" class="numpad-btn">3</button><button data-v-0450a0c5="" class="numpad-btn">,</button><button data-v-0450a0c5="" class="numpad-btn">0</button><button data-v-0450a0c5="" class="numpad-btn numpad-btn-del">⌫</button><button data-v-0450a0c5="" class="numpad-btn numpad-btn-cancel">Abbrechen</button><button data-v-0450a0c5="" class="numpad-btn numpad-btn-confirm">Bestätigen</button></div>
+"<div class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Ausgabe buchen</h2><button class="close-btn" aria-label="Schließen">×</button>
+    </div>
+    <form class="modal-body">
+      <div class="form-group"><label for="expense-amount-input" class="form-label">Betrag (€)</label>
+        <div class="amount-input-wrap"><input id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input"><span class="currency-symbol">€</span></div>
+      </div>
+      <div class="form-group"><label for="expense-note-input" class="form-label">Notiz (optional)</label><input id="expense-note-input" type="text" inputmode="text" placeholder="z. B. Kaffee, Mittagessen" maxlength="50" enterkeyhint="done" class="note-input"></div>
+      <div class="form-actions"><button type="button" class="btn btn-cancel"> Abbrechen </button><button type="submit" class="btn btn-confirm" disabled=""> Speichern </button></div>
+    </form>
   </div>
 </div>"
 `;
