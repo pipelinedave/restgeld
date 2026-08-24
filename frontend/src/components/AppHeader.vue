@@ -3,6 +3,12 @@
     <div class="brand">
       <span class="brand-title">restgeld</span>
       <span class="brand-dot">.</span>
+      <span v-if="isOffline" class="offline-badge" title="Offline - Daten werden lokal gespeichert">
+        <span class="offline-dot"></span> Offline
+      </span>
+      <span v-else-if="pendingSyncCount > 0" class="syncing-badge" title="Ausstehende Synchronisierung">
+        {{ pendingSyncCount }} ungesynct
+      </span>
     </div>
     <button class="settings-btn" aria-label="Einstellungen" title="Einstellungen" @click="$emit('open-settings')">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -14,6 +20,17 @@
 </template>
 
 <script setup lang="ts">
+withDefaults(
+  defineProps<{
+    isOffline?: boolean
+    pendingSyncCount?: number
+  }>(),
+  {
+    isOffline: false,
+    pendingSyncCount: 0,
+  }
+)
+
 defineEmits<{
   (e: 'open-settings'): void
 }>()
@@ -66,5 +83,45 @@ defineEmits<{
   color: #64ffda;
   background: rgba(100, 255, 218, 0.08);
   transform: rotate(45deg);
+}
+
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.offline-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff6b6b;
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.syncing-badge {
+  background: rgba(100, 255, 218, 0.1);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  color: var(--accent, #64ffda);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 10px;
 }
 </style>

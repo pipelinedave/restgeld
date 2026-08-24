@@ -6,7 +6,11 @@
       :type="toast.type"
     />
 
-    <AppHeader @open-settings="openSettings" />
+    <AppHeader
+      :isOffline="!offlineSync.isOnline.value"
+      :pendingSyncCount="offlineSync.pendingCount.value"
+      @open-settings="openSettings"
+    />
 
     <MonthProgress
       :day="budget?.day ?? 1"
@@ -75,9 +79,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useApi, type BudgetData } from './composables/useApi'
 import { useHaptics } from './composables/useHaptics'
+import { useOfflineSync } from './composables/useOfflineSync'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
@@ -92,6 +97,7 @@ import ToastNotification from './components/ToastNotification.vue'
 
 const api = useApi()
 const haptics = useHaptics()
+const offlineSync = useOfflineSync()
 const budget = ref<BudgetData | null>(null)
 const showNumpad = ref(false)
 const showSettings = ref(false)
@@ -141,20 +147,56 @@ async function loadBudget() {
 
 async function handleConfirm(amount: number, note: string) {
   isSavingExpense.value = true
+  const formatted = amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const noteText = note ? ` (${note})` : ''
+
+  // Fallback / Offline Handling
+  if (!offlineSync.isOnline.value) {
+    offlineSync.enqueueExpense(amount, note)
+    // Optimistic Update
+    if (budget.value) {
+      budget.value.currentBudget -= amount
+      budget.value.expenses.unshift({
+        id: `offline-${Date.now()}`,
+        periodId: budget.value.periodId,
+        amount,
+        note,
+        createdAt: new Date().toISOString(),
+      })
+    }
+    showNumpad.value = false
+    isSavingExpense.value = false
+    haptics.success()
+    showToast(`Offline gespeichert: ${formatted} €${noteText}`, 'info')
+    return
+  }
+
   try {
     await api.addExpense(amount, note)
     await loadBudget()
     showNumpad.value = false
     haptics.success()
-    const formatted = amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    const noteText = note ? ` (${note})` : ''
     showToast(`✓ ${formatted} € gebucht${noteText}`, 'success')
   } catch (e: any) {
-    haptics.error()
-    showToast('Fehler beim Speichern der Ausgabe', 'error')
-    console.error('Fehler beim Speichern:', e.message)
+    // If request failed (e.g. lost network during request)
+    offlineSync.enqueueExpense(amount, note)
+    if (budget.value) {
+      budget.value.currentBudget -= amount
+    }
+    showNumpad.value = false
+    haptics.warning()
+    showToast(`Offline gespeichert: ${formatted} €${noteText}`, 'info')
   } finally {
     isSavingExpense.value = false
+  }
+}
+
+async function handleAutoSync() {
+  const synced = await offlineSync.syncPendingExpenses(api)
+  if (synced > 0) {
+    await loadBudget()
+    haptics.success()
+    showToast(`✓ ${synced} Offline-Ausgabe(n) synchronisiert`, 'success')
   }
 }
 
@@ -210,7 +252,30 @@ async function handleDataImported(count: number) {
   showToast(`✓ ${count} Ausgabe(n) erfolgreich importiert`, 'success')
 }
 
-onMounted(loadBudget)
+let cleanupListeners: (() => void) | undefined
+
+onMounted(async () => {
+  await loadBudget()
+  cleanupListeners = offlineSync.initListeners(handleAutoSync)
+
+  // Try auto sync on load if pending
+  if (offlineSync.pendingCount.value > 0 && offlineSync.isOnline.value) {
+    handleAutoSync()
+  }
+
+  // PWA Shortcut Check: ?action=add-expense
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('action') === 'add-expense' || window.location.hash === '#add-expense') {
+      showNumpad.value = true
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }
+})
+
+onUnmounted(() => {
+  cleanupListeners?.()
+})
 </script>
 
 <style scoped>

@@ -13,4 +13,16 @@ describe('AppHeader', () => {
     await wrapper.find('.settings-btn').trigger('click')
     expect(wrapper.emitted('open-settings')).toBeTruthy()
   })
+
+  it('zeigt Offline-Badge an wenn isOffline=true', () => {
+    const wrapper = mount(AppHeader, { props: { isOffline: true } })
+    expect(wrapper.find('.offline-badge').exists()).toBe(true)
+    expect(wrapper.find('.offline-badge').text()).toContain('Offline')
+  })
+
+  it('zeigt Sync-Badge an wenn pendingSyncCount > 0', () => {
+    const wrapper = mount(AppHeader, { props: { pendingSyncCount: 3 } })
+    expect(wrapper.find('.syncing-badge').exists()).toBe(true)
+    expect(wrapper.find('.syncing-badge').text()).toContain('3 ungesynct')
+  })
 })

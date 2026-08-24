@@ -9,5 +9,14 @@
   "start_url": "/",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ausgabe buchen",
+      "short_name": "Buchen",
+      "description": "Direkt eine neue Ausgabe erfassen",
+      "url": "/?action=add-expense",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
   ]
 }
