@@ -6,6 +6,14 @@ export interface Expense {
   createdAt: string
 }
 
+export interface PaginatedExpenses {
+  items: Expense[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
 export interface BudgetData {
   day: number
   monthDays: number
@@ -36,7 +44,8 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 export function useApi() {
   return {
     getBudget: () => api<BudgetData>('/api/budget'),
-    getExpenses: () => api<Expense[]>('/api/expenses'),
+    getExpenses: (page = 1, limit = 10) =>
+      api<PaginatedExpenses>(`/api/expenses?page=${page}&limit=${limit}`),
     addExpense: (amount: number, note: string) =>
       api<Expense>('/api/expenses', {
         method: 'POST',

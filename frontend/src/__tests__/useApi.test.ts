@@ -31,6 +31,20 @@ describe('useApi', () => {
     expect(result).toEqual(data)
   })
 
+  it('getExpenses ruft /api/expenses mit Parametern auf', async () => {
+    const data = {
+      items: [{ id: 'e1', periodId: '2026-08', amount: 8.5, note: 'Test', createdAt: '2026-08-18T06:35:43Z' }],
+      total: 1,
+      page: 2,
+      limit: 5,
+      totalPages: 1
+    }
+    mockFetch.mockResolvedValueOnce(mockResponse(data))
+    const result = await api.getExpenses(2, 5)
+    expect(mockFetch).toHaveBeenCalledWith('/api/expenses?page=2&limit=5', expect.any(Object))
+    expect(result).toEqual(data)
+  })
+
   it('addExpense ruft POST /api/expenses auf', async () => {
     const expense: Expense = { id: 'e1', periodId: '2026-08', amount: 8.5, note: 'Test', createdAt: '2026-08-18T06:35:43Z' }
     mockFetch.mockResolvedValueOnce(mockResponse(expense, 201))

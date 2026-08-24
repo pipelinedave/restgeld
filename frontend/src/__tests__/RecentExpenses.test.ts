@@ -32,9 +32,18 @@ describe('RecentExpenses', () => {
   it('emittet delete beim loeschen-button', async () => {
     const expenses = [makeExpense()]
     const wrapper = mount(RecentExpenses, { props: { expenses } })
-    await wrapper.find('button').trigger('click')
+    await wrapper.find('.delete-btn').trigger('click')
     expect(wrapper.emitted('delete')).toBeTruthy()
     expect(wrapper.emitted('delete')![0]).toEqual(['test-1'])
+  })
+
+  it('emittet open-all beim klick auf alle anzeigen', async () => {
+    const expenses = [makeExpense()]
+    const wrapper = mount(RecentExpenses, { props: { expenses } })
+    const showAllBtn = wrapper.find('.show-all-btn')
+    expect(showAllBtn.exists()).toBe(true)
+    await showAllBtn.trigger('click')
+    expect(wrapper.emitted('open-all')).toBeTruthy()
   })
 
   it('zeigt notiz statt "Ausgabe" wenn vorhanden', () => {

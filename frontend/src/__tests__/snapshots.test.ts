@@ -5,6 +5,7 @@ import MonthProgress from '../components/MonthProgress.vue'
 import BudgetDisplay from '../components/BudgetDisplay.vue'
 import RecentExpenses from '../components/RecentExpenses.vue'
 import Numpad from '../components/Numpad.vue'
+import ExpensesModal from '../components/ExpensesModal.vue'
 import AppFooter from '../components/AppFooter.vue'
 
 describe('Snapshot: AppHeader', () => {
@@ -83,6 +84,13 @@ describe('Snapshot: Numpad', () => {
 
   it('sichtbar', () => {
     const wrapper = mount(Numpad, { props: { visible: true } })
+    expect(wrapper.html()).toMatchSnapshot()
+  })
+})
+
+describe('Snapshot: ExpensesModal', () => {
+  it('versteckt', () => {
+    const wrapper = mount(ExpensesModal, { props: { visible: false } })
     expect(wrapper.html()).toMatchSnapshot()
   })
 })

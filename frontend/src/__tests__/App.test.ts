@@ -122,6 +122,31 @@ describe('App', () => {
     expect(mockApi().getBudget).toHaveBeenCalledTimes(2)
   })
 
+  it('oeffnet ausgaben-historie modal bei klick auf alle anzeigen', async () => {
+    const api = mockApi()
+    ;(api.getBudget as any).mockResolvedValue(makeBudget({
+      expenses: [{ id: 'e1', periodId: '2026-08', amount: 8.5, note: 'Test', createdAt: '2026-08-18T06:35:43Z' }]
+    }))
+    ;(api.getExpenses as any).mockResolvedValue({
+      items: [{ id: 'e1', periodId: '2026-08', amount: 8.5, note: 'Test', createdAt: '2026-08-18T06:35:43Z' }],
+      total: 1,
+      page: 1,
+      limit: 6,
+      totalPages: 1
+    })
+
+    const wrapper = mount(App)
+    await flushPromises()
+
+    const showAllBtn = wrapper.find('.show-all-btn')
+    expect(showAllBtn.exists()).toBe(true)
+    await showAllBtn.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.modal-content h2').text()).toBe('Alle Ausgaben')
+    expect(api.getExpenses).toHaveBeenCalledWith(1, 6)
+  })
+
   it('zeigt fehler bei api-fehler', async () => {
     mockApi.mockReturnValue({
       getBudget: vi.fn().mockRejectedValue(new Error('kaputt')),

@@ -51,10 +51,25 @@ test.describe('Restgeld E2E', () => {
       const url = route.request().url()
 
       if (method === 'GET') {
+        const urlObj = new URL(url, 'http://localhost')
+        const pageNum = parseInt(urlObj.searchParams.get('page') || '1', 10)
+        const limitNum = parseInt(urlObj.searchParams.get('limit') || '10', 10)
+        const allReversed = [...expenses].reverse()
+        const total = allReversed.length
+        const totalPages = Math.max(1, Math.ceil(total / limitNum))
+        const offset = (pageNum - 1) * limitNum
+        const items = allReversed.slice(offset, offset + limitNum)
+
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify([...expenses].reverse().slice(0, 3)),
+          body: JSON.stringify({
+            items,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages,
+          }),
         })
       } else if (method === 'POST') {
         const postData = route.request().postDataJSON()
@@ -133,5 +148,36 @@ test.describe('Restgeld E2E', () => {
     await expect(page.getByText('-10,00')).toBeVisible()
     await page.getByRole('button', { name: 'Löschen' }).click()
     await expect(page.getByText('-10,00')).not.toBeVisible()
+  })
+
+  test('oeffnet ausgaben-historie und paginiert', async ({ page }) => {
+    // 7 Ausgaben anlegen (damit bei PageSize 6 eine 2. Seite entsteht)
+    for (let i = 1; i <= 7; i++) {
+      expenses.push({
+        id: `exp-${i}`,
+        periodId: 'test-period-id',
+        amount: i * 5,
+        note: `Ausgabe ${i}`,
+        createdAt: new Date(2026, 7, 18, 10, i).toISOString(),
+      })
+    }
+
+    await page.goto('/')
+    await expect(page.getByText('Alle anzeigen')).toBeVisible()
+    await page.getByText('Alle anzeigen').click()
+
+    // Modal geöffnet
+    await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).toBeVisible()
+    await expect(page.getByText('Seite 1 von 2')).toBeVisible()
+    await expect(page.getByText('Ausgabe 7')).toBeVisible()
+
+    // Zur nächsten Seite blättern
+    await page.getByRole('button', { name: 'Nächste Seite' }).click()
+    await expect(page.getByText('Seite 2 von 2')).toBeVisible()
+    await expect(page.getByText('Ausgabe 1')).toBeVisible()
+
+    // Schließen
+    await page.getByRole('button', { name: 'Schließen' }).click()
+    await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).not.toBeVisible()
   })
 })

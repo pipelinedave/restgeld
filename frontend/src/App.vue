@@ -26,6 +26,7 @@
       <RecentExpenses
         :expenses="budget?.expenses ?? []"
         @delete="handleDelete"
+        @open-all="showExpensesModal = true"
       />
     </div>
 
@@ -35,6 +36,12 @@
       :visible="showNumpad"
       @confirm="handleConfirm"
       @cancel="showNumpad = false"
+    />
+
+    <ExpensesModal
+      :visible="showExpensesModal"
+      @expense-deleted="loadBudget"
+      @close="showExpensesModal = false"
     />
 
     <SettingsModal
@@ -55,6 +62,7 @@ import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
 import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'
+import ExpensesModal from './components/ExpensesModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import AppFooter from './components/AppFooter.vue'
 
@@ -62,6 +70,7 @@ const api = useApi()
 const budget = ref<BudgetData | null>(null)
 const showNumpad = ref(false)
 const showSettings = ref(false)
+const showExpensesModal = ref(false)
 
 async function loadBudget() {
   try {

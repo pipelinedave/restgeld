@@ -1,6 +1,14 @@
 <template>
   <section class="recent-expenses">
-    <h3 class="section-title">Letzte Ausgaben</h3>
+    <div class="section-header">
+      <h3 class="section-title">Letzte Ausgaben</h3>
+      <button v-if="expenses.length > 0" class="show-all-btn" @click="$emit('open-all')">
+        <span>Alle anzeigen</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
     <ul v-if="expenses.length > 0" class="expense-list">
       <li v-for="exp in expenses" :key="exp.id" class="expense-item">
         <span class="expense-note">{{ exp.note || 'Ausgabe' }}</span>
@@ -25,7 +33,8 @@ defineProps<{
 }>()
 
 defineEmits<{
-  delete: [id: string]
+  (e: 'delete', id: string): void
+  (e: 'open-all'): void
 }>()
 
 function formatted(amount: number) {
@@ -38,11 +47,37 @@ function formatted(amount: number) {
   padding: 16px;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .section-title {
   font-size: 0.85rem;
-  color: #8892b0;
-  margin-bottom: 8px;
+  color: var(--text-dim);
+  margin: 0;
   font-weight: 500;
+}
+
+.show-all-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+
+.show-all-btn:hover {
+  opacity: 0.8;
 }
 
 .expense-list {
