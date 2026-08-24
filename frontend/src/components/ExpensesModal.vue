@@ -86,12 +86,25 @@ async function loadExpenses(page: number) {
   isLoading.value = true
   try {
     const res = await api.getExpenses(page, pageSize)
-    expenses.value = res.items
-    currentPage.value = res.page
-    totalPages.value = res.totalPages
-    totalCount.value = res.total
+    if (Array.isArray(res)) {
+      expenses.value = res
+      currentPage.value = 1
+      totalPages.value = 1
+      totalCount.value = res.length
+    } else if (res && Array.isArray(res.items)) {
+      expenses.value = res.items
+      currentPage.value = res.page || 1
+      totalPages.value = res.totalPages || 1
+      totalCount.value = res.total ?? res.items.length
+    } else {
+      expenses.value = []
+      currentPage.value = 1
+      totalPages.value = 1
+      totalCount.value = 0
+    }
   } catch (err: any) {
     console.error('Fehler beim Laden der Ausgaben-Historie:', err.message)
+    expenses.value = []
   } finally {
     isLoading.value = false
   }
