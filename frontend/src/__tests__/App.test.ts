@@ -92,6 +92,36 @@ describe('App', () => {
     expect(wrapper.text()).toContain('Lade')
   })
 
+  it('oeffnet settings bei klick auf settings-button', async () => {
+    const wrapper = mount(App)
+    await flushPromises()
+    await wrapper.find('.settings-btn').trigger('click')
+    expect(wrapper.find('.modal-content h2').text()).toBe('Einstellungen')
+  })
+
+  it('aktualisiert budget ueber settings modal', async () => {
+    const wrapper = mount(App)
+    await flushPromises()
+    await wrapper.find('.settings-btn').trigger('click')
+    const input = wrapper.find<HTMLInputElement>('input#monthly-budget-input')
+    await input.setValue(800)
+    await wrapper.find('.setting-section .action-btn').trigger('click')
+    await flushPromises()
+    expect(mockApi().updateBudget).toHaveBeenCalledWith(800)
+    expect(mockApi().getBudget).toHaveBeenCalledTimes(2)
+  })
+
+  it('setzt periode zurueck ueber settings modal', async () => {
+    const wrapper = mount(App)
+    await flushPromises()
+    await wrapper.find('.settings-btn').trigger('click')
+    await wrapper.find('.danger-btn').trigger('click') // Erstes "Neue Periode starten"
+    await wrapper.find('.danger-btn.confirm').trigger('click') // Bestätigen
+    await flushPromises()
+    expect(mockApi().newPeriod).toHaveBeenCalledOnce()
+    expect(mockApi().getBudget).toHaveBeenCalledTimes(2)
+  })
+
   it('zeigt fehler bei api-fehler', async () => {
     mockApi.mockReturnValue({
       getBudget: vi.fn().mockRejectedValue(new Error('kaputt')),

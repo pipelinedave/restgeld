@@ -25,4 +25,10 @@ describe('MonthProgress', () => {
     const fill = wrapper.find('.progress-fill')
     expect(fill.attributes('style')).toContain('width: 100%')
   })
+
+  it('emittet open-settings bei klick auf settings-button', async () => {
+    const wrapper = mount(MonthProgress, { props: { day: 15, monthDays: 30 } })
+    await wrapper.find('.settings-btn').trigger('click')
+    expect(wrapper.emitted('open-settings')).toBeTruthy()
+  })
 })

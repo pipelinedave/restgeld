@@ -1,6 +1,10 @@
 <template>
   <div class="app-shell">
-    <MonthProgress :day="budget?.day ?? 1" :monthDays="budget?.monthDays ?? 30" />
+    <MonthProgress
+      :day="budget?.day ?? 1"
+      :monthDays="budget?.monthDays ?? 30"
+      @open-settings="showSettings = true"
+    />
 
     <div class="hero-area">
       <BudgetDisplay
@@ -29,6 +33,14 @@
       @confirm="handleConfirm"
       @cancel="showNumpad = false"
     />
+
+    <SettingsModal
+      :visible="showSettings"
+      :currentMonthlyBudget="budget ? Math.round(budget.baseBudget * budget.monthDays) : undefined"
+      @update-budget="handleUpdateBudget"
+      @new-period="handleNewPeriod"
+      @close="showSettings = false"
+    />
   </div>
 </template>
 
@@ -39,10 +51,12 @@ import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
 import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'
+import SettingsModal from './components/SettingsModal.vue'
 
 const api = useApi()
 const budget = ref<BudgetData | null>(null)
 const showNumpad = ref(false)
+const showSettings = ref(false)
 
 async function loadBudget() {
   try {
@@ -68,6 +82,25 @@ async function handleDelete(id: string) {
     await loadBudget()
   } catch (e: any) {
     console.error('Fehler beim Löschen:', e.message)
+  }
+}
+
+async function handleUpdateBudget(monthlyTotal: number) {
+  try {
+    await api.updateBudget(monthlyTotal)
+    await loadBudget()
+  } catch (e: any) {
+    console.error('Fehler beim Aktualisieren des Budgets:', e.message)
+  }
+}
+
+async function handleNewPeriod() {
+  showSettings.value = false
+  try {
+    await api.newPeriod()
+    await loadBudget()
+  } catch (e: any) {
+    console.error('Fehler beim Starten der neuen Periode:', e.message)
   }
 }
 
