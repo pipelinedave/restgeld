@@ -127,6 +127,7 @@ restgeld/
 - UI: Stylischer App-Header mit Titel "restgeld." in eigenständige Komponente `AppHeader.vue` extrahiert und sauber von `MonthProgress.vue` entkoppelt ✅
 - UI: Minimalistischer App-Footer (`AppFooter.vue`) mit dezentem Trennstrich, Tagline und Versionsanzeige für verbesserte visuelle Struktur implementiert und getestet ✅
 - Flexible Perioden & Payday-Cycles: Start einer neuen Periode ab dem heutigen Tag (beginnt sofort bei Tag 1 von N), nahtloser Monatsübergang und Migration `002_flexible_periods.sql` implementiert und verifiziert ✅
+- Korrektur der Budget- & Sparbetragsformel: Heutiges Budget zählt nicht mehr vorab als Ersparnis; an Tag 1 startet der Tracker sauber mit genau $300 / 31 = 9,68 €$ und 0 € Ersparnis ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**
