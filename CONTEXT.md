@@ -118,6 +118,7 @@ restgeld/
   - DELETE: ungültige UUID → 404 statt 500
 - Backend: Health-Endpoint `/api/health` implementiert (DB-Ping) und K8s-Probes umgestellt ✅
 - Backend: Datenbank-Migrationen via `schema_migrations` und `embed.FS` mit Start-Migration `001_initial.sql` implementiert und getestet ✅
+- Frontend: Playwright E2E-Tests repariert (Dev-Server-Anbindung, Mock-API mit dynamischem State & GitHub Actions CI-Integration) ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**
