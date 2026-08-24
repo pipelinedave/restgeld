@@ -26,13 +26,13 @@ Daily Allowance Tracker – Mobile-first PWA
 
 ## Lokale Entwicklung
 
-### 1-Befehl-Start (Gesamter Stack)
+### 1-Befehl-Start: Live-Entwicklung mit Hot-Reload (HMR)
 
-Der gesamte Stack (PostgreSQL, Backend-API und Frontend) kann mit einem einzigen Befehl gestartet werden:
+Startet die Datenbank, das Backend und den Vite Dev-Server mit Live-Reloading & HMR bei Code-Änderungen:
 
 ```bash
 # Mit Docker Compose
-docker compose up --build
+docker compose -f docker-compose.dev.yml up --build
 
 # Oder via PowerShell (Windows)
 .\scripts\dev.ps1
@@ -41,9 +41,16 @@ docker compose up --build
 ./scripts/dev.sh
 ```
 
-- **Frontend:** [http://localhost:3000](http://localhost:3000)
+- **Frontend (Live-HMR):** [http://localhost:5173](http://localhost:5173)
 - **Backend API:** [http://localhost:8080](http://localhost:8080) (z.B. `/api/health`, `/api/budget`)
 - **PostgreSQL:** `localhost:5432`
+
+### Produktionsnaher Stack (Nginx + Static Build)
+
+```bash
+docker compose up --build
+```
+- **Frontend (Nginx):** [http://localhost:3000](http://localhost:3000)
 
 ### Manuelle Entwicklung (Einzelkomponenten)
 

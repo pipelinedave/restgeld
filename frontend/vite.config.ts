@@ -4,8 +4,14 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    host: '0.0.0.0',
+    port: 5173,
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': process.env.VITE_API_PROXY || 'http://localhost:8080'
+    },
+    watch: {
+      usePolling: true
     }
   }
 })
+
