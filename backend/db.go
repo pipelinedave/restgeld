@@ -75,7 +75,7 @@ func (s *postgresStore) GetOrCreatePeriod() (*Period, error) {
 			defaultBudget := 450.0
 			lastTotal = parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
 		}
-		return s.CreatePeriodWithStart(now, lastTotal)
+		return s.CreatePeriodWithStart(now, lastTotal, 0)
 	}
 
 	if err != nil {
@@ -85,10 +85,13 @@ func (s *postgresStore) GetOrCreatePeriod() (*Period, error) {
 	return &p, nil
 }
 
-func (s *postgresStore) CreatePeriodWithStart(start time.Time, monthlyTotal float64) (*Period, error) {
+func (s *postgresStore) CreatePeriodWithStart(start time.Time, monthlyTotal float64, days int) (*Period, error) {
 	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
 	periodID := startDay.Format("2006-01-02")
-	monthDays := calcPeriodDays(startDay)
+	monthDays := days
+	if monthDays <= 0 {
+		monthDays = calcPeriodDays(startDay)
+	}
 
 	if monthlyTotal <= 0 {
 		defaultBudget := 450.0
@@ -132,24 +135,35 @@ func (s *postgresStore) CreatePeriodWithStart(start time.Time, monthlyTotal floa
 
 func (s *postgresStore) CreatePeriod() (*Period, error) {
 	var lastTotal float64
-	err := s.db.QueryRow("SELECT monthly_total FROM periods ORDER BY start_date DESC LIMIT 1").Scan(&lastTotal)
+	var lastDays int
+	err := s.db.QueryRow("SELECT monthly_total, month_days FROM periods ORDER BY start_date DESC LIMIT 1").Scan(&lastTotal, &lastDays)
 	if err != nil {
 		defaultBudget := 450.0
 		lastTotal = parseFloat(envOrDefault("DEFAULT_MONTHLY_BUDGET", fmt.Sprintf("%.0f", defaultBudget)))
+		lastDays = 0
 	}
-	return s.CreatePeriodWithStart(time.Now(), lastTotal)
+	return s.CreatePeriodWithStart(time.Now(), lastTotal, lastDays)
 }
 
-func (s *postgresStore) UpdateBudget(newTotal float64) error {
+func (s *postgresStore) UpdateBudget(newTotal float64, days int) error {
 	p, err := s.GetOrCreatePeriod()
 	if err != nil {
 		return err
 	}
 
-	baseDaily := mathRound(newTotal/float64(p.MonthDays), 2)
+	monthDays := p.MonthDays
+	if days > 0 {
+		monthDays = days
+	}
+
+	if newTotal <= 0 {
+		newTotal = p.MonthlyTotal
+	}
+
+	baseDaily := mathRound(newTotal/float64(monthDays), 2)
 	_, err = s.db.Exec(
-		"UPDATE periods SET base_budget = $1, monthly_total = $2 WHERE id = $3",
-		baseDaily, newTotal, p.ID,
+		"UPDATE periods SET base_budget = $1, monthly_total = $2, month_days = $3 WHERE id = $4",
+		baseDaily, newTotal, monthDays, p.ID,
 	)
 	return err
 }

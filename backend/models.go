@@ -47,12 +47,14 @@ type ExpenseRequest struct {
 }
 
 type UpdateBudgetRequest struct {
-	MonthlyTotal float64 `json:"monthlyTotal"`
+	MonthlyTotal float64 `json:"monthlyTotal,omitempty"`
+	Days         int     `json:"days,omitempty"`
 }
 
 type NewPeriodRequest struct {
 	MonthlyTotal float64 `json:"monthlyTotal,omitempty"`
 	StartDate    string  `json:"startDate,omitempty"`
+	Days         int     `json:"days,omitempty"`
 }
 
 func calcPeriodDays(start time.Time) int {

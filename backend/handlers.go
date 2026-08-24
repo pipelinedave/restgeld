@@ -111,12 +111,12 @@ func (s *server) updateBudgetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.MonthlyTotal <= 0 {
-		writeError(w, http.StatusBadRequest, "monatsbudget muss > 0 sein")
+	if req.MonthlyTotal <= 0 && req.Days <= 0 {
+		writeError(w, http.StatusBadRequest, "mindestens budget oder tage müssen > 0 sein")
 		return
 	}
 
-	if err := s.store.UpdateBudget(req.MonthlyTotal); err != nil {
+	if err := s.store.UpdateBudget(req.MonthlyTotal, req.Days); err != nil {
 		log.Printf("fehler beim aktualisieren des budgets: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim aktualisieren")
 		return
@@ -147,14 +147,14 @@ func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
 	limit := 10
 
 	if p := r.URL.Query().Get("page"); p != "" {
-		if parsedPage, err := strconv.Atoi(p); err == nil && parsedPage > 0 {
-			page = parsedPage
+		if val, err := strconv.Atoi(p); err == nil && val > 0 {
+			page = val
 		}
 	}
 
 	if l := r.URL.Query().Get("limit"); l != "" {
-		if parsedLimit, err := strconv.Atoi(l); err == nil && parsedLimit > 0 {
-			limit = parsedLimit
+		if val, err := strconv.Atoi(l); err == nil && val > 0 {
+			limit = val
 		}
 	}
 
@@ -244,7 +244,7 @@ func (s *server) handleNewPeriod(w http.ResponseWriter, r *http.Request) {
 
 	var period *Period
 	var err error
-	period, err = s.store.CreatePeriodWithStart(startDate, req.MonthlyTotal)
+	period, err = s.store.CreatePeriodWithStart(startDate, req.MonthlyTotal, req.Days)
 
 	if err != nil {
 		log.Printf("fehler beim erstellen der periode: %v", err)

@@ -5,8 +5,8 @@ import "time"
 type Store interface {
 	GetOrCreatePeriod() (*Period, error)
 	CreatePeriod() (*Period, error)
-	CreatePeriodWithStart(start time.Time, monthlyTotal float64) (*Period, error)
-	UpdateBudget(newTotal float64) error
+	CreatePeriodWithStart(start time.Time, monthlyTotal float64, days int) (*Period, error)
+	UpdateBudget(newTotal float64, days int) error
 	GetTotalExpenses(periodID string) (float64, error)
 	GetTodayExpenses(periodID string, now time.Time) (float64, error)
 	GetRecentExpenses(periodID string, limit int) ([]Expense, error)

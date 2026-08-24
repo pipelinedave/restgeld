@@ -146,6 +146,9 @@ func TestAPI_ConcurrentExpenses(t *testing.T) {
 	srv := newIntegrationServer(t)
 	router := srv.router()
 
+	// Initialisiere die Periode vorab, damit nicht mehrere Goroutines gleichzeitig upsert ausführen
+	srv.store.GetOrCreatePeriod()
+
 	// 3 parallele Requests gleichzeitig
 	n := 3
 	errs := make(chan error, n)

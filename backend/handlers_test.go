@@ -240,11 +240,37 @@ func TestNewPeriodWithCustomBudget(t *testing.T) {
 	}
 }
 
-func TestUpdateBudget(t *testing.T) {
+func TestNewPeriodWithCustomBudgetAndDays(t *testing.T) {
 	store := newMemoryStore()
 	srv := &server{store: store, now: time.Now}
 
-	body := `{"monthlyTotal": 600}`
+	body := `{"monthlyTotal": 280, "startDate": "2026-08-25", "days": 14}`
+	req := httptest.NewRequest(http.MethodPost, "/api/period", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("erwartet 201, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	p, _ := store.GetOrCreatePeriod()
+	if p.MonthlyTotal != 280 {
+		t.Errorf("erwartet monthlyTotal 280, bekommen %.2f", p.MonthlyTotal)
+	}
+	if p.MonthDays != 14 {
+		t.Errorf("erwartet monthDays 14, bekommen %d", p.MonthDays)
+	}
+	if p.BaseBudget != 20.0 {
+		t.Errorf("erwartet baseBudget 20.00, bekommen %.2f", p.BaseBudget)
+	}
+}
+
+func TestUpdateBudgetAndDays(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	body := `{"monthlyTotal": 300, "days": 15}`
 	req := httptest.NewRequest(http.MethodPatch, "/api/budget", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -255,8 +281,14 @@ func TestUpdateBudget(t *testing.T) {
 	}
 
 	p, _ := store.GetOrCreatePeriod()
-	if p.MonthlyTotal != 600 {
-		t.Errorf("erwartet monthly_total 600, bekommen %.2f", p.MonthlyTotal)
+	if p.MonthlyTotal != 300 {
+		t.Errorf("erwartet monthly_total 300, bekommen %.2f", p.MonthlyTotal)
+	}
+	if p.MonthDays != 15 {
+		t.Errorf("erwartet monthDays 15, bekommen %d", p.MonthDays)
+	}
+	if p.BaseBudget != 20.0 {
+		t.Errorf("erwartet baseBudget 20.00, bekommen %.2f", p.BaseBudget)
 	}
 }
 

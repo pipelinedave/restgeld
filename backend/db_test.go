@@ -171,7 +171,7 @@ func TestIntegrationGetTotalExpenses(t *testing.T) {
 
 func TestIntegrationUpdateBudget(t *testing.T) {
 	store := newIntegrationStore(t)
-	err := store.UpdateBudget(600)
+	err := store.UpdateBudget(600, 0)
 	if err != nil {
 		t.Fatalf("update budget: %v", err)
 	}
@@ -206,7 +206,7 @@ func TestIntegrationCreatePeriodClearsExpenses(t *testing.T) {
 func TestIntegrationCreatePeriodWithStart(t *testing.T) {
 	store := newIntegrationStore(t)
 	start := time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)
-	p, err := store.CreatePeriodWithStart(start, 400.0)
+	p, err := store.CreatePeriodWithStart(start, 400.0, 0)
 	if err != nil {
 		t.Fatalf("create period with start: %v", err)
 	}
@@ -223,6 +223,38 @@ func TestIntegrationCreatePeriodWithStart(t *testing.T) {
 	expectedBase := mathRound(400.0/31.0, 2)
 	if p.BaseBudget != expectedBase {
 		t.Errorf("erwartet base_budget %.2f, bekommen %.2f", expectedBase, p.BaseBudget)
+	}
+}
+
+func TestIntegrationCreatePeriodWithCustomDays(t *testing.T) {
+	store := newIntegrationStore(t)
+	start := time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)
+	p, err := store.CreatePeriodWithStart(start, 140.0, 14)
+	if err != nil {
+		t.Fatalf("create period with custom days: %v", err)
+	}
+
+	if p.MonthDays != 14 {
+		t.Errorf("erwartet 14 Tage, bekommen %d", p.MonthDays)
+	}
+	if p.BaseBudget != 10.0 {
+		t.Errorf("erwartet base_budget 10.00, bekommen %.2f", p.BaseBudget)
+	}
+
+	err = store.UpdateBudget(200.0, 20)
+	if err != nil {
+		t.Fatalf("update budget and days: %v", err)
+	}
+
+	updated, err := store.GetOrCreatePeriod()
+	if err != nil {
+		t.Fatalf("get period: %v", err)
+	}
+	if updated.MonthDays != 20 {
+		t.Errorf("erwartet 20 Tage nach update, bekommen %d", updated.MonthDays)
+	}
+	if updated.MonthlyTotal != 200.0 {
+		t.Errorf("erwartet monthly_total 200, bekommen %.2f", updated.MonthlyTotal)
 	}
 }
 

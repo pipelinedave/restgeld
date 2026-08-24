@@ -34,34 +34,42 @@ func (m *memoryStore) GetOrCreatePeriod() (*Period, error) {
 }
 
 func (m *memoryStore) CreatePeriod() (*Period, error) {
-	return m.CreatePeriodWithStart(time.Now(), m.period.MonthlyTotal)
+	return m.CreatePeriodWithStart(time.Now(), m.period.MonthlyTotal, m.period.MonthDays)
 }
 
-func (m *memoryStore) CreatePeriodWithStart(start time.Time, monthlyTotal float64) (*Period, error) {
+func (m *memoryStore) CreatePeriodWithStart(start time.Time, monthlyTotal float64, days int) (*Period, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.expenses = nil
 	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	days := calcPeriodDays(startDay)
+	monthDays := days
+	if monthDays <= 0 {
+		monthDays = calcPeriodDays(startDay)
+	}
 	if monthlyTotal <= 0 {
 		monthlyTotal = 450
 	}
 	m.period = &Period{
 		ID:           startDay.Format("2006-01-02"),
 		StartDate:    startDay,
-		MonthDays:    days,
-		BaseBudget:   mathRound(monthlyTotal/float64(days), 2),
+		MonthDays:    monthDays,
+		BaseBudget:   mathRound(monthlyTotal/float64(monthDays), 2),
 		MonthlyTotal: monthlyTotal,
 	}
 	cp := *m.period
 	return &cp, nil
 }
 
-func (m *memoryStore) UpdateBudget(newTotal float64) error {
+func (m *memoryStore) UpdateBudget(newTotal float64, days int) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.period.MonthlyTotal = newTotal
-	m.period.BaseBudget = mathRound(newTotal/float64(m.period.MonthDays), 2)
+	if newTotal > 0 {
+		m.period.MonthlyTotal = newTotal
+	}
+	if days > 0 {
+		m.period.MonthDays = days
+	}
+	m.period.BaseBudget = mathRound(m.period.MonthlyTotal/float64(m.period.MonthDays), 2)
 	return nil
 }
 
