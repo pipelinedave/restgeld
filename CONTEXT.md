@@ -140,6 +140,7 @@ restgeld/
 - Trend-Chart & Sparkline-Verlauf: Backend `GetDailyExpenses` & `dailyStats` in `BudgetResponse`, neue interaktive Dashboard-Komponente `SpendingTrend.vue` mit Tagesbalken, Farbcodierung (Grün/Rot/Spar-Tag), Basis-Budget-Referenzlinie, Ø Tagesschnitt und Tap-Details implementiert und mit 77 Vitest- & 23 Go-Tests abgedeckt ✅
 - CSV & JSON Daten Export / Import: Endpoints `GET /api/export` (CSV & JSON-Backup mit automatischem Datei-Download) und `POST /api/import` (Wiederherstellung aus CSV/JSON) sowie neuer Bereich "Daten & Backup" in `SettingsModal.vue` implementiert und mit 80 Vitest- & 27 Go-Tests abgesichert ✅
 - 🔥 Spar-Streaks & Gamification: Streak-Berechnung im Backend (`calcStreakInfo`), `StreakCard.vue` mit animiertem 🔥 Flammen-Badge, Rekord-Streak und 🎯 Null-Euro-Tage Zähler implementiert und mit 83 Vitest- & 28 Go-Tests abgedeckt ✅
+- Numpad Live-Impact & Quick Note Chips: Dynamische Echtzeit-Berechnung des verbleibenden Tagesbudgets bzw. Puffer-Abzugs direkt bei der Betragseingabe (`impact-ok` / `impact-warning`) sowie One-Tap Quick-Chips für die letzten Notizen mit localStorage-Persistierung implementiert und mit 85 Vitest-Tests abgedeckt ✅
 - Preview Environment & Branching-Strategie: Vercel Preview Deployments und Pre-Production Branch `develop` eingerichtet, CI/CD-Pipelines & Agent-Workflow-Dokumentation (`AGENTS.md`, `CONTEXT.md`, `README.md`) für sichere Iteration ohne Gefahr für Live-Daten aktualisiert ✅
 
 ### 🔄 Nächste Schritte

@@ -49,6 +49,9 @@
     <Numpad
       :visible="showNumpad"
       :isSaving="isSavingExpense"
+      :currentBudget="budget?.currentBudget"
+      :savings="budget?.savings"
+      :recentExpenses="budget?.expenses"
       @confirm="handleConfirm"
       @cancel="showNumpad = false"
     />

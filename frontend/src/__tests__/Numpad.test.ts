@@ -81,5 +81,36 @@ describe('Numpad / Ausgabe-Modal', () => {
     expect(wrapper.find<HTMLButtonElement>('.btn-confirm').element.disabled).toBe(true)
     expect(wrapper.find<HTMLInputElement>('#expense-amount-input').element.disabled).toBe(true)
   })
+
+  it('berechnet und zeigt Live Impact Vorschau', async () => {
+    const wrapper = mount(Numpad, {
+      props: { visible: true, currentBudget: 15.0 },
+    })
+
+    const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
+    await amountInput.setValue('8.50')
+
+    expect(wrapper.find('.impact-preview').exists()).toBe(true)
+    expect(wrapper.find('.impact-preview').classes()).toContain('impact-ok')
+    expect(wrapper.find('.impact-text').text()).toContain('Heute verbleiben: 6,50 €')
+
+    // Überzogenes Budget
+    await amountInput.setValue('20.00')
+    expect(wrapper.find('.impact-preview').classes()).toContain('impact-warning')
+    expect(wrapper.find('.impact-text').text()).toContain('Überzieht Tagesbudget um 5,00 €')
+  })
+
+  it('uebernimmt Notiz bei Klick auf Quick-Chip', async () => {
+    const wrapper = mount(Numpad, {
+      props: { visible: true },
+    })
+
+    const chips = wrapper.findAll('.quick-chip')
+    expect(chips.length).toBeGreaterThan(0)
+
+    await chips[0].trigger('click')
+    const noteInput = wrapper.find<HTMLInputElement>('#expense-note-input')
+    expect(noteInput.element.value).toBe(chips[0].text())
+  })
 })
 

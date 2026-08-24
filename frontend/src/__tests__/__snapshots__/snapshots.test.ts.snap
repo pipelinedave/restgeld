@@ -72,9 +72,12 @@ exports[`Snapshot: Numpad > sichtbar 1`] = `
     </div>
     <form data-v-0450a0c5="" class="modal-body">
       <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-amount-input" class="form-label">Betrag (€)</label>
-        <div data-v-0450a0c5="" class="amount-input-wrap"><input data-v-0450a0c5="" id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input"><span data-v-0450a0c5="" class="currency-symbol">€</span></div>
+        <div data-v-0450a0c5="" class="amount-input-wrap"><input data-v-0450a0c5="" id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input"><span data-v-0450a0c5="" class="currency-symbol">€</span></div><!-- Live Budget Impact Vorschau -->
+        <!--v-if-->
       </div>
-      <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-note-input" class="form-label">Notiz (optional)</label><input data-v-0450a0c5="" id="expense-note-input" type="text" inputmode="text" placeholder="z. B. Kaffee, Mittagessen" maxlength="50" enterkeyhint="done" class="note-input"></div>
+      <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-note-input" class="form-label">Notiz (optional)</label><!-- Quick Note Chips -->
+        <div data-v-0450a0c5="" class="quick-chips"><button data-v-0450a0c5="" type="button" class="quick-chip">Kaffee</button><button data-v-0450a0c5="" type="button" class="quick-chip">Mittagessen</button><button data-v-0450a0c5="" type="button" class="quick-chip">Einkauf</button><button data-v-0450a0c5="" type="button" class="quick-chip">Snack</button></div><input data-v-0450a0c5="" id="expense-note-input" type="text" inputmode="text" placeholder="z. B. Kaffee, Mittagessen" maxlength="50" enterkeyhint="done" class="note-input">
+      </div>
       <div data-v-0450a0c5="" class="form-actions"><button data-v-0450a0c5="" type="button" class="btn btn-cancel"> Abbrechen </button><button data-v-0450a0c5="" type="submit" class="btn btn-confirm" disabled="">
           <!--v-if--><span data-v-0450a0c5="">Speichern</span>
         </button></div>

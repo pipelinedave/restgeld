@@ -25,10 +25,32 @@
             />
             <span class="currency-symbol">&euro;</span>
           </div>
+
+          <!-- Live Budget Impact Vorschau -->
+          <div v-if="liveImpact" class="impact-preview" :class="liveImpact.type">
+            <span class="impact-icon">{{ liveImpact.icon }}</span>
+            <span class="impact-text">{{ liveImpact.text }}</span>
+          </div>
         </div>
 
         <div class="form-group">
           <label for="expense-note-input" class="form-label">Notiz (optional)</label>
+          
+          <!-- Quick Note Chips -->
+          <div v-if="availableChips.length > 0" class="quick-chips">
+            <button
+              v-for="chip in availableChips"
+              :key="chip"
+              type="button"
+              class="quick-chip"
+              :class="{ active: noteInput === chip }"
+              :disabled="isSaving"
+              @click="selectChip(chip)"
+            >
+              {{ chip }}
+            </button>
+          </div>
+
           <input
             id="expense-note-input"
             v-model="noteInput"
@@ -57,16 +79,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import type { Expense } from '../composables/useApi'
 
 const props = withDefaults(
   defineProps<{
     visible: boolean
     isSaving?: boolean
+    currentBudget?: number
+    savings?: number
+    recentExpenses?: Expense[]
   }>(),
   {
     isSaving: false,
+    currentBudget: undefined,
+    savings: undefined,
+    recentExpenses: () => [],
   }
 )
 
@@ -79,6 +108,41 @@ const haptics = useHaptics()
 const amountInput = ref('')
 const noteInput = ref('')
 const amountInputRef = ref<HTMLInputElement | null>(null)
+const storedNotes = ref<string[]>([])
+
+const RECENT_NOTES_KEY = 'restgeld_recent_notes'
+const DEFAULT_CHIPS = ['Kaffee', 'Mittagessen', 'Einkauf', 'Snack']
+
+function loadStoredNotes() {
+  try {
+    const raw = localStorage.getItem(RECENT_NOTES_KEY)
+    if (raw) {
+      storedNotes.value = JSON.parse(raw)
+    }
+  } catch {
+    storedNotes.value = []
+  }
+}
+
+function saveNoteToStorage(note: string) {
+  if (!note || note.trim().length === 0) return
+  const clean = note.trim()
+  const list = [clean, ...storedNotes.value.filter((n) => n.toLowerCase() !== clean.toLowerCase())].slice(0, 6)
+  storedNotes.value = list
+  try {
+    localStorage.setItem(RECENT_NOTES_KEY, JSON.stringify(list))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+const availableChips = computed(() => {
+  const fromExpenses = props.recentExpenses
+    ? props.recentExpenses.map((e) => e.note).filter((n): n is string => Boolean(n && n.trim()))
+    : []
+  const combined = Array.from(new Set([...storedNotes.value, ...fromExpenses, ...DEFAULT_CHIPS]))
+  return combined.slice(0, 5)
+})
 
 const parsedAmount = computed(() => {
   if (!amountInput.value) return 0
@@ -89,12 +153,33 @@ const parsedAmount = computed(() => {
 
 const isValidAmount = computed(() => parsedAmount.value > 0)
 
+const liveImpact = computed(() => {
+  if (!isValidAmount.value || props.currentBudget === undefined) return null
+
+  const diff = props.currentBudget - parsedAmount.value
+  if (diff >= 0) {
+    return {
+      type: 'impact-ok',
+      icon: '✓',
+      text: `Heute verbleiben: ${diff.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+    }
+  } else {
+    const over = Math.abs(diff)
+    return {
+      type: 'impact-warning',
+      icon: '⚠️',
+      text: `Überzieht Tagesbudget um ${over.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+    }
+  }
+})
+
 watch(
   () => props.visible,
   (isVis) => {
     if (isVis) {
       amountInput.value = ''
       noteInput.value = ''
+      loadStoredNotes()
       nextTick(() => {
         amountInputRef.value?.focus()
       })
@@ -109,6 +194,15 @@ function handleAmountKeydown(e: KeyboardEvent) {
   }
 }
 
+function selectChip(chip: string) {
+  haptics.tap()
+  if (noteInput.value === chip) {
+    noteInput.value = ''
+  } else {
+    noteInput.value = chip
+  }
+}
+
 function cancel() {
   if (props.isSaving) return
   haptics.tap()
@@ -120,8 +214,14 @@ function cancel() {
 function confirmAll() {
   if (!isValidAmount.value || props.isSaving) return
   haptics.tap()
-  emit('confirm', parsedAmount.value, noteInput.value.trim())
+  const note = noteInput.value.trim()
+  if (note) {
+    saveNoteToStorage(note)
+  }
+  emit('confirm', parsedAmount.value, note)
 }
+
+onMounted(loadStoredNotes)
 </script>
 
 <style scoped>
@@ -318,5 +418,53 @@ function confirmAll() {
   to {
     transform: rotate(360deg);
   }
+}
+
+.impact-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.impact-ok {
+  background: rgba(100, 255, 218, 0.08);
+  color: var(--accent, #64ffda);
+  border: 1px solid rgba(100, 255, 218, 0.2);
+}
+
+.impact-warning {
+  background: rgba(255, 107, 107, 0.08);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.25);
+}
+
+.quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.quick-chip {
+  background: rgba(204, 214, 246, 0.05);
+  border: 1px solid #233554;
+  color: var(--text-dim, #8892b0);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.quick-chip:hover,
+.quick-chip.active {
+  border-color: var(--accent, #64ffda);
+  color: var(--accent, #64ffda);
+  background: rgba(100, 255, 218, 0.08);
 }
 </style>
