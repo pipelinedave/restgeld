@@ -1,9 +1,10 @@
 <template>
   <div class="app-shell">
+    <AppHeader @open-settings="showSettings = true" />
+
     <MonthProgress
       :day="budget?.day ?? 1"
       :monthDays="budget?.monthDays ?? 30"
-      @open-settings="showSettings = true"
     />
 
     <div class="hero-area">
@@ -47,6 +48,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useApi, type BudgetData } from './composables/useApi'
+import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
 import Numpad from './components/Numpad.vue'

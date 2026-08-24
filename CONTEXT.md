@@ -55,6 +55,7 @@ restgeld/
 │   │   ├── style.css
 │   │   ├── composables/useApi.ts
 │   │   └── components/
+│   │       ├── AppHeader.vue
 │   │       ├── MonthProgress.vue
 │   │       ├── BudgetDisplay.vue
 │   │       ├── Numpad.vue
@@ -121,7 +122,7 @@ restgeld/
 - Frontend: Playwright E2E-Tests repariert (Dev-Server-Anbindung, Mock-API mit dynamischem State & GitHub Actions CI-Integration) ✅
 - 1-Befehl lokales Dev-Environment via Docker Compose (`docker-compose.yml`, `scripts/dev.sh`, `scripts/dev.ps1`) ✅
 - UI-Konfiguration: Settings-Modal (`SettingsModal.vue`) zum Einstellen des Monatsbudgets und Zurücksetzen der Periode mit Bestätigungsdialog implementiert und getestet ✅
-- UI: Stylischer App-Header mit Titel "restgeld." und nahtloser Integration in `MonthProgress.vue` implementiert und getestet ✅
+- UI: Stylischer App-Header mit Titel "restgeld." in eigenständige Komponente `AppHeader.vue` extrahiert und sauber von `MonthProgress.vue` entkoppelt ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**

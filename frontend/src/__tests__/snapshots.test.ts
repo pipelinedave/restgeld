@@ -1,9 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import AppHeader from '../components/AppHeader.vue'
 import MonthProgress from '../components/MonthProgress.vue'
 import BudgetDisplay from '../components/BudgetDisplay.vue'
 import RecentExpenses from '../components/RecentExpenses.vue'
 import Numpad from '../components/Numpad.vue'
+
+describe('Snapshot: AppHeader', () => {
+  it('standard', () => {
+    const wrapper = mount(AppHeader)
+    expect(wrapper.html()).toMatchSnapshot()
+  })
+})
 
 describe('Snapshot: MonthProgress', () => {
   it('tag 17/31', () => {
