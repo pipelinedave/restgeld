@@ -304,17 +304,17 @@ func TestGetBudgetOnFirstDay(t *testing.T) {
 	if resp.Day != 1 {
 		t.Errorf("erwartet Tag 1, bekommen %d", resp.Day)
 	}
-	if resp.Savings != resp.BaseBudget {
-		t.Errorf("erwartet savings = baseBudget (%.2f) an tag 1, bekommen %.2f", resp.BaseBudget, resp.Savings)
+	if resp.Savings != 0 {
+		t.Errorf("erwartet savings = 0 an tag 1 (vor ausgaben), bekommen %.2f", resp.Savings)
 	}
-	if resp.CurrentBudget <= resp.BaseBudget {
-		t.Errorf("erwartet current > base (%.2f) wegen rollover, bekommen %.2f", resp.BaseBudget, resp.CurrentBudget)
+	if resp.CurrentBudget != resp.BaseBudget {
+		t.Errorf("erwartet current == base (%.2f) an tag 1, bekommen %.2f", resp.BaseBudget, resp.CurrentBudget)
 	}
 }
 
 func TestGetBudgetAfterAllSpent(t *testing.T) {
 	store := newMemoryStore()
-	for i := 0; i < 18; i++ {
+	for i := 0; i < 17; i++ {
 		store.AddExpense("2026-08", 14.52, "tag")
 	}
 	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
@@ -394,6 +394,102 @@ func TestDeleteExpenseInvalidUUID(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("erwartet 404 für ungültige UUID, bekommen %d", rec.Code)
+	}
+}
+
+func TestGetExpensesDefaultPagination(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/expenses", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp PaginatedExpenses
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("json decode fehler: %v", err)
+	}
+
+	if resp.Total != 0 || len(resp.Items) != 0 || resp.Page != 1 || resp.Limit != 10 || resp.TotalPages != 1 {
+		t.Errorf("unerwartete antwort fuer leere liste: %+v", resp)
+	}
+}
+
+func TestGetExpensesCustomPagination(t *testing.T) {
+	store := newMemoryStore()
+	for i := 1; i <= 25; i++ {
+		store.AddExpense("2026-08", float64(i), fmt.Sprintf("Ausgabe %d", i))
+	}
+
+	srv := &server{store: store, now: time.Now}
+
+	// Seite 2 mit Limit 10 -> sollte 10 Elemente enthalten (Ausgabe 15 bis 6)
+	req := httptest.NewRequest(http.MethodGet, "/api/expenses?page=2&limit=10", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp PaginatedExpenses
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("json decode fehler: %v", err)
+	}
+
+	if resp.Total != 25 {
+		t.Errorf("erwartet Total=25, bekommen %d", resp.Total)
+	}
+	if resp.Page != 2 {
+		t.Errorf("erwartet Page=2, bekommen %d", resp.Page)
+	}
+	if resp.Limit != 10 {
+		t.Errorf("erwartet Limit=10, bekommen %d", resp.Limit)
+	}
+	if resp.TotalPages != 3 {
+		t.Errorf("erwartet TotalPages=3, bekommen %d", resp.TotalPages)
+	}
+	if len(resp.Items) != 10 {
+		t.Errorf("erwartet 10 Items auf Seite 2, bekommen %d", len(resp.Items))
+	}
+	// Letztes Element auf Seite 2 (bei 25 Einträgen, Seite 2: 11. bis 20. neuste Ausgabe -> Ausgabe 15 bis 6)
+	if resp.Items[0].Note != "Ausgabe 15" {
+		t.Errorf("erwartet erstes Element auf Seite 2 'Ausgabe 15', bekommen '%s'", resp.Items[0].Note)
+	}
+
+	// Seite 3 mit Limit 10 -> sollte die restlichen 5 Elemente enthalten
+	req3 := httptest.NewRequest(http.MethodGet, "/api/expenses?page=3&limit=10", nil)
+	rec3 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec3, req3)
+
+	var resp3 PaginatedExpenses
+	json.NewDecoder(rec3.Body).Decode(&resp3)
+	if len(resp3.Items) != 5 {
+		t.Errorf("erwartet 5 Items auf Seite 3, bekommen %d", len(resp3.Items))
+	}
+}
+
+func TestGetExpensesInvalidParams(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/expenses?page=-5&limit=abc", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d", rec.Code)
+	}
+
+	var resp PaginatedExpenses
+	json.NewDecoder(rec.Body).Decode(&resp)
+
+	if resp.Page != 1 || resp.Limit != 10 {
+		t.Errorf("erwartet fallback auf Page=1, Limit=10, bekommen Page=%d, Limit=%d", resp.Page, resp.Limit)
 	}
 }
 

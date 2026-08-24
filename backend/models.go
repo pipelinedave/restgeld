@@ -22,6 +22,14 @@ type Expense struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type PaginatedExpenses struct {
+	Items      []Expense `json:"items"`
+	Total      int       `json:"total"`
+	Page       int       `json:"page"`
+	Limit      int       `json:"limit"`
+	TotalPages int       `json:"totalPages"`
+}
+
 type BudgetResponse struct {
 	Day           int       `json:"day"`
 	MonthDays     int       `json:"monthDays"`
@@ -74,15 +82,24 @@ func (p Period) dayOfMonth(now time.Time) int {
 
 func (p Period) calcBudget(totalSpent float64, now time.Time) (currentBudget float64, savings float64, color string) {
 	day := p.dayOfMonth(now)
-	remainingDays := p.MonthDays - day
+	remainingDays := p.MonthDays - day + 1 // inklusive heute
 
-	expectedSoFar := p.BaseBudget * float64(day)
-	savings = mathRound(expectedSoFar-totalSpent, 2)
+	expectedSpentPrior := p.BaseBudget * float64(day-1)
+	pastSavings := expectedSpentPrior - totalSpent
+	if day == 1 {
+		pastSavings = 0 - totalSpent
+	}
+	savings = mathRound(pastSavings, 2)
 
-	if remainingDays <= 0 {
-		currentBudget = p.BaseBudget
+	remainingBudget := p.MonthlyTotal - totalSpent
+	if remainingDays <= 1 {
+		currentBudget = mathRound(remainingBudget, 2)
 	} else {
-		currentBudget = mathRound(p.BaseBudget+savings/float64(remainingDays), 2)
+		currentBudget = mathRound(remainingBudget/float64(remainingDays), 2)
+	}
+
+	if currentBudget < 0 {
+		currentBudget = 0
 	}
 
 	switch {
