@@ -14,6 +14,59 @@ func sqlOpen(driver, connStr string) (*sql.DB, error) {
 	return sql.Open(driver, connStr)
 }
 
+func TestIntegrationMigrations(t *testing.T) {
+	host := getEnv("DB_HOST", "localhost")
+	port := getEnv("DB_PORT", "5432")
+	user := getEnv("DB_USER", "restgeld")
+	password := getEnv("DB_PASSWORD", "restgeld")
+	dbname := getEnv("DB_NAME", "restgeld")
+
+	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db, err := sqlOpen("postgres", connStr)
+	if err != nil {
+		t.Fatalf("db open: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.Ping(); err != nil {
+		t.Fatalf("db ping: %v", err)
+	}
+
+	// Migrationen ausführen
+	if err := RunMigrations(db); err != nil {
+		t.Fatalf("migration ausfuehren: %v", err)
+	}
+
+	// Prüfen, ob schema_migrations Version enthält
+	var version string
+	err = db.QueryRow("SELECT version FROM schema_migrations WHERE version = $1", "001_initial.sql").Scan(&version)
+	if err != nil {
+		t.Fatalf("version 001_initial.sql nicht in schema_migrations gefunden: %v", err)
+	}
+	if version != "001_initial.sql" {
+		t.Fatalf("erwartet version '001_initial.sql', bekommen '%s'", version)
+	}
+
+	// Idempotenz prüfen: zweiter Lauf darf keine Fehler werfen
+	if err := RunMigrations(db); err != nil {
+		t.Fatalf("erneute migration schlug fehl: %v", err)
+	}
+
+	// Tabellen prüfen (periods und expenses müssen existieren)
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM periods").Scan(&count)
+	if err != nil {
+		t.Fatalf("periods tabelle nicht abfragbar: %v", err)
+	}
+
+	err = db.QueryRow("SELECT COUNT(*) FROM expenses").Scan(&count)
+	if err != nil {
+		t.Fatalf("expenses tabelle nicht abfragbar: %v", err)
+	}
+}
+
 func TestIntegrationCreateAndReadPeriod(t *testing.T) {
 	store := newIntegrationStore(t)
 	p, err := store.GetOrCreatePeriod()

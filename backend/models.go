@@ -43,7 +43,8 @@ type UpdateBudgetRequest struct {
 }
 
 func (p Period) dayOfMonth(now time.Time) int {
-	start := time.Date(p.StartDate.Year(), p.StartDate.Month(), p.StartDate.Day(), 0, 0, 0, 0, now.Location())
+	startInLoc := p.StartDate.In(now.Location())
+	start := time.Date(startInLoc.Year(), startInLoc.Month(), startInLoc.Day(), 0, 0, 0, 0, now.Location())
 	diff := now.Sub(start)
 	day := int(diff.Hours()/24) + 1
 	if day < 1 {

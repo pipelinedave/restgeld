@@ -15,7 +15,9 @@ type postgresStore struct {
 }
 
 func newPostgresStoreFromDB(db *sql.DB) Store {
-	createTables(db)
+	if err := RunMigrations(db); err != nil {
+		log.Fatalf("fehler bei db-migration: %v", err)
+	}
 	return &postgresStore{db: db}
 }
 
@@ -42,38 +44,12 @@ func newPostgresStore() Store {
 		log.Fatalf("fehler beim db-ping: %v", err)
 	}
 
-	createTables(db)
-	log.Println("db-verbindung hergestellt und tabellen bereit")
+	if err := RunMigrations(db); err != nil {
+		log.Fatalf("fehler bei db-migration: %v", err)
+	}
+	log.Println("db-verbindung hergestellt und migrationen ausgefuehrt")
 
 	return &postgresStore{db: db}
-}
-
-func createTables(db *sql.DB) {
-	schema := `
-	CREATE TABLE IF NOT EXISTS periods (
-		id TEXT PRIMARY KEY,
-		start_date TIMESTAMPTZ NOT NULL,
-		month_days INTEGER NOT NULL,
-		base_budget NUMERIC(10,2) NOT NULL,
-		monthly_total NUMERIC(10,2) NOT NULL,
-		created_at TIMESTAMPTZ DEFAULT NOW()
-	);
-
-	CREATE TABLE IF NOT EXISTS expenses (
-		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-		period_id TEXT NOT NULL REFERENCES periods(id) ON DELETE CASCADE,
-		amount NUMERIC(10,2) NOT NULL,
-		note TEXT NOT NULL DEFAULT '',
-		created_at TIMESTAMPTZ DEFAULT NOW()
-	);
-
-	CREATE INDEX IF NOT EXISTS idx_expenses_period ON expenses(period_id);
-	CREATE INDEX IF NOT EXISTS idx_expenses_created ON expenses(created_at DESC);
-	`
-
-	if _, err := db.Exec(schema); err != nil {
-		log.Fatalf("fehler beim tabellen-erstellen: %v", err)
-	}
 }
 
 func (s *postgresStore) GetOrCreatePeriod() (*Period, error) {
