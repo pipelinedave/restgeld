@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restgeld – Dein minimalistischer Daily Allowance Tracker</title>
+  <meta name="description" content="Tägliches Taschengeld statt Monatsfrust. Restgeld teilt dein Monatsbudget intelligent auf jeden Tag auf. Minimalistisch, offline-fähig und 100% Open Source.">
+  <meta name="theme-color" content="#0a0a0c">
+
+  <!-- OpenGraph / Social Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Restgeld – Tägliches Taschengeld statt Monatsfrust">
+  <meta property="og:description" content="Minimalistischer Daily Allowance Tracker. Immer wissen, was heute noch geht.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/pipelinedave/restgeld/main/frontend/public/favicon.svg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>💰</text></svg>">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Glow & Grid -->
+  <div class="bg-grid"></div>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <!-- Navigation -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="brand">
+        <span class="brand-text">restgeld<span class="brand-dot">.</span></span>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#rechner">Rechner</a>
+        <a href="#how-it-works">Funktionsweise</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/pipelinedave/restgeld" target="_blank" rel="noopener noreferrer" class="btn btn-ghost" title="GitHub Repository">
+          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span class="desktop-only">GitHub</span>
+        </a>
+        <a href="#demo" class="btn btn-primary">
+          <span>Live Demo</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero-section">
+      <div class="container hero-container">
+        
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            <span>Minimalistischer Daily Allowance Tracker</span>
+          </div>
+
+          <h1 class="hero-title">
+            Tägliches Taschengeld<br>
+            <span class="gradient-text">statt Monatsfrust.</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Schluss mit unübersichtlichen Tabellen und 40 Budgetkategorien. Restgeld berechnet dir jeden Tag aufs Neue genau eine Zahl: <strong>Dein Restgeld für heute</strong>. Gibst du weniger aus, wächst dein Puffer. Gibst du mehr aus, gleicht sich das Budget automatisch an.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="#rechner" class="btn btn-primary btn-lg">
+              <span>Budget berechnen</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </a>
+            <a href="https://github.com/pipelinedave/restgeld" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-lg">
+              <span>Quellcode auf GitHub</span>
+            </a>
+          </div>
+
+          <div class="hero-features-strip">
+            <div class="feature-tag">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>100% Kostenlos & Open Source</span>
+            </div>
+            <div class="feature-tag">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Offline-fähige PWA</span>
+            </div>
+            <div class="feature-tag">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Volle Datenhoheit</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Phone Mockup -->
+        <div class="hero-mockup-wrapper" id="demo">
+          <div class="phone-frame">
+            <div class="phone-speaker"></div>
+            <div class="phone-screen">
+              
+              <!-- Mockup App Header -->
+              <div class="mockup-header">
+                <div class="mockup-brand">restgeld<span class="brand-dot">.</span></div>
+                <div class="mockup-status">
+                  <span class="online-dot"></span>
+                  <span class="status-text">Online</span>
+                </div>
+              </div>
+
+              <!-- Mockup Period Progress -->
+              <div class="mockup-progress-card">
+                <div class="progress-info">
+                  <span class="progress-title">März Periode</span>
+                  <span class="progress-days">Tag 12 von 31</span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" style="width: 38.7%;"></div>
+                </div>
+              </div>
+
+              <!-- Mockup Hero Card -->
+              <div class="mockup-hero-card">
+                <span class="hero-label">HEUTE VERFÜGBAR</span>
+                <div class="hero-amount" id="mockup-amount">14,20 €</div>
+                
+                <div class="hero-meta">
+                  <div class="hero-badge-pill badge-positive" id="mockup-badge">
+                    <span>+42,50 € Spar-Puffer</span>
+                  </div>
+                  <span class="hero-base">Basis: 10,00 €/Tag</span>
+                </div>
+              </div>
+
+              <!-- Mockup Streak Card -->
+              <div class="mockup-streak-card">
+                <div class="streak-flame">🔥</div>
+                <div class="streak-details">
+                  <div class="streak-title">5 Tage im Budget!</div>
+                  <div class="streak-subtitle">🎯 3 Spartage diese Woche</div>
+                </div>
+              </div>
+
+              <!-- Mockup Interactive Trigger -->
+              <div class="mockup-interactive-box">
+                <span class="interactive-label">💡 Klick zum Test-Buchen:</span>
+                <div class="quick-chip-row">
+                  <button class="mockup-chip" data-amount="3.50" data-label="Kaffee ☕">☕ Kaffee 3,50 €</button>
+                  <button class="mockup-chip" data-amount="6.20" data-label="Snack 🥪">🥪 Snack 6,20 €</button>
+                  <button class="mockup-chip" data-amount="15.00" data-label="Einkauf 🛒">🛒 Einkauf 15 €</button>
+                </div>
+                <button class="mockup-reset-btn" id="mockup-reset">↺ Zurücksetzen</button>
+              </div>
+
+              <!-- Toast Notification inside Mockup -->
+              <div class="mockup-toast" id="mockup-toast">Ausgabe gebucht!</div>
+
+            </div>
+          </div>
+          <div class="mockup-glow"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Interactive Budget Calculator Section -->
+    <section class="calculator-section" id="rechner">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Rechner</div>
+          <h2 class="section-title">Wie viel Restgeld hast du pro Tag?</h2>
+          <p class="section-desc">Gib dein frei verfügbares Budget (nach Miete und Fixkosten) ein und sieh sofort, wie viel du jeden Tag unbeschwert ausgeben kannst.</p>
+        </div>
+
+        <div class="calc-card">
+          <div class="calc-inputs">
+            
+            <div class="calc-group">
+              <div class="calc-label-row">
+                <label for="input-monthly-budget">Freies Monatsbudget</label>
+                <span class="calc-val" id="val-monthly-budget">350 €</span>
+              </div>
+              <input type="range" id="input-monthly-budget" min="50" max="2000" step="10" value="350" class="slider">
+              <div class="slider-ticks">
+                <span>50 €</span>
+                <span>500 €</span>
+                <span>1.000 €</span>
+                <span>2.000 €</span>
+              </div>
+            </div>
+
+            <div class="calc-group">
+              <div class="calc-label-row">
+                <label for="input-period-days">Abrechnungszeitraum (Tage)</label>
+                <span class="calc-val" id="val-period-days">31 Tage</span>
+              </div>
+              <input type="range" id="input-period-days" min="7" max="31" step="1" value="31" class="slider">
+              <div class="slider-ticks">
+                <span>7 Tage (Woche)</span>
+                <span>14 Tage</span>
+                <span>30 / 31 Tage</span>
+              </div>
+            </div>
+
+            <div class="calc-tip">
+              <div class="tip-icon">💡</div>
+              <p><strong>Die Restgeld-Magie:</strong> Wenn du an 2 Tagen pro Woche 0 € ausgibst, steigt dein tägliches Budget an den restlichen Tagen automatisch spürbar an!</p>
+            </div>
+
+          </div>
+
+          <div class="calc-results">
+            <div class="result-box primary-result">
+              <span class="result-caption">DEIN TÄGLICHES START-BUDGET</span>
+              <div class="result-number" id="res-daily-budget">11,29 €</div>
+              <span class="result-sub">jeden Tag frei zur Verfügung</span>
+            </div>
+
+            <div class="result-grid">
+              <div class="result-box mini">
+                <span class="result-caption">Wochen-Puffer</span>
+                <div class="result-mini-number" id="res-weekly-budget">79,03 €</div>
+              </div>
+              <div class="result-box mini highlight">
+                <span class="result-caption">Budget mit 2 Spartagen/Woche</span>
+                <div class="result-mini-number" id="res-smart-daily">15,81 €</div>
+              </div>
+            </div>
+
+            <a href="#demo" class="btn btn-primary btn-block">In der Demo ausprobieren</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-section" id="how-it-works">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Funktionsweise</div>
+          <h2 class="section-title">In 3 Schritten zur finanziellen Ruhe</h2>
+          <p class="section-desc">Kein Kategorien-Chaos. Kein schlechtes Gewissen beim Einkaufen. Nur eine einzige Zahl.</p>
+        </div>
+
+        <div class="steps-grid">
+          
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <div class="step-icon-box">🎯</div>
+            <h3 class="step-title">1. Budget festlegen</h3>
+            <p class="step-desc">Trage einmalig dein Taschengeld nach Abzug aller Fixkosten ein (z. B. 300 € für den Monat). Restgeld errechnet automatisch dein Start-Tagesbudget.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <div class="step-icon-box">⚡</div>
+            <h3 class="step-title">2. In 2 Sekunden erfassen</h3>
+            <p class="step-desc">Beim Kaffee oder Döner kurz Betrag eintippen oder Quick-Chip wählen. Restgeld zeigt dir in Echtzeit die Auswirkung auf deinen heutigen Tag.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <div class="step-icon-box">📈</div>
+            <h3 class="step-title">3. Flexibel anpassen</h3>
+            <p class="step-desc">Bleibt heute etwas übrig, fließt es in deinen Puffer und erhöht deine nächsten Tage. Gibst du mehr aus, verteilt sich das Minus sanft auf den Restmonat.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Bento Grid Section -->
+    <section class="features-section" id="features">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Features</div>
+          <h2 class="section-title">Gebaut für echte Gewohnheiten</h2>
+          <p class="section-desc">Alles was du brauchst, um dein Konsumverhalten spielerisch und ohne Stress in den Griff zu bekommen.</p>
+        </div>
+
+        <div class="bento-grid">
+          
+          <!-- Bento 1 (Large) -->
+          <div class="bento-card bento-span-2">
+            <div class="bento-badge">Tagesdynamik</div>
+            <h3 class="bento-title">Dynamisches Tagesbudget mit Sofort-Puffer</h3>
+            <p class="bento-desc">Kein ständiges Rechnen im Kopf mehr. Restgeld errechnet jeden Tag dein tagesaktuelles Budget basierend auf deinen bisherigen Sparerfolgen.</p>
+            <div class="bento-preview-pill">
+              <span class="preview-tag ok">Spar-Puffer: +42,50 €</span>
+              <span class="preview-arrow">➔</span>
+              <span class="preview-tag glow">Heute: 14,20 € statt 10,00 €</span>
+            </div>
+          </div>
+
+          <!-- Bento 2 -->
+          <div class="bento-card">
+            <div class="bento-badge">Gamification</div>
+            <h3 class="bento-title">🔥 Spar-Streaks & Null-Euro-Tage</h3>
+            <p class="bento-desc">Sammle Flammen-Level für jeden Tag, an dem du im Budget bleibst, und feiere Null-Euro-Tage wie Highscores.</p>
+          </div>
+
+          <!-- Bento 3 -->
+          <div class="bento-card">
+            <div class="bento-badge">PWA & Offline</div>
+            <h3 class="bento-title">📱 Funktioniert überall</h3>
+            <p class="bento-desc">Kein Netz im Supermarkt? Kein Problem. Restgeld speichert deine Ausgaben offline in einer Outbox und synchronisiert automatisch, sobald du wieder Empfang hast.</p>
+          </div>
+
+          <!-- Bento 4 -->
+          <div class="bento-card">
+            <div class="bento-badge">Projektion</div>
+            <h3 class="bento-title">🔮 Monatsende-Prognose</h3>
+            <p class="bento-desc">Erfahre jederzeit auf Knopfdruck, mit wie viel Ersparnis du die Periode voraussichtlich beenden wirst, wenn du dein Tempo beibehältst.</p>
+          </div>
+
+          <!-- Bento 5 (Large) -->
+          <div class="bento-card bento-span-2">
+            <div class="bento-badge">Privacy & Self-Host</div>
+            <h3 class="bento-title">🔒 100% Datenhoheit & Open Source</h3>
+            <p class="bento-desc">Deine Finanzdaten gehören nur dir. Kein Login-Zwang, kein Tracking, kein Drittanbieter-Zugriff. Vollständiger CSV & JSON Export / Import jederzeit möglich. Bereit für Docker und Kubernetes (k3s).</p>
+            <div class="tech-tags">
+              <span class="tech-tag">Go REST API</span>
+              <span class="tech-tag">Vue 3 + TypeScript</span>
+              <span class="tech-tag">PostgreSQL</span>
+              <span class="tech-tag">Docker</span>
+              <span class="tech-tag">k3s</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section class="comparison-section">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-badge">Vergleich</div>
+          <h2 class="section-title">Klassische Apps vs. Restgeld</h2>
+        </div>
+
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Funktion / Ansatz</th>
+                <th class="table-col-old">Typische Budget-Apps</th>
+                <th class="table-col-restgeld">Restgeld 💰</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Fokus</strong></td>
+                <td>40 starre Kategorien, Vergangenheitsanalyse</td>
+                <td><span class="highlight-good">1 Zahl für das Hier & Jetzt (Heute)</span></td>
+              </tr>
+              <tr>
+                <td><strong>Eingabeaufwand</strong></td>
+                <td>Kategorie wählen, Beleg scannen, Konto verknüpfen</td>
+                <td><span class="highlight-good">Betrag eingeben in unter 2 Sekunden</span></td>
+              </tr>
+              <tr>
+                <td><strong>Überzug</strong></td>
+                <td>Rote Warnungen, Frust, App wird gelöscht</td>
+                <td><span class="highlight-good">Sanfte Verteilung des Minus auf Folgetage</span></td>
+              </tr>
+              <tr>
+                <td><strong>Datenschutz</strong></td>
+                <td>Bank-Zugriffsrechte, Cloud-Tracking, Abo-Modell</td>
+                <td><span class="highlight-good">100% Open Source, Offline-PWA, Dein Server</span></td>
+              </tr>
+              <tr>
+                <td><strong>Kosten</strong></td>
+                <td>3,99 € – 9,99 € / Monat im Abo</td>
+                <td><span class="highlight-good">0,00 € (Für immer kostenlos)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="faq">
+      <div class="container faq-container">
+        <div class="section-header">
+          <div class="section-badge">FAQ</div>
+          <h2 class="section-title">Häufig gestellte Fragen</h2>
+        </div>
+
+        <div class="faq-list">
+          
+          <details class="faq-item" open>
+            <summary class="faq-question">
+              <span>Wie installiere ich Restgeld auf meinem Smartphone?</span>
+              <svg class="faq-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Restgeld ist eine moderne <strong>Progressive Web App (PWA)</strong>. Öffne einfach die App-URL im Safari (iOS) oder Chrome (Android) und wähle im Menü <em>"Zum Home-Bildschirm"</em> (iOS) bzw. <em>"App installieren"</em> (Android). Schon hast du die App ohne App-Store-Download auf deinem Smartphone!</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Brauche ich einen Account oder muss ich meine Bank verbinden?</span>
+              <svg class="faq-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Nein, absolut nicht. Restgeld verzichtet bewusst auf sensible Bankverbindungen und erfordert kein Benutzerkonto. Es ist als dein persönliches, unkompliziertes "Taschengeld-Portemonnaie" konzipiert.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Kann ich meine Daten sichern und exportieren?</span>
+              <svg class="faq-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Ja! In den Einstellungen der App kannst du deine gesamten Ausgaben und Perioden mit einem Klick als <strong>CSV</strong> (für Excel/Numbers) oder als vollständiges <strong>JSON-Backup</strong> herunterladen und jederzeit wieder importieren.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span>Kann ich Restgeld auf meinem eigenen Server hosten?</span>
+              <svg class="faq-icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Ja, Restgeld ist 100% Open Source unter der MIT-Lizenz. Im Repository findest du fertige <code>docker-compose.yml</code>-Dateien sowie Kubernetes/k3s-Manifeste, um die App innerhalb von 2 Minuten auf deinem eigenen Server oder Raspberry Pi zu starten.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Final Call to Action Banner -->
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-box">
+          <h2 class="cta-title">Starte noch heute mit deinem täglichen Restgeld.</h2>
+          <p class="cta-subtitle">Kein Abo, keine Werbung, keine Registrierung. Hol dir die Gelassenheit über deine täglichen Ausgaben zurück.</p>
+          <div class="cta-buttons">
+            <a href="https://github.com/pipelinedave/restgeld" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+              <span>GitHub Repository ansehen</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-left">
+        <div class="brand">restgeld<span class="brand-dot">.</span></div>
+        <p class="footer-copy">Minimalistischer Daily Allowance Tracker · 100% Open Source.</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/pipelinedave/restgeld" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/pipelinedave/restgeld/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Lizenz (MIT)</a>
+        <a href="#top">Nach oben ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

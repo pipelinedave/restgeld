@@ -5,15 +5,21 @@ Daily Allowance Tracker – Mobile-first PWA
 [![Go](https://github.com/pipelinedave/restgeld/actions/workflows/backend.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/backend.yml)
 [![Vue](https://github.com/pipelinedave/restgeld/actions/workflows/frontend.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/frontend.yml)
 [![Docker](https://github.com/pipelinedave/restgeld/actions/workflows/docker.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/docker.yml)
+[![GitHub Pages](https://github.com/pipelinedave/restgeld/actions/workflows/pages.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/pages.yml)
 [![codecov](https://codecov.io/gh/pipelinedave/restgeld/branch/main/graph/badge.svg)](https://codecov.io/gh/pipelinedave/restgeld)
+
+🌐 **Landing Page & Live Demo:** [https://pipelinedave.github.io/restgeld](https://pipelinedave.github.io/restgeld)
 
 ## Features
 
-- Tägliches Budget auf Basis eines Monatsbudgets
-- Nicht ausgegebenes Budget rolliert auf verbleibende Tage
-- Gamification: Ersparnis-Anzeige
-- Mobile-first PWA mit In-App-Numpad (keine native Tastatur)
-- Ausgaben-Historie mit Löschfunktion
+- Tägliches Budget auf Basis eines flexiblen Abrechnungszeitraums (z.B. Monatsbudget)
+- Nicht ausgegebenes Budget rolliert automatisch auf verbleibende Tage
+- Interaktiver Tages-Sparpuffer & Monatsende-Projektion ("Wo lande ich?")
+- Gamification: 🔥 Spar-Streaks, Rekord-Levels & 🎯 Null-Euro-Tage Zähler
+- Mobile-first PWA mit Schnell-Erfassung (Numpad, Quick Note Chips & Haptik)
+- Offline-Outbox mit automatischer Hintergrund-Synchronisation
+- Datenhoheit: CSV & JSON Export / Import
+- Ausgaben-Historie mit Filter- & Löschfunktion
 
 ## Tech Stack
 

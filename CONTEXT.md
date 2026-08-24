@@ -145,6 +145,7 @@ restgeld/
 - 🔮 Monatsende-Projektion ("Wo lande ich?"): Backend-Berechnung `calcProjection` (`projectedSavings`, `projectedTotalSpent`, `avgDailySpend`, `status`), minimalistischer Dashboard-Strip `MonthProjection.vue` mit Ersparnis-/Defizit-Vorschau und Ø Tagesschnitt implementiert und mit 94 Vitest- & 29 Go-Tests abgedeckt ✅
 - 📜 Vorherige Perioden & Monats-Rückblick: Backend-Endpoint `GET /api/periods` mit aggregierten Perioden-Metriken (`totalSpent`, `savings`, `expenseCount`), Archiv-Modal `PeriodsArchiveModal.vue` und Aufruf in `SettingsModal.vue` implementiert und mit 98 Vitest- & 30 Go-Tests abgesichert ✅
 - Preview Environment & Branching-Strategie: Vercel Preview Deployments und Pre-Production Branch `develop` eingerichtet, CI/CD-Pipelines & Agent-Workflow-Dokumentation (`AGENTS.md`, `CONTEXT.md`, `README.md`) für sichere Iteration ohne Gefahr für Live-Daten aktualisiert ✅
+- 🌐 Landing Page & GitHub Pages Deployment: Responsive, eigenständige Landing Page in `docs/` mit interaktivem Live-Mockup, dynamischem Budget-Rechner, Bento-Feature-Grid, FAQ und GitHub Actions Workflow (`pages.yml`) für automatisches GitHub Pages Hosting implementiert ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**
