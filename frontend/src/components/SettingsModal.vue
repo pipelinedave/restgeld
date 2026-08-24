@@ -1,9 +1,9 @@
-﻿<template>
-  <div v-if="visible" class="modal-overlay" @click.self="\('close')">
+<template>
+  <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content">
       <div class="modal-header">
         <h2>Einstellungen</h2>
-        <button class="close-btn" aria-label="Schließen" @click="\('close')">&times;</button>
+        <button class="close-btn" aria-label="Schließen" @click="$emit('close')">&times;</button>
       </div>
 
       <div class="modal-body">
