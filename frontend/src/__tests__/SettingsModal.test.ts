@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import SettingsModal from '../components/SettingsModal.vue'
 
@@ -49,7 +49,7 @@ describe('SettingsModal', () => {
     })
 
     const initialDangerBtn = wrapper.find('.danger-btn')
-    expect(initialDangerBtn.text()).toContain('Neue Periode starten')
+    expect(initialDangerBtn.text()).toContain('Neue Periode ab heute starten')
     await initialDangerBtn.trigger('click')
 
     expect(wrapper.find('.confirm-box').exists()).toBe(true)
