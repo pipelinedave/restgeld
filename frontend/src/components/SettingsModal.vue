@@ -40,6 +40,36 @@
           <p v-if="budgetSavedMsg" class="success-msg">{{ budgetSavedMsg }}</p>
         </section>
 
+        <section class="setting-section backup-zone">
+          <span class="section-title">Daten & Backup</span>
+          <p class="description">
+            Exportiere deine Daten als CSV für Excel oder erstelle ein JSON-Backup zur Wiederherstellung.
+          </p>
+
+          <div class="backup-actions">
+            <button class="backup-btn" :disabled="isExporting" @click="handleExport('csv')">
+              CSV (Excel)
+            </button>
+            <button class="backup-btn" :disabled="isExporting" @click="handleExport('json')">
+              JSON Backup
+            </button>
+          </div>
+
+          <div class="import-wrap">
+            <label class="import-btn" :class="{ disabled: isImporting }">
+              <input
+                type="file"
+                accept=".json,.csv"
+                class="file-input-hidden"
+                :disabled="isImporting"
+                @change="handleFileInput"
+              />
+              <span>{{ isImporting ? 'Importiere...' : 'Backup importieren (JSON/CSV)' }}</span>
+            </label>
+          </div>
+          <p v-if="backupMsg" class="backup-msg" :class="backupMsgType">{{ backupMsg }}</p>
+        </section>
+
         <section class="setting-section danger-zone">
           <span class="section-title danger-title">Neue Periode ab heute starten</span>
           <p class="description">
@@ -71,6 +101,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useApi } from '../composables/useApi'
 
 const props = defineProps<{
   visible: boolean
@@ -82,13 +113,20 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'update-budget', monthlyTotal: number, days?: number): void
   (e: 'new-period', monthlyTotal?: number, days?: number): void
+  (e: 'data-imported', count: number): void
 }>()
 
+const api = useApi()
 const haptics = useHaptics()
 const budgetInput = ref<number | null>(props.currentMonthlyBudget ?? null)
 const daysInput = ref<number | null>(props.currentMonthDays ?? null)
 const confirmReset = ref(false)
 const budgetSavedMsg = ref('')
+
+const isExporting = ref(false)
+const isImporting = ref(false)
+const backupMsg = ref('')
+const backupMsgType = ref<'success' | 'error'>('success')
 
 watch(
   () => props.currentMonthlyBudget,
@@ -116,6 +154,7 @@ watch(
     if (newVal) {
       confirmReset.value = false
       budgetSavedMsg.value = ''
+      backupMsg.value = ''
       if (props.currentMonthlyBudget) {
         budgetInput.value = props.currentMonthlyBudget
       }
@@ -143,7 +182,68 @@ function handleSaveSettings() {
   }
 }
 
+async function handleExport(format: 'json' | 'csv') {
+  isExporting.value = true
+  haptics.tap()
+  try {
+    const blob = await api.exportData(format)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const dateStr = new Date().toISOString().split('T')[0]
+    a.href = url
+    a.download = `restgeld-${format === 'csv' ? 'export' : 'backup'}-${dateStr}.${format}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    haptics.success()
+    backupMsgType.value = 'success'
+    backupMsg.value = `${format.toUpperCase()} erfolgreich heruntergeladen!`
+    setTimeout(() => {
+      backupMsg.value = ''
+    }, 3000)
+  } catch (err: any) {
+    haptics.error()
+    backupMsgType.value = 'error'
+    backupMsg.value = 'Export fehlgeschlagen'
+  } finally {
+    isExporting.value = false
+  }
+}
+
+async function handleFileInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  isImporting.value = true
+  haptics.tap()
+
+  try {
+    const content = await file.text()
+    const isCsv = file.name.endsWith('.csv') || content.includes(';') || content.includes('Datum')
+    const res = await api.importData(content, isCsv)
+
+    haptics.success()
+    backupMsgType.value = 'success'
+    backupMsg.value = `${res.imported} Ausgabe(n) erfolgreich importiert!`
+    emit('data-imported', res.imported)
+    setTimeout(() => {
+      backupMsg.value = ''
+    }, 3500)
+  } catch (err: any) {
+    haptics.error()
+    backupMsgType.value = 'error'
+    backupMsg.value = err.message || 'Import fehlgeschlagen'
+  } finally {
+    isImporting.value = false
+    target.value = ''
+  }
+}
+
 function handleResetPeriod() {
+  haptics.warning()
   confirmReset.value = false
   emit(
     'new-period',
@@ -343,5 +443,89 @@ input[type='number']:focus {
 .cancel-btn:hover {
   color: var(--text);
   border-color: var(--text-dim);
+}
+
+.backup-zone {
+  border-top: 1px solid #233554;
+  padding-top: 16px;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.backup-btn {
+  flex: 1;
+  background: rgba(100, 255, 218, 0.06);
+  border: 1px solid rgba(100, 255, 218, 0.3);
+  color: var(--accent);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.backup-btn:hover:not(:disabled),
+.backup-btn:active:not(:disabled) {
+  background: var(--accent);
+  color: #0a192f;
+}
+
+.backup-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.import-wrap {
+  margin-top: 8px;
+}
+
+.import-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: transparent;
+  border: 1px dashed #233554;
+  color: var(--text-dim);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.import-btn:hover,
+.import-btn:active {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.import-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.backup-msg {
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
+.backup-msg.success {
+  color: var(--accent);
+}
+
+.backup-msg.error {
+  color: var(--danger);
 }
 </style>

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -279,6 +280,197 @@ func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+type ExportBackup struct {
+	Version    string    `json:"version"`
+	ExportedAt time.Time `json:"exportedAt"`
+	Period     Period    `json:"period"`
+	Expenses   []Expense `json:"expenses"`
+}
+
+type ImportRequest struct {
+	Expenses []Expense `json:"expenses"`
+}
+
+func (s *server) handleExport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	period, err := s.store.GetOrCreatePeriod()
+	if err != nil {
+		log.Printf("fehler beim laden der periode fuer export: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
+		return
+	}
+
+	expenses, err := s.store.GetAllExpenses(period.ID)
+	if err != nil {
+		log.Printf("fehler beim laden der ausgaben fuer export: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
+		return
+	}
+
+	format := strings.ToLower(r.URL.Query().Get("format"))
+	if format == "csv" {
+		w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"restgeld-export-%s.csv\"", period.ID))
+		w.WriteHeader(http.StatusOK)
+
+		w.Write([]byte("Datum;Uhrzeit;Betrag;Notiz\n"))
+		for _, exp := range expenses {
+			dateStr := exp.CreatedAt.Format("2006-01-02")
+			timeStr := exp.CreatedAt.Format("15:04:05")
+			amountStr := fmt.Sprintf("%.2f", exp.Amount)
+			escapedNote := strings.ReplaceAll(exp.Note, "\"", "\"\"")
+			line := fmt.Sprintf("%s;%s;%s;\"%s\"\n", dateStr, timeStr, amountStr, escapedNote)
+			w.Write([]byte(line))
+		}
+		return
+	}
+
+	// JSON Export (Standard)
+	backup := ExportBackup{
+		Version:    "1.0",
+		ExportedAt: s.now(),
+		Period:     *period,
+		Expenses:   expenses,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"restgeld-backup-%s.json\"", period.ID))
+	writeJSON(w, http.StatusOK, backup)
+}
+
+func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	period, err := s.store.GetOrCreatePeriod()
+	if err != nil {
+		log.Printf("fehler beim laden der periode fuer import: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
+		return
+	}
+
+	contentType := r.Header.Get("Content-Type")
+	var expensesToImport []Expense
+
+	if strings.Contains(contentType, "text/csv") {
+		// CSV Import
+		bodyBytes, err := ioReadAll(r.Body)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "fehler beim lesen des request-bodys")
+			return
+		}
+		lines := strings.Split(string(bodyBytes), "\n")
+		for i, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || (i == 0 && (strings.HasPrefix(strings.ToLower(line), "datum") || strings.HasPrefix(strings.ToLower(line), "date"))) {
+				continue
+			}
+			// Trennzeichen: Semikolon oder Komma
+			sep := ";"
+			if !strings.Contains(line, ";") && strings.Contains(line, ",") {
+				sep = ","
+			}
+			parts := strings.Split(line, sep)
+			if len(parts) >= 2 {
+				dateStr := strings.TrimSpace(parts[0])
+				var amountStr string
+				var noteStr string
+				if len(parts) >= 4 {
+					amountStr = strings.TrimSpace(parts[2])
+					noteStr = strings.Trim(strings.TrimSpace(parts[3]), "\"")
+				} else {
+					amountStr = strings.TrimSpace(parts[1])
+					if len(parts) > 2 {
+						noteStr = strings.Trim(strings.TrimSpace(parts[2]), "\"")
+					}
+				}
+
+				amountStr = strings.ReplaceAll(amountStr, ",", ".")
+				amount, err := strconv.ParseFloat(amountStr, 64)
+				if err == nil && amount > 0 {
+					createdAt := s.now()
+					if parsedDate, err := time.Parse("2006-01-02", dateStr); err == nil {
+						createdAt = parsedDate
+					}
+					expensesToImport = append(expensesToImport, Expense{
+						Amount:    amount,
+						Note:      noteStr,
+						CreatedAt: createdAt,
+					})
+				}
+			}
+		}
+	} else {
+		// JSON Import (akzeptiert ExportBackup oder Array []Expense oder ImportRequest)
+		bodyBytes, err := ioReadAll(r.Body)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "fehler beim lesen des request-bodys")
+			return
+		}
+
+		var backup ExportBackup
+		if err := json.Unmarshal(bodyBytes, &backup); err == nil && len(backup.Expenses) > 0 {
+			expensesToImport = backup.Expenses
+		} else {
+			var list []Expense
+			if err := json.Unmarshal(bodyBytes, &list); err == nil {
+				expensesToImport = list
+			} else {
+				var req ImportRequest
+				if err := json.Unmarshal(bodyBytes, &req); err == nil {
+					expensesToImport = req.Expenses
+				}
+			}
+		}
+	}
+
+	if len(expensesToImport) == 0 {
+		writeError(w, http.StatusBadRequest, "keine gueltigen ausgaben zum importieren gefunden")
+		return
+	}
+
+	imported, err := s.store.ImportExpenses(period.ID, expensesToImport)
+	if err != nil {
+		log.Printf("fehler beim importieren: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim importieren der ausgaben")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":   "ok",
+		"imported": imported,
+	})
+}
+
+func ioReadAll(r ioReader) ([]byte, error) {
+	if r == nil {
+		return []byte{}, nil
+	}
+	var buf []byte
+	b := make([]byte, 1024)
+	for {
+		n, err := r.Read(b)
+		if n > 0 {
+			buf = append(buf, b[:n]...)
+		}
+		if err != nil {
+			break
+		}
+	}
+	return buf, nil
+}
+
+type ioReader interface {
+	Read(p []byte) (n int, err error)
+}
+
 func (s *server) router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", s.handleHealth)
@@ -286,5 +478,7 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/expenses", s.handleExpenses)
 	mux.HandleFunc("/api/expenses/", s.handleDeleteExpense)
 	mux.HandleFunc("/api/period", s.handleNewPeriod)
+	mux.HandleFunc("/api/export", s.handleExport)
+	mux.HandleFunc("/api/import", s.handleImport)
 	return corsMiddleware(mux)
 }

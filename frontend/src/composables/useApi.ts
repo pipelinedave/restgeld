@@ -70,5 +70,24 @@ export function useApi() {
         method: 'PATCH',
         body: JSON.stringify({ monthlyTotal, days }),
       }),
+    exportData: async (format: 'json' | 'csv') => {
+      const res = await fetch(`${BASE}/api/export?format=${format}`)
+      if (!res.ok) throw new Error('Export fehlgeschlagen')
+      return res.blob()
+    },
+    importData: async (content: string, isCsv = false) => {
+      const res = await fetch(`${BASE}/api/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': isCsv ? 'text/csv' : 'application/json',
+        },
+        body: content,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }))
+        throw new Error(err.error || 'Import fehlgeschlagen')
+      }
+      return res.json() as Promise<{ status: string; imported: number }>
+    },
   }
 }

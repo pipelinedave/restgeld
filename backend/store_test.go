@@ -220,6 +220,51 @@ func (m *memoryStore) GetDailyExpenses(periodID string, start time.Time, upToDay
 	return stats, nil
 }
 
+func (m *memoryStore) GetAllExpenses(periodID string) ([]Expense, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var result []Expense
+	for _, e := range m.expenses {
+		if e.PeriodID == periodID {
+			result = append(result, e)
+		}
+	}
+	if result == nil {
+		result = []Expense{}
+	}
+	return result, nil
+}
+
+func (m *memoryStore) ImportExpenses(periodID string, expenses []Expense) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	count := 0
+	for _, exp := range expenses {
+		if exp.Amount <= 0 {
+			continue
+		}
+		m.nextID++
+		id := exp.ID
+		if id == "" {
+			id = fmt.Sprintf("exp-%d", m.nextID)
+		}
+		createdAt := exp.CreatedAt
+		if createdAt.IsZero() {
+			createdAt = time.Now()
+		}
+		e := Expense{
+			ID:        id,
+			PeriodID:  periodID,
+			Amount:    exp.Amount,
+			Note:      exp.Note,
+			CreatedAt: createdAt,
+		}
+		m.expenses = append(m.expenses, e)
+		count++
+	}
+	return count, nil
+}
+
 func (m *memoryStore) Ping() error {
 	return nil
 }

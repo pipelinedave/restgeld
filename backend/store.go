@@ -13,6 +13,8 @@ type Store interface {
 	GetExpenses(periodID string, page, limit int) (*PaginatedExpenses, error)
 	AddExpense(periodID string, amount float64, note string) (*Expense, error)
 	GetDailyExpenses(periodID string, start time.Time, upToDay int) ([]DailyStat, error)
+	GetAllExpenses(periodID string) ([]Expense, error)
+	ImportExpenses(periodID string, expenses []Expense) (int, error)
 	DeleteExpense(expenseID string) error
 	Ping() error
 }

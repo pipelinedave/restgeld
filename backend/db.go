@@ -351,6 +351,74 @@ func (s *postgresStore) GetDailyExpenses(periodID string, start time.Time, upToD
 	return stats, nil
 }
 
+func (s *postgresStore) GetAllExpenses(periodID string) ([]Expense, error) {
+	rows, err := s.db.Query(
+		"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 ORDER BY created_at ASC",
+		periodID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("alle ausgaben laden: %w", err)
+	}
+	defer rows.Close()
+
+	var expenses []Expense
+	for rows.Next() {
+		var e Expense
+		if err := rows.Scan(&e.ID, &e.PeriodID, &e.Amount, &e.Note, &e.CreatedAt); err != nil {
+			return nil, fmt.Errorf("ausgabe scannen: %w", err)
+		}
+		expenses = append(expenses, e)
+	}
+
+	if expenses == nil {
+		expenses = []Expense{}
+	}
+
+	return expenses, nil
+}
+
+func (s *postgresStore) ImportExpenses(periodID string, expenses []Expense) (int, error) {
+	if len(expenses) == 0 {
+		return 0, nil
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("transaktion starten: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(
+		"INSERT INTO expenses (id, period_id, amount, note, created_at) VALUES (COALESCE(NULLIF($1, '')::uuid, gen_random_uuid()), $2, $3, $4, COALESCE(NULLIF($5, '')::timestamptz, NOW()))",
+	)
+	if err != nil {
+		return 0, fmt.Errorf("insert vorbereiten: %w", err)
+	}
+	defer stmt.Close()
+
+	count := 0
+	for _, exp := range expenses {
+		if exp.Amount <= 0 {
+			continue
+		}
+		var createdAtStr string
+		if !exp.CreatedAt.IsZero() {
+			createdAtStr = exp.CreatedAt.Format(time.RFC3339)
+		}
+		_, err := stmt.Exec(exp.ID, periodID, exp.Amount, exp.Note, createdAtStr)
+		if err != nil {
+			return 0, fmt.Errorf("ausgabe importieren (note: %s): %w", exp.Note, err)
+		}
+		count++
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("transaktion committen: %w", err)
+	}
+
+	return count, nil
+}
+
 func (s *postgresStore) Ping() error {
 	return s.db.Ping()
 }

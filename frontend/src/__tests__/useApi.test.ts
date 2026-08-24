@@ -84,6 +84,28 @@ describe('useApi', () => {
     expect(result).toEqual({ status: 'ok' })
   })
 
+  it('exportData ruft GET /api/export auf', async () => {
+    const dummyBlob = new Blob(['test'])
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      blob: () => Promise.resolve(dummyBlob),
+    })
+    const result = await api.exportData('json')
+    expect(mockFetch).toHaveBeenCalledWith('/api/export?format=json')
+    expect(result).toBe(dummyBlob)
+  })
+
+  it('importData ruft POST /api/import auf', async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse({ status: 'ok', imported: 3 }))
+    const result = await api.importData('{"expenses":[]}', false)
+    expect(mockFetch).toHaveBeenCalledWith('/api/import', expect.objectContaining({
+      method: 'POST',
+      body: '{"expenses":[]}',
+      headers: { 'Content-Type': 'application/json' },
+    }))
+    expect(result).toEqual({ status: 'ok', imported: 3 })
+  })
+
   it('wirft fehler bei nicht-ok response', async () => {
     mockFetch.mockResolvedValueOnce(mockResponse({ error: 'kaputt' }, 400))
     await expect(api.getBudget()).rejects.toThrow('kaputt')

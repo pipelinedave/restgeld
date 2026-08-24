@@ -22,7 +22,12 @@ Daily Allowance Tracker – Mobile-first PWA
 | Frontend | Vue 3 + Vite + TypeScript + PWA |
 | Backend | Go 1.22 (net/http + lib/pq) |
 | Database | PostgreSQL 16 |
-| Deployment | Docker, Kubernetes (k3s), Flux |
+| Deployment | Vercel (Preview & Production), Docker, Kubernetes (k3s), Flux |
+
+## Umgebungen & Branching-Modell
+
+- **Production (`main`):** Produktive Live-App für die tägliche Budgetverwaltung.
+- **Preview Environment (`develop` / Feature-Branches):** Automatisches [Vercel Preview Deployment](https://vercel.com/docs/deployments/environments#preview-environment-pre-production) bei jedem Push/PR. Ermöglicht schnelles Testen und Iterieren neuer Features mit getrennter Preview-Datenbank, ohne die Produktivdaten zu gefährden.
 
 ## Lokale Entwicklung
 

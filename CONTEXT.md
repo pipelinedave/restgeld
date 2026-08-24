@@ -9,8 +9,12 @@ Betrieben auf lokalem single-node k3s-Cluster.
 2. **Backend:** Go REST API (net/http + lib/pq), port 8080
 3. **Datenbank:** PostgreSQL 16-alpine mit PVC
 
-## Domain & Infrastruktur
-- **Domain:** restgeld.stillon.top
+## Domain, Umgebungen & Infrastruktur
+- **Environments & Branching:**
+  - **Production (`main`):** Produktive Live-App für tägliche Nutzung.
+  - **Preview Environment (`develop` / Feature-Branches):** Automatisches Pre-Production Deployment auf Vercel pro Push/Branch für schnelle Iterationen und sichere Feature-Verifikation ohne Gefahr für Live-Daten.
+  - **Environment Separation:** Getrennte DB-Instanzen / Environment-Variablen zwischen Production und Preview.
+- **Production Host:** Vercel & lokaler k3s-Cluster (restgeld.stillon.top)
 - **Ingress:** nginx-ingress, TLS via letsencrypt-prod (cert-manager)
 - **Namespace:** restgeld (manuell via kubectl create namespace restgeld)
 - **Flux Kustomization:** apps/restgeld.yaml → kustomize/restgeld/
@@ -134,6 +138,8 @@ restgeld/
 - Konfigurierbare Periodendauer (Tage): Periodendauer kann im Einstellungs-Dialog sowohl mit sofortiger Wirkung für die laufende Periode angepasst als auch für neue Abrechnungszyklen frei definiert werden (z. B. 14 Tage, 20 Tage, etc.) ✅
 - UX- & Micro-Feedback Upgrade: Taktiles haptisches Feedback (`useHaptics` via Web Vibration API) bei Tastendruck, erfolgreichem Buchen/Löschen und Warnungen; schwebende Toast-Benachrichtigungen (`ToastNotification.vue`), Lade-Spinner & Button-Blockierung beim Buchen zur Vermeidung von Doppelbuchungen sowie Zahlen-Puls-Animation bei Budgetänderungen implementiert und mit 74 Vitest-Tests abgedeckt ✅
 - Trend-Chart & Sparkline-Verlauf: Backend `GetDailyExpenses` & `dailyStats` in `BudgetResponse`, neue interaktive Dashboard-Komponente `SpendingTrend.vue` mit Tagesbalken, Farbcodierung (Grün/Rot/Spar-Tag), Basis-Budget-Referenzlinie, Ø Tagesschnitt und Tap-Details implementiert und mit 77 Vitest- & 23 Go-Tests abgedeckt ✅
+- CSV & JSON Daten Export / Import: Endpoints `GET /api/export` (CSV & JSON-Backup mit automatischem Datei-Download) und `POST /api/import` (Wiederherstellung aus CSV/JSON) sowie neuer Bereich "Daten & Backup" in `SettingsModal.vue` implementiert und mit 80 Vitest- & 27 Go-Tests abgesichert ✅
+- Preview Environment & Branching-Strategie: Vercel Preview Deployments und Pre-Production Branch `develop` eingerichtet, CI/CD-Pipelines & Agent-Workflow-Dokumentation (`AGENTS.md`, `CONTEXT.md`, `README.md`) für sichere Iteration ohne Gefahr für Live-Daten aktualisiert ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**

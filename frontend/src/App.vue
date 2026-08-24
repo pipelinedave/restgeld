@@ -63,6 +63,7 @@
       :currentMonthDays="budget?.monthDays"
       @update-budget="handleUpdateBudget"
       @new-period="handleNewPeriod"
+      @data-imported="handleDataImported"
       @close="showSettings = false"
     />
   </div>
@@ -195,6 +196,12 @@ async function handleNewPeriod(monthlyTotal?: number, days?: number) {
     showToast('Fehler beim Starten der neuen Periode', 'error')
     console.error('Fehler beim Starten der neuen Periode:', e.message)
   }
+}
+
+async function handleDataImported(count: number) {
+  await loadBudget()
+  haptics.success()
+  showToast(`✓ ${count} Ausgabe(n) erfolgreich importiert`, 'success')
 }
 
 onMounted(loadBudget)

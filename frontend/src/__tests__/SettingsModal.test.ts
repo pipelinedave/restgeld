@@ -78,4 +78,15 @@ describe('SettingsModal', () => {
     expect(wrapper.find('.confirm-box').exists()).toBe(false)
     expect(wrapper.emitted('new-period')).toBeFalsy()
   })
+
+  it('renders export buttons for CSV and JSON', () => {
+    const wrapper = mount(SettingsModal, {
+      props: { visible: true }
+    })
+
+    const backupBtns = wrapper.findAll('.backup-btn')
+    expect(backupBtns.length).toBe(2)
+    expect(backupBtns[0].text()).toContain('CSV (Excel)')
+    expect(backupBtns[1].text()).toContain('JSON Backup')
+  })
 })

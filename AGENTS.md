@@ -2,7 +2,18 @@
 
 ## Rolle
 Du bist ein autonomer Full-Stack Agent, der die Restgeld-App entwickelt.
-Du startest das Projekt von Null, schreibst Code, deployst auf k3s und iterierst.
+Du schreibst sauberen Code, testest gründlich, deployst via Vercel Previews / k3s und iterierst zügig und sicher.
+
+## Rollen & Umgebungen
+
+### Umgebungs- & Branching-Modell (Vercel Preview Workflow)
+- **`main` → Production**: Produktivumgebung. Läuft live für die tägliche Nutzung. Niemals unfertige oder ungetestete Features direkt auf `main` committen/pushen.
+- **`develop` (bzw. `feat/*`, `fix/*`) → Preview Environment (Pre-Production)**:
+  - Jeder Push auf `develop` oder Feature-Branches erzeugt automatisch ein **Vercel Preview Deployment** mit eigener URL (z. B. `restgeld-git-develop-...vercel.app`).
+  - Neue Features, UI-Änderungen und Experimente werden ausschließlich hier entwickelt, integriert und im Preview-Environment verifiziert.
+- **Environment- & Datenbank-Trennung**:
+  - In Vercel sind Environment-Variablen nach `Production`, `Preview` und `Development` getrennt.
+  - Preview-Deployments nutzen eine getrennte Preview/Staging-Datenbank (oder Neon-Branch / Test-DB), sodass echte Produktivdaten auf `main` zu keinem Zeitpunkt überschrieben oder gefährdet werden.
 
 ## Workflow (Zyklen)
 
@@ -12,9 +23,10 @@ Jeder Zyklus folgt diesem Ablauf:
 - `CONTEXT.md` lesen → aktuellen Projektstatus verstehen
 - Nächsten unerledigten Schritt identifizieren
 
-### 2. Git-Clean-Check
-- `git status` prüfen
-- Wenn uncommitted changes und kein Zyklus aktiv: user fragen ob commit/stash
+### 2. Git- & Branch-Check
+- `git branch --show-current` & `git status` prüfen
+- Für neue Features/Fixes: Sicherstellen, dass auf `develop` oder einem entsprechenden Feature-Branch (`feat/...`) gearbeitet wird – **nicht direkt auf `main`**!
+- Wenn uncommitted changes und kein Zyklus aktiv: User fragen ob commit/stash
 - Vor Änderungen: `git pull --rebase` (falls remote existiert)
 
 ### 3. Implementieren
@@ -74,6 +86,21 @@ curl -s http://localhost:8080/api/expenses | jq .
 ### 7. Plan aktualisieren
 - `CONTEXT.md` lesen, `## Status`-Sektion updaten
 - Erledigte Schritte markieren, neuen Status dokumentieren
+
+### 8. Preview Deployment & Release Promotion
+- Änderungen auf die Remote-Branch (`develop` / `feat/*`) pushen: `git push origin develop`
+- Vercel erzeugt automatisch ein **Preview Deployment**
+- Preview URL in Vercel prüfen & Funktionalität verifizieren
+- Sobald das Feature stabil und vom User/Review abgenommen ist:
+  - PR erstellen oder Fast-Forward Merge in `main`:
+    ```bash
+    git checkout main
+    git pull origin main
+    git merge develop
+    git push origin main
+    git checkout develop
+    ```
+  - Vercel triggert daraufhin das finale **Production Deployment**.
 
 ## Konventionen
 

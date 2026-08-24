@@ -559,6 +559,108 @@ func TestGetExpensesInvalidParams(t *testing.T) {
 	}
 }
 
+func TestExportJSON(t *testing.T) {
+	store := newMemoryStore()
+	store.AddExpense("2026-08", 14.50, "Kaffee")
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/export?format=json", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Header().Get("Content-Type"), "application/json") {
+		t.Errorf("erwartet application/json content-type, bekommen %s", rec.Header().Get("Content-Type"))
+	}
+
+	var backup ExportBackup
+	if err := json.NewDecoder(rec.Body).Decode(&backup); err != nil {
+		t.Fatalf("json decode fehler: %v", err)
+	}
+	if len(backup.Expenses) != 1 || backup.Expenses[0].Amount != 14.50 {
+		t.Errorf("unerwartete exportierte Ausgaben: %+v", backup.Expenses)
+	}
+}
+
+func TestExportCSV(t *testing.T) {
+	store := newMemoryStore()
+	store.AddExpense("2026-08", 12.00, "Mittagessen")
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/export?format=csv", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Header().Get("Content-Type"), "text/csv") {
+		t.Errorf("erwartet text/csv content-type, bekommen %s", rec.Header().Get("Content-Type"))
+	}
+
+	csvContent := rec.Body.String()
+	if !strings.Contains(csvContent, "Datum;Uhrzeit;Betrag;Notiz") {
+		t.Errorf("erwartet CSV Header, bekommen: %s", csvContent)
+	}
+	if !strings.Contains(csvContent, "12.00;\"Mittagessen\"") {
+		t.Errorf("erwartet CSV Eintrag, bekommen: %s", csvContent)
+	}
+}
+
+func TestImportJSON(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	body := `{"expenses":[{"amount": 9.99, "note": "Buch"}]}`
+	req := httptest.NewRequest(http.MethodPost, "/api/import", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]any
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["imported"].(float64) != 1 {
+		t.Errorf("erwartet 1 importiert, bekommen %v", resp["imported"])
+	}
+
+	exp, _ := store.GetAllExpenses("2026-08")
+	if len(exp) != 1 || exp[0].Amount != 9.99 {
+		t.Errorf("unerwartete Ausgaben im Store: %+v", exp)
+	}
+}
+
+func TestImportCSV(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	csv := "Datum;Uhrzeit;Betrag;Notiz\n2026-08-10;12:00:00;15.50;\"Supermarkt\"\n2026-08-11;14:00:00;5.20;\"Eis\""
+	req := httptest.NewRequest(http.MethodPost, "/api/import", strings.NewReader(csv))
+	req.Header.Set("Content-Type", "text/csv")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]any
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["imported"].(float64) != 2 {
+		t.Errorf("erwartet 2 importiert, bekommen %v", resp["imported"])
+	}
+
+	exp, _ := store.GetAllExpenses("2026-08")
+	if len(exp) != 2 {
+		t.Errorf("erwartet 2 Ausgaben im Store, bekommen %d", len(exp))
+	}
+}
+
 func decodeJSON(t *testing.T, body interface{ Read([]byte) (int, error) }, v interface{}) {
 	t.Helper()
 	b := make([]byte, 4096)
