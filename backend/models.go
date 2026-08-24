@@ -84,13 +84,11 @@ func (p Period) calcBudget(totalSpent float64, now time.Time) (currentBudget flo
 	day := p.dayOfMonth(now)
 	remainingDays := p.MonthDays - day + 1 // inklusive heute
 
-	expectedSpentPrior := p.BaseBudget * float64(day-1)
-	pastSavings := expectedSpentPrior - totalSpent
-	if day == 1 {
-		pastSavings = 0 - totalSpent
-	}
-	savings = mathRound(pastSavings, 2)
+	// Ersparnis bis heute: Was stand mir bis einschl. heute zu minus was ausgegeben wurde
+	allowedUpToToday := p.BaseBudget * float64(day)
+	savings = mathRound(allowedUpToToday-totalSpent, 2)
 
+	// Restbudget verteilt auf verbleibende Tage (inkl. heute)
 	remainingBudget := p.MonthlyTotal - totalSpent
 	if remainingDays <= 1 {
 		currentBudget = mathRound(remainingBudget, 2)
@@ -103,9 +101,9 @@ func (p Period) calcBudget(totalSpent float64, now time.Time) (currentBudget flo
 	}
 
 	switch {
-	case savings > 0:
+	case savings > 0 && currentBudget > 0:
 		color = "green"
-	case savings < 0:
+	case savings < 0 || currentBudget == 0:
 		color = "red"
 	default:
 		color = "white"

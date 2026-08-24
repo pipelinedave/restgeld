@@ -304,17 +304,20 @@ func TestGetBudgetOnFirstDay(t *testing.T) {
 	if resp.Day != 1 {
 		t.Errorf("erwartet Tag 1, bekommen %d", resp.Day)
 	}
-	if resp.Savings != 0 {
-		t.Errorf("erwartet savings = 0 an tag 1 (vor ausgaben), bekommen %.2f", resp.Savings)
+	if resp.Savings != resp.BaseBudget {
+		t.Errorf("erwartet savings = baseBudget (%.2f) an tag 1 (0 ausgegeben), bekommen %.2f", resp.BaseBudget, resp.Savings)
 	}
 	if resp.CurrentBudget != resp.BaseBudget {
 		t.Errorf("erwartet current == base (%.2f) an tag 1, bekommen %.2f", resp.BaseBudget, resp.CurrentBudget)
+	}
+	if resp.Color != "green" {
+		t.Errorf("erwartet green an Tag 1 mit vollem Budget, bekommen %s", resp.Color)
 	}
 }
 
 func TestGetBudgetAfterAllSpent(t *testing.T) {
 	store := newMemoryStore()
-	for i := 0; i < 17; i++ {
+	for i := 0; i < 18; i++ {
 		store.AddExpense("2026-08", 14.52, "tag")
 	}
 	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
