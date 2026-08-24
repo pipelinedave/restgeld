@@ -131,6 +131,7 @@ restgeld/
 - Ausgaben-Historie mit Paginierung: Backend-Endpoint `/api/expenses?page=X&limit=Y` mit `PaginatedExpenses`, Frontend "Alle anzeigen"-Button in `RecentExpenses.vue` und stylisches, voll funktionales `ExpensesModal.vue` mit Zeitstempel-Formatierung, Paginierung und Einzel-Löschung implementiert und vollständig mit Unit-, Snapshot- und E2E-Tests abgedeckt ✅
 - Hero-Card Redesign & intuitive Tages-Restgeld-Logik: Große Hero-Zahl zeigt nun immer exakt das heute noch verfügbare Budget (`HEUTE VERFÜGBAR`), subtiler Status-Badge zeigt den echten Monats-Puffer (Grün) bzw. Überzug (Rot). Ausgabe buchen zieht direkt vom heutigen Restgeld ab ✅
 - Mobile Numpad & Keyboard UX: Ausgaben-Erfassung auf native Mobile-Tastatur (`inputmode="decimal"`) umgestellt, 1-stufiger kompakter Dialog mit Betrag + Notiz, Vermeidung von Überdeckungen durch `interactive-widget=resizes-content` und `dvh`-Viewport-Handling ✅
+- Konfigurierbare Periodendauer (Tage): Periodendauer kann im Einstellungs-Dialog sowohl mit sofortiger Wirkung für die laufende Periode angepasst als auch für neue Abrechnungszyklen frei definiert werden (z. B. 14 Tage, 20 Tage, etc.) ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**
