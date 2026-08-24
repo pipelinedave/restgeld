@@ -53,15 +53,15 @@ export function useApi() {
       }),
     deleteExpense: (id: string) =>
       api<{ status: string }>(`/api/expenses/${id}`, { method: 'DELETE' }),
-    newPeriod: (monthlyTotal?: number, startDate?: string) =>
+    newPeriod: (monthlyTotal?: number, startDate?: string, days?: number) =>
       api<{ id: string }>('/api/period', {
         method: 'POST',
-        body: JSON.stringify({ monthlyTotal, startDate }),
+        body: JSON.stringify({ monthlyTotal, startDate, days }),
       }),
-    updateBudget: (monthlyTotal: number) =>
+    updateBudget: (monthlyTotal?: number, days?: number) =>
       api<{ status: string }>('/api/budget', {
         method: 'PATCH',
-        body: JSON.stringify({ monthlyTotal }),
+        body: JSON.stringify({ monthlyTotal, days }),
       }),
   }
 }

@@ -10,14 +10,17 @@ describe('SettingsModal', () => {
     expect(wrapper.find('.modal-overlay').exists()).toBe(false)
   })
 
-  it('renders correctly when visible is true and populates budget', () => {
+  it('renders correctly when visible is true and populates budget and days', () => {
     const wrapper = mount(SettingsModal, {
-      props: { visible: true, currentMonthlyBudget: 600 }
+      props: { visible: true, currentMonthlyBudget: 600, currentMonthDays: 30 }
     })
     expect(wrapper.find('.modal-overlay').exists()).toBe(true)
     const input = wrapper.find<HTMLInputElement>('input#monthly-budget-input')
     expect(input.exists()).toBe(true)
     expect(input.element.value).toBe('600')
+    const daysInput = wrapper.find<HTMLInputElement>('input#period-days-input')
+    expect(daysInput.exists()).toBe(true)
+    expect(daysInput.element.value).toBe('30')
   })
 
   it('emits close event when clicking close button or backdrop', async () => {
@@ -31,16 +34,18 @@ describe('SettingsModal', () => {
     expect(wrapper.emitted('close')?.length).toBe(2)
   })
 
-  it('emits update-budget event when clicking save with valid value', async () => {
+  it('emits update-budget event with days when clicking save', async () => {
     const wrapper = mount(SettingsModal, {
-      props: { visible: true, currentMonthlyBudget: 600 }
+      props: { visible: true, currentMonthlyBudget: 600, currentMonthDays: 30 }
     })
     const input = wrapper.find<HTMLInputElement>('input#monthly-budget-input')
     await input.setValue(750)
+    const daysInput = wrapper.find<HTMLInputElement>('input#period-days-input')
+    await daysInput.setValue(14)
     await wrapper.find('.action-btn').trigger('click')
 
     expect(wrapper.emitted('update-budget')).toBeTruthy()
-    expect(wrapper.emitted('update-budget')?.[0]).toEqual([750])
+    expect(wrapper.emitted('update-budget')?.[0]).toEqual([750, 14])
   })
 
   it('requires confirmation before emitting new-period', async () => {

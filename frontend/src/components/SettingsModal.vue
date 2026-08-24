@@ -8,7 +8,7 @@
 
       <div class="modal-body">
         <section class="setting-section">
-          <label for="monthly-budget-input" class="section-title">Monatsbudget (€)</label>
+          <label for="monthly-budget-input" class="section-title">Budget (€)</label>
           <div class="input-row">
             <input
               id="monthly-budget-input"
@@ -17,9 +17,23 @@
               min="1"
               step="10"
               placeholder="z. B. 600"
-              @keyup.enter="handleSaveBudget"
+              @keyup.enter="handleSaveSettings"
             />
-            <button class="action-btn" :disabled="!isValidBudget" @click="handleSaveBudget">
+          </div>
+
+          <label for="period-days-input" class="section-title" style="margin-top: 14px;">Dauer der Periode (Tage)</label>
+          <div class="input-row">
+            <input
+              id="period-days-input"
+              v-model.number="daysInput"
+              type="number"
+              min="1"
+              max="365"
+              step="1"
+              placeholder="z. B. 30"
+              @keyup.enter="handleSaveSettings"
+            />
+            <button class="action-btn" :disabled="!isValidSettings" @click="handleSaveSettings">
               Speichern
             </button>
           </div>
@@ -29,7 +43,7 @@
         <section class="setting-section danger-zone">
           <span class="section-title danger-title">Neue Periode ab heute starten</span>
           <p class="description">
-            Startet deinen Gehalts-/Abrechnungszyklus ab heute bei Tag 1. Bisherige Ausgaben dieser Periode werden zurückgesetzt.
+            Startet deinen Gehalts-/Abrechnungszyklus ab heute bei Tag 1 mit dem oben konfigurierten Budget und der Dauer. Bisherige Ausgaben dieser Periode werden zurückgesetzt.
           </p>
 
           <div v-if="!confirmReset">
@@ -56,19 +70,23 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useHaptics } from '../composables/useHaptics'
 
 const props = defineProps<{
   visible: boolean
   currentMonthlyBudget?: number
+  currentMonthDays?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'update-budget', monthlyTotal: number): void
-  (e: 'new-period', monthlyTotal?: number): void
+  (e: 'update-budget', monthlyTotal: number, days?: number): void
+  (e: 'new-period', monthlyTotal?: number, days?: number): void
 }>()
 
+const haptics = useHaptics()
 const budgetInput = ref<number | null>(props.currentMonthlyBudget ?? null)
+const daysInput = ref<number | null>(props.currentMonthDays ?? null)
 const confirmReset = ref(false)
 const budgetSavedMsg = ref('')
 
@@ -83,6 +101,16 @@ watch(
 )
 
 watch(
+  () => props.currentMonthDays,
+  (newVal) => {
+    if (newVal) {
+      daysInput.value = newVal
+    }
+  },
+  { immediate: true }
+)
+
+watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
@@ -91,18 +119,24 @@ watch(
       if (props.currentMonthlyBudget) {
         budgetInput.value = props.currentMonthlyBudget
       }
+      if (props.currentMonthDays) {
+        daysInput.value = props.currentMonthDays
+      }
     }
   }
 )
 
-const isValidBudget = computed(() => {
-  return typeof budgetInput.value === 'number' && budgetInput.value > 0
+const isValidSettings = computed(() => {
+  const validBudget = typeof budgetInput.value === 'number' && budgetInput.value > 0
+  const validDays = daysInput.value === null || (typeof daysInput.value === 'number' && daysInput.value > 0)
+  return validBudget && validDays
 })
 
-function handleSaveBudget() {
-  if (isValidBudget.value && budgetInput.value) {
-    emit('update-budget', budgetInput.value)
-    budgetSavedMsg.value = 'Budget erfolgreich gespeichert!'
+function handleSaveSettings() {
+  if (isValidSettings.value && budgetInput.value) {
+    haptics.success()
+    emit('update-budget', budgetInput.value, daysInput.value || undefined)
+    budgetSavedMsg.value = 'Einstellungen erfolgreich gespeichert!'
     setTimeout(() => {
       budgetSavedMsg.value = ''
     }, 2500)
@@ -111,7 +145,11 @@ function handleSaveBudget() {
 
 function handleResetPeriod() {
   confirmReset.value = false
-  emit('new-period', isValidBudget.value && budgetInput.value ? budgetInput.value : undefined)
+  emit(
+    'new-period',
+    isValidSettings.value && budgetInput.value ? budgetInput.value : undefined,
+    isValidSettings.value && daysInput.value ? daysInput.value : undefined
+  )
 }
 </script>
 
