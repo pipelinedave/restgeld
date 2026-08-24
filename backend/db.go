@@ -311,6 +311,46 @@ func (s *postgresStore) DeleteExpense(expenseID string) error {
 	return nil
 }
 
+func (s *postgresStore) GetDailyExpenses(periodID string, start time.Time, upToDay int) ([]DailyStat, error) {
+	if upToDay < 1 {
+		upToDay = 1
+	}
+
+	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	endDay := startDay.AddDate(0, 0, upToDay)
+
+	rows, err := s.db.Query(
+		"SELECT DATE(created_at) AS d, SUM(amount) FROM expenses WHERE period_id = $1 AND created_at >= $2 AND created_at < $3 GROUP BY d ORDER BY d ASC",
+		periodID, startDay, endDay,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("daily expenses abfragen: %w", err)
+	}
+	defer rows.Close()
+
+	daySums := make(map[string]float64)
+	for rows.Next() {
+		var d time.Time
+		var sum float64
+		if err := rows.Scan(&d, &sum); err == nil {
+			daySums[d.Format("2006-01-02")] = sum
+		}
+	}
+
+	stats := make([]DailyStat, upToDay)
+	for d := 1; d <= upToDay; d++ {
+		curDate := startDay.AddDate(0, 0, d-1)
+		dateStr := curDate.Format("2006-01-02")
+		stats[d-1] = DailyStat{
+			Day:   d,
+			Date:  dateStr,
+			Spent: mathRound(daySums[dateStr], 2),
+		}
+	}
+
+	return stats, nil
+}
+
 func (s *postgresStore) Ping() error {
 	return s.db.Ping()
 }

@@ -111,6 +111,37 @@ func TestGetBudgetWithExpenses(t *testing.T) {
 	if len(resp.Expenses) != 2 {
 		t.Errorf("erwartet 2 ausgaben, bekommen %d", len(resp.Expenses))
 	}
+
+	if len(resp.DailyStats) != 17 {
+		t.Errorf("erwartet 17 Tage in DailyStats, bekommen %d", len(resp.DailyStats))
+	}
+}
+
+func TestGetDailyExpensesStats(t *testing.T) {
+	store := newMemoryStore()
+	start := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
+	// Ausgabe an Tag 1
+	store.AddExpenseWithDate("2026-08", 12.0, "Einkauf", time.Date(2026, 8, 1, 10, 0, 0, 0, time.UTC))
+	// Ausgabe an Tag 3
+	store.AddExpenseWithDate("2026-08", 8.5, "Kino", time.Date(2026, 8, 3, 18, 0, 0, 0, time.UTC))
+
+	stats, err := store.GetDailyExpenses("2026-08", start, 3)
+	if err != nil {
+		t.Fatalf("fehler: %v", err)
+	}
+
+	if len(stats) != 3 {
+		t.Fatalf("erwartet 3 Tage, bekommen %d", len(stats))
+	}
+	if stats[0].Spent != 12.0 || stats[0].Date != "2026-08-01" {
+		t.Errorf("Tag 1 unerwartet: %+v", stats[0])
+	}
+	if stats[1].Spent != 0.0 || stats[1].Date != "2026-08-02" {
+		t.Errorf("Tag 2 unerwartet: %+v", stats[1])
+	}
+	if stats[2].Spent != 8.5 || stats[2].Date != "2026-08-03" {
+		t.Errorf("Tag 3 unerwartet: %+v", stats[2])
+	}
 }
 
 func TestCreateExpense(t *testing.T) {

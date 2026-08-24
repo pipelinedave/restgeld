@@ -30,15 +30,22 @@ type PaginatedExpenses struct {
 	TotalPages int       `json:"totalPages"`
 }
 
+type DailyStat struct {
+	Day   int     `json:"day"`
+	Date  string  `json:"date"`
+	Spent float64 `json:"spent"`
+}
+
 type BudgetResponse struct {
-	Day           int       `json:"day"`
-	MonthDays     int       `json:"monthDays"`
-	BaseBudget    float64   `json:"baseBudget"`
-	CurrentBudget float64   `json:"currentBudget"`
-	Savings       float64   `json:"savings"`
-	Color         string    `json:"color"`
-	PeriodID      string    `json:"periodId"`
-	Expenses      []Expense `json:"expenses"`
+	Day           int         `json:"day"`
+	MonthDays     int         `json:"monthDays"`
+	BaseBudget    float64     `json:"baseBudget"`
+	CurrentBudget float64     `json:"currentBudget"`
+	Savings       float64     `json:"savings"`
+	Color         string      `json:"color"`
+	PeriodID      string      `json:"periodId"`
+	Expenses      []Expense   `json:"expenses"`
+	DailyStats    []DailyStat `json:"dailyStats"`
 }
 
 type ExpenseRequest struct {

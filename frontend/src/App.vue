@@ -28,6 +28,12 @@
       </button>
     </div>
 
+    <SpendingTrend
+      :stats="budget?.dailyStats"
+      :baseBudget="budget?.baseBudget ?? 15"
+      :currentDay="budget?.day ?? 1"
+    />
+
     <div class="history-area">
       <RecentExpenses
         :expenses="budget?.expenses ?? []"
@@ -69,6 +75,7 @@ import { useHaptics } from './composables/useHaptics'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
+import SpendingTrend from './components/SpendingTrend.vue'
 import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'
 import ExpensesModal from './components/ExpensesModal.vue'

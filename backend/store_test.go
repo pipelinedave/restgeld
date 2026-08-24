@@ -156,6 +156,10 @@ func (m *memoryStore) GetExpenses(periodID string, page, limit int) (*PaginatedE
 }
 
 func (m *memoryStore) AddExpense(periodID string, amount float64, note string) (*Expense, error) {
+	return m.AddExpenseWithDate(periodID, amount, note, time.Now()), nil
+}
+
+func (m *memoryStore) AddExpenseWithDate(periodID string, amount float64, note string, createdAt time.Time) *Expense {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.nextID++
@@ -164,10 +168,10 @@ func (m *memoryStore) AddExpense(periodID string, amount float64, note string) (
 		PeriodID:  periodID,
 		Amount:    amount,
 		Note:      note,
-		CreatedAt: time.Now(),
+		CreatedAt: createdAt,
 	}
 	m.expenses = append(m.expenses, e)
-	return &e, nil
+	return &e
 }
 
 func (m *memoryStore) DeleteExpense(expenseID string) error {
@@ -180,6 +184,40 @@ func (m *memoryStore) DeleteExpense(expenseID string) error {
 		}
 	}
 	return fmt.Errorf("ausgabe nicht gefunden")
+}
+
+func (m *memoryStore) GetDailyExpenses(periodID string, start time.Time, upToDay int) ([]DailyStat, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if upToDay < 1 {
+		upToDay = 1
+	}
+
+	startInLoc := start
+	startDay := time.Date(startInLoc.Year(), startInLoc.Month(), startInLoc.Day(), 0, 0, 0, 0, start.Location())
+
+	stats := make([]DailyStat, upToDay)
+	for d := 1; d <= upToDay; d++ {
+		currentDate := startDay.AddDate(0, 0, d-1)
+		dateStr := currentDate.Format("2006-01-02")
+		nextDate := currentDate.AddDate(0, 0, 1)
+
+		var spent float64
+		for _, e := range m.expenses {
+			if e.PeriodID == periodID && !e.CreatedAt.Before(currentDate) && e.CreatedAt.Before(nextDate) {
+				spent += e.Amount
+			}
+		}
+
+		stats[d-1] = DailyStat{
+			Day:   d,
+			Date:  dateStr,
+			Spent: mathRound(spent, 2),
+		}
+	}
+
+	return stats, nil
 }
 
 func (m *memoryStore) Ping() error {

@@ -14,6 +14,12 @@ export interface PaginatedExpenses {
   totalPages: number
 }
 
+export interface DailyStat {
+  day: number
+  date: string
+  spent: number
+}
+
 export interface BudgetData {
   day: number
   monthDays: number
@@ -23,6 +29,7 @@ export interface BudgetData {
   color: string
   periodId: string
   expenses: Expense[]
+  dailyStats?: DailyStat[]
 }
 
 const BASE = import.meta.env.PROD
