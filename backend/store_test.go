@@ -265,6 +265,31 @@ func (m *memoryStore) ImportExpenses(periodID string, expenses []Expense) (int, 
 	return count, nil
 }
 
+func (m *memoryStore) GetAllPeriods() ([]PeriodSummary, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var totalSpent float64
+	for _, e := range m.expenses {
+		if e.PeriodID == m.period.ID {
+			totalSpent += e.Amount
+		}
+	}
+
+	summary := PeriodSummary{
+		ID:           m.period.ID,
+		StartDate:    m.period.StartDate,
+		MonthDays:    m.period.MonthDays,
+		BaseBudget:   m.period.BaseBudget,
+		MonthlyTotal: m.period.MonthlyTotal,
+		TotalSpent:   mathRound(totalSpent, 2),
+		Savings:      mathRound(m.period.MonthlyTotal-totalSpent, 2),
+		ExpenseCount: len(m.expenses),
+	}
+
+	return []PeriodSummary{summary}, nil
+}
+
 func (m *memoryStore) Ping() error {
 	return nil
 }

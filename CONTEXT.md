@@ -143,6 +143,7 @@ restgeld/
 - Numpad Live-Impact & Quick Note Chips: Dynamische Echtzeit-Berechnung des verbleibenden Tagesbudgets bzw. Puffer-Abzugs direkt bei der Betragseingabe (`impact-ok` / `impact-warning`) sowie One-Tap Quick-Chips für die letzten Notizen mit localStorage-Persistierung implementiert und mit 85 Vitest-Tests abgedeckt ✅
 - 📱 PWA Quick Actions & Offline-Outbox: Homescreen App-Shortcut (`/?action=add-expense`), Outbox-Warteschlange (`useOfflineSync`), automatischer Hintergrund-Sync bei Wiederverbindung, optimistische Dashboard-Aktualisierung und Offline-Indikator im App-Header implementiert und mit 91 Vitest-Tests abgesichert ✅
 - 🔮 Monatsende-Projektion ("Wo lande ich?"): Backend-Berechnung `calcProjection` (`projectedSavings`, `projectedTotalSpent`, `avgDailySpend`, `status`), minimalistischer Dashboard-Strip `MonthProjection.vue` mit Ersparnis-/Defizit-Vorschau und Ø Tagesschnitt implementiert und mit 94 Vitest- & 29 Go-Tests abgedeckt ✅
+- 📜 Vorherige Perioden & Monats-Rückblick: Backend-Endpoint `GET /api/periods` mit aggregierten Perioden-Metriken (`totalSpent`, `savings`, `expenseCount`), Archiv-Modal `PeriodsArchiveModal.vue` und Aufruf in `SettingsModal.vue` implementiert und mit 98 Vitest- & 30 Go-Tests abgesichert ✅
 - Preview Environment & Branching-Strategie: Vercel Preview Deployments und Pre-Production Branch `develop` eingerichtet, CI/CD-Pipelines & Agent-Workflow-Dokumentation (`AGENTS.md`, `CONTEXT.md`, `README.md`) für sichere Iteration ohne Gefahr für Live-Daten aktualisiert ✅
 
 ### 🔄 Nächste Schritte

@@ -716,6 +716,32 @@ func TestImportCSV(t *testing.T) {
 	}
 }
 
+func TestGetPeriods(t *testing.T) {
+	store := newMemoryStore()
+	store.AddExpense("2026-08", 25.0, "Hotel")
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/periods", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var periods []PeriodSummary
+	if err := json.NewDecoder(rec.Body).Decode(&periods); err != nil {
+		t.Fatalf("decode fehler: %v", err)
+	}
+
+	if len(periods) != 1 {
+		t.Fatalf("erwartet 1 Periode, bekommen %d", len(periods))
+	}
+	if periods[0].TotalSpent != 25.0 || periods[0].ExpenseCount != 1 {
+		t.Errorf("unerwartete Periodenzusammenfassung: %+v", periods[0])
+	}
+}
+
 func decodeJSON(t *testing.T, body interface{ Read([]byte) (int, error) }, v interface{}) {
 	t.Helper()
 	b := make([]byte, 4096)

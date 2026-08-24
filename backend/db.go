@@ -419,6 +419,44 @@ func (s *postgresStore) ImportExpenses(periodID string, expenses []Expense) (int
 	return count, nil
 }
 
+func (s *postgresStore) GetAllPeriods() ([]PeriodSummary, error) {
+	rows, err := s.db.Query(`
+		SELECT 
+			p.id, 
+			p.start_date, 
+			p.month_days, 
+			p.base_budget, 
+			p.monthly_total,
+			COALESCE(SUM(e.amount), 0) AS total_spent,
+			COUNT(e.id) AS expense_count
+		FROM periods p
+		LEFT JOIN expenses e ON p.id = e.period_id
+		GROUP BY p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total
+		ORDER BY p.start_date DESC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("alle perioden laden: %w", err)
+	}
+	defer rows.Close()
+
+	var summaries []PeriodSummary
+	for rows.Next() {
+		var s PeriodSummary
+		if err := rows.Scan(&s.ID, &s.StartDate, &s.MonthDays, &s.BaseBudget, &s.MonthlyTotal, &s.TotalSpent, &s.ExpenseCount); err != nil {
+			return nil, fmt.Errorf("periode scannen: %w", err)
+		}
+		s.TotalSpent = mathRound(s.TotalSpent, 2)
+		s.Savings = mathRound(s.MonthlyTotal-s.TotalSpent, 2)
+		summaries = append(summaries, s)
+	}
+
+	if summaries == nil {
+		summaries = []PeriodSummary{}
+	}
+
+	return summaries, nil
+}
+
 func (s *postgresStore) Ping() error {
 	return s.db.Ping()
 }

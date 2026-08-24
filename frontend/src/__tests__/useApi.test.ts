@@ -106,6 +106,13 @@ describe('useApi', () => {
     expect(result).toEqual({ status: 'ok', imported: 3 })
   })
 
+  it('getPeriods ruft GET /api/periods auf', async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse([{ id: '2026-08', monthlyTotal: 450 }]))
+    const result = await api.getPeriods()
+    expect(mockFetch).toHaveBeenCalledWith('/api/periods', expect.anything())
+    expect(result).toEqual([{ id: '2026-08', monthlyTotal: 450 }])
+  })
+
   it('wirft fehler bei nicht-ok response', async () => {
     mockFetch.mockResolvedValueOnce(mockResponse({ error: 'kaputt' }, 400))
     await expect(api.getBudget()).rejects.toThrow('kaputt')

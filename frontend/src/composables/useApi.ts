@@ -48,6 +48,17 @@ export interface BudgetData {
   projection?: ProjectionInfo
 }
 
+export interface PeriodSummary {
+  id: string
+  startDate: string
+  monthDays: number
+  baseBudget: number
+  monthlyTotal: number
+  totalSpent: number
+  savings: number
+  expenseCount: number
+}
+
 const BASE = import.meta.env.PROD
   ? window.location.origin
   : ''
@@ -67,6 +78,7 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
 export function useApi() {
   return {
     getBudget: () => api<BudgetData>('/api/budget'),
+    getPeriods: () => api<PeriodSummary[]>('/api/periods'),
     getExpenses: (page = 1, limit = 10) =>
       api<PaginatedExpenses>(`/api/expenses?page=${page}&limit=${limit}`),
     addExpense: (amount: number, note: string) =>

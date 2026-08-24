@@ -15,6 +15,17 @@ type Period struct {
 	MonthlyTotal float64   `json:"monthlyTotal"`
 }
 
+type PeriodSummary struct {
+	ID           string    `json:"id"`
+	StartDate    time.Time `json:"startDate"`
+	MonthDays    int       `json:"monthDays"`
+	BaseBudget   float64   `json:"baseBudget"`
+	MonthlyTotal float64   `json:"monthlyTotal"`
+	TotalSpent   float64   `json:"totalSpent"`
+	Savings      float64   `json:"savings"`
+	ExpenseCount int       `json:"expenseCount"`
+}
+
 type Expense struct {
 	ID        string    `json:"id"`
 	PeriodID  string    `json:"periodId"`

@@ -75,7 +75,13 @@
       @update-budget="handleUpdateBudget"
       @new-period="handleNewPeriod"
       @data-imported="handleDataImported"
+      @open-archive="openArchiveModal"
       @close="showSettings = false"
+    />
+
+    <PeriodsArchiveModal
+      :visible="showArchiveModal"
+      @close="showArchiveModal = false"
     />
   </div>
 </template>
@@ -95,6 +101,7 @@ import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'
 import ExpensesModal from './components/ExpensesModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
+import PeriodsArchiveModal from './components/PeriodsArchiveModal.vue'
 import AppFooter from './components/AppFooter.vue'
 import ToastNotification from './components/ToastNotification.vue'
 
@@ -105,6 +112,7 @@ const budget = ref<BudgetData | null>(null)
 const showNumpad = ref(false)
 const showSettings = ref(false)
 const showExpensesModal = ref(false)
+const showArchiveModal = ref(false)
 const isSavingExpense = ref(false)
 
 const toast = reactive({
@@ -138,6 +146,12 @@ function openSettings() {
 function openExpensesModal() {
   haptics.tap()
   showExpensesModal.value = true
+}
+
+function openArchiveModal() {
+  haptics.tap()
+  showSettings.value = false
+  showArchiveModal.value = true
 }
 
 async function loadBudget() {

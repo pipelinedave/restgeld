@@ -454,6 +454,10 @@ func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+type ioReader interface {
+	Read(p []byte) (n int, err error)
+}
+
 func ioReadAll(r ioReader) ([]byte, error) {
 	if r == nil {
 		return []byte{}, nil
@@ -472,8 +476,21 @@ func ioReadAll(r ioReader) ([]byte, error) {
 	return buf, nil
 }
 
-type ioReader interface {
-	Read(p []byte) (n int, err error)
+func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	periods, err := s.store.GetAllPeriods()
+	if err != nil {
+		log.Printf("fehler beim abrufen aller perioden: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim abrufen der perioden")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, periods)
 }
 
 func (s *server) router() http.Handler {
@@ -483,6 +500,7 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/expenses", s.handleExpenses)
 	mux.HandleFunc("/api/expenses/", s.handleDeleteExpense)
 	mux.HandleFunc("/api/period", s.handleNewPeriod)
+	mux.HandleFunc("/api/periods", s.handleGetPeriods)
 	mux.HandleFunc("/api/export", s.handleExport)
 	mux.HandleFunc("/api/import", s.handleImport)
 	return corsMiddleware(mux)

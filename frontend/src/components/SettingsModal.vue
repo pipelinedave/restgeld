@@ -68,6 +68,12 @@
             </label>
           </div>
           <p v-if="backupMsg" class="backup-msg" :class="backupMsgType">{{ backupMsg }}</p>
+
+          <div style="margin-top: 6px;">
+            <button type="button" class="archive-trigger-btn" @click="handleOpenArchive">
+              📜 Frühere Monate / Archiv ansehen
+            </button>
+          </div>
         </section>
 
         <section class="setting-section danger-zone">
@@ -114,6 +120,7 @@ const emit = defineEmits<{
   (e: 'update-budget', monthlyTotal: number, days?: number): void
   (e: 'new-period', monthlyTotal?: number, days?: number): void
   (e: 'data-imported', count: number): void
+  (e: 'open-archive'): void
 }>()
 
 const api = useApi()
@@ -240,6 +247,11 @@ async function handleFileInput(e: Event) {
     isImporting.value = false
     target.value = ''
   }
+}
+
+function handleOpenArchive() {
+  haptics.tap()
+  emit('open-archive')
 }
 
 function handleResetPeriod() {
@@ -527,5 +539,24 @@ input[type='number']:focus {
 
 .backup-msg.error {
   color: var(--danger);
+}
+
+.archive-trigger-btn {
+  width: 100%;
+  background: rgba(204, 214, 246, 0.05);
+  border: 1px solid #233554;
+  color: var(--text, #ccd6f6);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.archive-trigger-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 </style>
