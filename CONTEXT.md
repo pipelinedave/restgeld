@@ -129,6 +129,7 @@ restgeld/
 - Flexible Perioden & Payday-Cycles: Start einer neuen Periode ab dem heutigen Tag (beginnt sofort bei Tag 1 von N), nahtloser Monatsübergang und Migration `002_flexible_periods.sql` implementiert und verifiziert ✅
 - Korrektur der Budget- & Sparbetragsformel: Heutiges Budget zählt nicht mehr vorab als Ersparnis; an Tag 1 startet der Tracker sauber mit genau $300 / 31 = 9,68 €$ und 0 € Ersparnis ✅
 - Ausgaben-Historie mit Paginierung: Backend-Endpoint `/api/expenses?page=X&limit=Y` mit `PaginatedExpenses`, Frontend "Alle anzeigen"-Button in `RecentExpenses.vue` und stylisches, voll funktionales `ExpensesModal.vue` mit Zeitstempel-Formatierung, Paginierung und Einzel-Löschung implementiert und vollständig mit Unit-, Snapshot- und E2E-Tests abgedeckt ✅
+- Hero-Card Redesign & intuitive Tages-Restgeld-Logik: Große Hero-Zahl zeigt nun immer exakt das heute noch verfügbare Budget (`HEUTE VERFÜGBAR`), subtiler Status-Badge zeigt den echten Monats-Puffer (Grün) bzw. Überzug (Rot). Ausgabe buchen zieht direkt vom heutigen Restgeld ab ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**
