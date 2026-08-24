@@ -56,10 +56,12 @@ restgeld/
 │   │   ├── composables/useApi.ts
 │   │   └── components/
 │   │       ├── AppHeader.vue
+│   │       ├── AppFooter.vue
 │   │       ├── MonthProgress.vue
 │   │       ├── BudgetDisplay.vue
 │   │       ├── Numpad.vue
-│   │       └── RecentExpenses.vue
+│   │       ├── RecentExpenses.vue
+│   │       └── SettingsModal.vue
 │   ├── index.html
 │   ├── vite.config.ts
 │   ├── tsconfig.json
@@ -123,6 +125,7 @@ restgeld/
 - 1-Befehl lokales Dev-Environment via Docker Compose (`docker-compose.yml`, `scripts/dev.sh`, `scripts/dev.ps1`) ✅
 - UI-Konfiguration: Settings-Modal (`SettingsModal.vue`) zum Einstellen des Monatsbudgets und Zurücksetzen der Periode mit Bestätigungsdialog implementiert und getestet ✅
 - UI: Stylischer App-Header mit Titel "restgeld." in eigenständige Komponente `AppHeader.vue` extrahiert und sauber von `MonthProgress.vue` entkoppelt ✅
+- UI: Minimalistischer App-Footer (`AppFooter.vue`) mit dezentem Trennstrich, Tagline und Versionsanzeige für verbesserte visuelle Struktur implementiert und getestet ✅
 
 ### 🔄 Nächste Schritte
 1. **Deployment auf k3s**

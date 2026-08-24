@@ -29,6 +29,8 @@
       />
     </div>
 
+    <AppFooter />
+
     <Numpad
       :visible="showNumpad"
       @confirm="handleConfirm"
@@ -54,6 +56,7 @@ import BudgetDisplay from './components/BudgetDisplay.vue'
 import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'
 import SettingsModal from './components/SettingsModal.vue'
+import AppFooter from './components/AppFooter.vue'
 
 const api = useApi()
 const budget = ref<BudgetData | null>(null)
@@ -96,10 +99,10 @@ async function handleUpdateBudget(monthlyTotal: number) {
   }
 }
 
-async function handleNewPeriod() {
+async function handleNewPeriod(monthlyTotal?: number) {
   showSettings.value = false
   try {
-    await api.newPeriod()
+    await api.newPeriod(monthlyTotal)
     await loadBudget()
   } catch (e: any) {
     console.error('Fehler beim Starten der neuen Periode:', e.message)

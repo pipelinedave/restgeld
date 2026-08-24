@@ -27,21 +27,21 @@
         </section>
 
         <section class="setting-section danger-zone">
-          <span class="section-title danger-title">Periode zurücksetzen</span>
+          <span class="section-title danger-title">Neue Periode ab heute starten</span>
           <p class="description">
-            Startet eine neue Periode ab Tag 1 und archiviert/löscht die aktuellen Ausgaben.
+            Startet deinen Gehalts-/Abrechnungszyklus ab heute bei Tag 1. Bisherige Ausgaben dieser Periode werden zurückgesetzt.
           </p>
 
           <div v-if="!confirmReset">
             <button class="danger-btn" @click="confirmReset = true">
-              Neue Periode starten
+              Neue Periode ab heute starten
             </button>
           </div>
           <div v-else class="confirm-box">
-            <p class="confirm-text">Wirklich zurücksetzen?</p>
+            <p class="confirm-text">Wirklich ab heute neu starten?</p>
             <div class="confirm-actions">
               <button class="danger-btn confirm" @click="handleResetPeriod">
-                Ja, zurücksetzen
+                Ja, ab heute starten
               </button>
               <button class="cancel-btn" @click="confirmReset = false">
                 Abbrechen
@@ -65,7 +65,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'update-budget', monthlyTotal: number): void
-  (e: 'new-period'): void
+  (e: 'new-period', monthlyTotal?: number): void
 }>()
 
 const budgetInput = ref<number | null>(props.currentMonthlyBudget ?? null)
@@ -111,7 +111,7 @@ function handleSaveBudget() {
 
 function handleResetPeriod() {
   confirmReset.value = false
-  emit('new-period')
+  emit('new-period', isValidBudget.value && budgetInput.value ? budgetInput.value : undefined)
 }
 </script>
 

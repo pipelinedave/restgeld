@@ -5,10 +5,18 @@ import MonthProgress from '../components/MonthProgress.vue'
 import BudgetDisplay from '../components/BudgetDisplay.vue'
 import RecentExpenses from '../components/RecentExpenses.vue'
 import Numpad from '../components/Numpad.vue'
+import AppFooter from '../components/AppFooter.vue'
 
 describe('Snapshot: AppHeader', () => {
   it('standard', () => {
     const wrapper = mount(AppHeader)
+    expect(wrapper.html()).toMatchSnapshot()
+  })
+})
+
+describe('Snapshot: AppFooter', () => {
+  it('standard', () => {
+    const wrapper = mount(AppFooter)
     expect(wrapper.html()).toMatchSnapshot()
   })
 })
