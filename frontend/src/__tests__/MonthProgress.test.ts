@@ -3,6 +3,11 @@ import { mount } from '@vue/test-utils'
 import MonthProgress from '../components/MonthProgress.vue'
 
 describe('MonthProgress', () => {
+  it('rendert den App-Titel "restgeld"', () => {
+    const wrapper = mount(MonthProgress, { props: { day: 17, monthDays: 31 } })
+    expect(wrapper.find('.brand-title').text()).toBe('restgeld')
+  })
+
   it('zeigt label Tag X von Y', () => {
     const wrapper = mount(MonthProgress, { props: { day: 17, monthDays: 31 } })
     expect(wrapper.text()).toContain('Tag 17 von 31')
