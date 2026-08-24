@@ -80,7 +80,7 @@ func (p Period) dayOfMonth(now time.Time) int {
 	return day
 }
 
-func (p Period) calcBudget(totalSpent float64, now time.Time) (currentBudget float64, savings float64, color string) {
+func (p Period) calcBudget(totalSpent, todaySpent float64, now time.Time) (currentBudget float64, savings float64, color string) {
 	day := p.dayOfMonth(now)
 	remainingDays := p.MonthDays - day + 1 // inklusive heute
 
@@ -88,22 +88,28 @@ func (p Period) calcBudget(totalSpent float64, now time.Time) (currentBudget flo
 	allowedUpToToday := p.BaseBudget * float64(day)
 	savings = mathRound(allowedUpToToday-totalSpent, 2)
 
-	// Restbudget verteilt auf verbleibende Tage (inkl. heute)
-	remainingBudget := p.MonthlyTotal - totalSpent
+	// Tagesbudget für den heutigen Tag vor heutigen Ausgaben
+	spentPriorToToday := totalSpent - todaySpent
+	remainingPrior := p.MonthlyTotal - spentPriorToToday
+	var startOfTodayDaily float64
 	if remainingDays <= 1 {
-		currentBudget = mathRound(remainingBudget, 2)
+		startOfTodayDaily = mathRound(remainingPrior, 2)
 	} else {
-		currentBudget = mathRound(remainingBudget/float64(remainingDays), 2)
+		startOfTodayDaily = mathRound(remainingPrior/float64(remainingDays), 2)
 	}
 
-	if currentBudget < 0 {
+	// Heutiges Restbudget nach Abzug der heutigen Ausgaben
+	todayRemaining := mathRound(startOfTodayDaily-todaySpent, 2)
+	if todayRemaining < 0 {
 		currentBudget = 0
+	} else {
+		currentBudget = todayRemaining
 	}
 
 	switch {
 	case savings > 0 && currentBudget > 0:
 		color = "green"
-	case savings < 0 || currentBudget == 0:
+	case savings < 0 || (currentBudget == 0 && todaySpent > 0):
 		color = "red"
 	default:
 		color = "white"

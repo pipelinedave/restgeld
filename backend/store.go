@@ -8,6 +8,7 @@ type Store interface {
 	CreatePeriodWithStart(start time.Time, monthlyTotal float64) (*Period, error)
 	UpdateBudget(newTotal float64) error
 	GetTotalExpenses(periodID string) (float64, error)
+	GetTodayExpenses(periodID string, now time.Time) (float64, error)
 	GetRecentExpenses(periodID string, limit int) ([]Expense, error)
 	GetExpenses(periodID string, page, limit int) (*PaginatedExpenses, error)
 	AddExpense(periodID string, amount float64, note string) (*Expense, error)

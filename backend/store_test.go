@@ -75,6 +75,20 @@ func (m *memoryStore) GetTotalExpenses(periodID string) (float64, error) {
 	return total, nil
 }
 
+func (m *memoryStore) GetTodayExpenses(periodID string, now time.Time) (float64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfToday := startOfToday.AddDate(0, 0, 1)
+	var total float64
+	for _, e := range m.expenses {
+		if !e.CreatedAt.Before(startOfToday) && e.CreatedAt.Before(endOfToday) {
+			total += e.Amount
+		}
+	}
+	return total, nil
+}
+
 func (m *memoryStore) GetRecentExpenses(periodID string, limit int) ([]Expense, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

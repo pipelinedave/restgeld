@@ -171,6 +171,26 @@ func (s *postgresStore) GetTotalExpenses(periodID string) (float64, error) {
 	return 0, nil
 }
 
+func (s *postgresStore) GetTodayExpenses(periodID string, now time.Time) (float64, error) {
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfToday := startOfToday.AddDate(0, 0, 1)
+
+	var total sql.NullFloat64
+	err := s.db.QueryRow(
+		"SELECT SUM(amount) FROM expenses WHERE period_id = $1 AND created_at >= $2 AND created_at < $3",
+		periodID, startOfToday, endOfToday,
+	).Scan(&total)
+
+	if err != nil {
+		return 0, err
+	}
+
+	if total.Valid {
+		return total.Float64, nil
+	}
+	return 0, nil
+}
+
 func (s *postgresStore) GetRecentExpenses(periodID string, limit int) ([]Expense, error) {
 	rows, err := s.db.Query(
 		"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 ORDER BY created_at DESC LIMIT $2",

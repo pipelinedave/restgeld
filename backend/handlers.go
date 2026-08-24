@@ -72,6 +72,13 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	now := s.now()
+	todaySpent, err := s.store.GetTodayExpenses(period.ID, now)
+	if err != nil {
+		log.Printf("fehler beim laden der heutigen ausgaben: %v", err)
+		todaySpent = 0
+	}
+
 	expenses, err := s.store.GetRecentExpenses(period.ID, 3)
 	if err != nil {
 		log.Printf("fehler beim laden der letzten ausgaben: %v", err)
@@ -79,9 +86,8 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	now := s.now()
 	day := period.dayOfMonth(now)
-	currentBudget, savings, color := period.calcBudget(totalSpent, now)
+	currentBudget, savings, color := period.calcBudget(totalSpent, todaySpent, now)
 
 	resp := BudgetResponse{
 		Day:           day,
