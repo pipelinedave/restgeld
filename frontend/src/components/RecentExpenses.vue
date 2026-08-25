@@ -44,80 +44,87 @@ function formatted(amount: number) {
 
 <style scoped>
 .recent-expenses {
-  padding: 16px;
+  padding: 12px 16px 16px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .section-title {
-  font-size: 0.85rem;
-  color: var(--text-dim);
+  font-size: 0.78rem;
+  color: var(--text-muted, #8e8e9c);
   margin: 0;
-  font-weight: 500;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .show-all-btn {
   background: transparent;
   border: none;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 500;
+  color: var(--accent-green, #22c55e);
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 4px;
-  border-radius: 4px;
-  transition: opacity 0.15s;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
 }
 
 .show-all-btn:hover {
-  opacity: 0.8;
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
 }
 
 .expense-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .expense-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  background: #112240;
-  border-radius: 8px;
-  margin-bottom: 6px;
+  padding: 10px 14px;
+  background: var(--bg-card, #121216);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
 }
 
 .expense-note {
   flex: 1;
-  color: #ccd6f6;
-  font-size: 0.95rem;
+  color: var(--text-main, #f4f4f6);
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .expense-amount {
-  color: #ff6b6b;
+  color: var(--accent-red, #ef4444);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9rem;
   white-space: nowrap;
 }
 
 .delete-btn {
   background: none;
   border: none;
-  color: #ff6b6b;
+  color: var(--accent-red, #ef4444);
   cursor: pointer;
   padding: 4px;
   display: flex;
   align-items: center;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity 0.15s;
 }
 
@@ -127,9 +134,12 @@ function formatted(amount: number) {
 }
 
 .empty-state {
-  color: #495670;
+  color: var(--text-dim, #5c5c6e);
   font-size: 0.85rem;
   text-align: center;
-  padding: 20px;
+  padding: 18px;
+  background: var(--bg-card, #121216);
+  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
 }
 </style>

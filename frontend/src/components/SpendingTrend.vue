@@ -136,43 +136,44 @@ function formatDate(dateStr: string) {
 
 <style scoped>
 .spending-trend {
-  padding: 16px;
-  background: var(--bg-card, #112240);
-  border: 1px solid #233554;
-  border-radius: 14px;
-  margin: 0 16px 16px 16px;
+  padding: 14px 16px;
+  background: var(--bg-card, #121216);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  border-radius: 16px;
+  margin: 0 16px 12px 16px;
 }
 
 .trend-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .trend-title {
-  font-size: 0.85rem;
-  color: var(--text-dim, #8892b0);
+  font-size: 0.78rem;
+  color: var(--text-muted, #8e8e9c);
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .average-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--accent, #64ffda);
-  background: rgba(100, 255, 218, 0.1);
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-green, #22c55e);
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
   padding: 3px 8px;
-  border-radius: 12px;
-  border: 1px solid rgba(100, 255, 218, 0.2);
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .chart-container {
   width: 100%;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -180,9 +181,9 @@ function formatDate(dateStr: string) {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  height: 90px;
+  height: 85px;
   min-width: 100%;
-  padding-top: 10px;
+  padding-top: 8px;
 }
 
 .bar-column {
@@ -221,18 +222,18 @@ function formatDate(dateStr: string) {
 }
 
 .bar-good {
-  background: var(--accent, #64ffda);
-  box-shadow: 0 0 6px rgba(100, 255, 218, 0.3);
+  background: var(--accent-green, #22c55e);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
 }
 
 .bar-over {
-  background: #ff6b6b;
-  box-shadow: 0 0 6px rgba(255, 107, 107, 0.3);
+  background: var(--accent-red, #ef4444);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
 }
 
 .bar-zero {
-  background: #495670;
-  opacity: 0.5;
+  background: #2a2a36;
+  opacity: 0.6;
 }
 
 .base-budget-line {
@@ -240,32 +241,33 @@ function formatDate(dateStr: string) {
   left: 0;
   right: 0;
   height: 1px;
-  background: rgba(204, 214, 246, 0.25);
+  background: rgba(255, 255, 255, 0.15);
   pointer-events: none;
   z-index: 2;
 }
 
 .bar-label {
   font-size: 0.65rem;
-  color: var(--text-dim, #8892b0);
+  color: var(--text-dim, #5c5c6e);
+  font-family: var(--font-mono, monospace);
   margin-top: 4px;
   line-height: 1;
 }
 
 .is-today .bar-label {
-  color: var(--accent, #64ffda);
+  color: var(--accent-green, #22c55e);
   font-weight: 700;
 }
 
 .is-selected .bar-track {
-  outline: 1.5px solid var(--accent, #64ffda);
+  outline: 1.5px solid var(--accent-green, #22c55e);
 }
 
 .detail-preview {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #1d2d50;
-  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.78rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -273,24 +275,25 @@ function formatDate(dateStr: string) {
 }
 
 .detail-hint {
-  color: #495670;
+  color: var(--text-dim, #5c5c6e);
   font-style: italic;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .detail-day {
-  color: var(--text-dim, #8892b0);
+  color: var(--text-muted, #8e8e9c);
 }
 
 .detail-spent {
   font-weight: 600;
+  font-family: var(--font-mono, monospace);
 }
 
 .spent-ok {
-  color: var(--accent, #64ffda);
+  color: var(--accent-green, #22c55e);
 }
 
 .spent-over {
-  color: #ff6b6b;
+  color: var(--accent-red, #ef4444);
 }
 </style>

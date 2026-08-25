@@ -118,8 +118,9 @@ function formatAmount(val: number): string {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 25, 47, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -128,13 +129,13 @@ function formatAmount(val: number): string {
 }
 
 .modal-content {
-  background: var(--bg-card, #112240);
-  border: 1px solid #233554;
-  border-radius: 16px;
+  background: var(--bg-card, #121216);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 20px;
   width: 100%;
   max-width: 440px;
   max-height: 85dvh;
-  box-shadow: 0 10px 30px -10px rgba(2, 12, 27, 0.7);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -145,30 +146,33 @@ function formatAmount(val: number): string {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #233554;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   flex-shrink: 0;
 }
 
 .modal-header h2 {
-  font-size: 1.2rem;
-  color: var(--text, #ccd6f6);
+  font-size: 1.15rem;
+  color: var(--text-main, #f4f4f6);
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .close-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-dim, #8892b0);
-  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  color: var(--text-muted, #8e8e9c);
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .close-btn:hover {
-  color: var(--text, #ccd6f6);
+  color: var(--text-main, #f4f4f6);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .modal-body {
@@ -187,7 +191,7 @@ function formatAmount(val: number): string {
   align-items: center;
   justify-content: center;
   padding: 32px 16px;
-  color: var(--text-dim, #8892b0);
+  color: var(--text-dim, #5c5c6e);
   gap: 12px;
   text-align: center;
 }
@@ -195,8 +199,8 @@ function formatAmount(val: number): string {
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid #233554;
-  border-top-color: var(--accent, #64ffda);
+  border: 2px solid var(--bg-subtle, #1c1c24);
+  border-top-color: var(--accent-green, #22c55e);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -206,11 +210,13 @@ function formatAmount(val: number): string {
 }
 
 .retry-btn {
-  background: transparent;
-  border: 1px solid var(--accent, #64ffda);
-  color: var(--accent, #64ffda);
-  padding: 6px 12px;
-  border-radius: 6px;
+  background: var(--bg-subtle, #1c1c24);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  color: var(--accent-green, #22c55e);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -221,9 +227,9 @@ function formatAmount(val: number): string {
 }
 
 .period-item {
-  background: var(--bg, #0a192f);
-  border: 1px solid #233554;
-  border-radius: 12px;
+  background: var(--bg-subtle, #1c1c24);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  border-radius: 14px;
   padding: 14px;
   display: flex;
   flex-direction: column;
@@ -237,37 +243,38 @@ function formatAmount(val: number): string {
 }
 
 .period-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text, #ccd6f6);
+  color: var(--text-main, #f4f4f6);
   text-transform: capitalize;
 }
 
 .period-badge {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  font-family: var(--font-mono, monospace);
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: 9999px;
 }
 
 .period-badge.saving {
-  background: rgba(100, 255, 218, 0.1);
-  color: var(--accent, #64ffda);
-  border: 1px solid rgba(100, 255, 218, 0.25);
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
+  color: var(--accent-green, #22c55e);
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
 .period-badge.deficit {
-  background: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 107, 107, 0.25);
+  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
+  color: var(--accent-red, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .period-details {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  border-top: 1px solid #1b2a47;
-  padding-top: 8px;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  padding-top: 10px;
 }
 
 .detail-col {
@@ -277,13 +284,15 @@ function formatAmount(val: number): string {
 
 .detail-label {
   font-size: 0.65rem;
-  color: var(--text-dim, #8892b0);
+  color: var(--text-dim, #5c5c6e);
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .detail-val {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text, #ccd6f6);
+  font-family: var(--font-mono, monospace);
+  color: var(--text-main, #f4f4f6);
 }
 </style>

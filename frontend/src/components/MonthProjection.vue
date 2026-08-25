@@ -33,11 +33,11 @@ function formatAmount(val: number): string {
 
 <style scoped>
 .projection-strip {
-  margin: 0 16px 14px 16px;
-  background: rgba(17, 34, 64, 0.6);
-  border: 1px solid #233554;
-  border-radius: 10px;
-  padding: 8px 12px;
+  margin: 0 16px 12px 16px;
+  background: var(--bg-card, #121216);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  padding: 8px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -46,12 +46,12 @@ function formatAmount(val: number): string {
 }
 
 .projection-strip.saving {
-  border-color: rgba(100, 255, 218, 0.2);
+  border-color: rgba(34, 197, 94, 0.2);
 }
 
 .projection-strip.deficit {
-  border-color: rgba(255, 107, 107, 0.25);
-  background: rgba(255, 107, 107, 0.04);
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.04);
 }
 
 .projection-content {
@@ -68,36 +68,39 @@ function formatAmount(val: number): string {
 .projection-text-wrap {
   display: flex;
   align-items: baseline;
-  gap: 5px;
+  gap: 6px;
 }
 
 .projection-title {
-  color: var(--text-dim, #8892b0);
+  color: var(--text-muted, #8e8e9c);
   font-size: 0.75rem;
 }
 
 .projection-highlight {
   font-weight: 700;
   font-size: 0.85rem;
+  font-family: var(--font-mono, monospace);
 }
 
 .projection-highlight.saving {
-  color: var(--accent, #64ffda);
+  color: var(--accent-green, #22c55e);
 }
 
 .projection-highlight.deficit {
-  color: #ff6b6b;
+  color: var(--accent-red, #ef4444);
 }
 
 .projection-tag {
   font-size: 0.7rem;
   font-weight: 400;
   opacity: 0.85;
+  font-family: var(--font-sans, sans-serif);
 }
 
 .projection-rate {
   font-size: 0.75rem;
-  color: var(--text-dim, #8892b0);
+  color: var(--text-dim, #5c5c6e);
+  font-family: var(--font-mono, monospace);
   white-space: nowrap;
 }
 </style>

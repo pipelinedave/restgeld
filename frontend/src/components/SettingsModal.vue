@@ -269,8 +269,9 @@ function handleResetPeriod() {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 25, 47, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,12 +280,15 @@ function handleResetPeriod() {
 }
 
 .modal-content {
-  background: var(--bg-card);
-  border: 1px solid #233554;
-  border-radius: 16px;
+  background: var(--bg-card, #121216);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 20px;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 10px 30px -10px rgba(2, 12, 27, 0.7);
+  max-width: 440px;
+  max-height: 85vh;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -293,36 +297,41 @@ function handleResetPeriod() {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #233554;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  flex-shrink: 0;
 }
 
 .modal-header h2 {
-  font-size: 1.25rem;
-  color: var(--text);
+  font-size: 1.15rem;
+  color: var(--text-main, #f4f4f6);
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .close-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  color: var(--text-muted, #8e8e9c);
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .close-btn:hover {
-  color: var(--text);
+  color: var(--text-main, #f4f4f6);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .modal-body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
+  overflow-y: auto;
 }
 
 .setting-section {
@@ -332,9 +341,10 @@ function handleResetPeriod() {
 }
 
 .section-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--text-main, #f4f4f6);
 }
 
 .input-row {
@@ -344,28 +354,36 @@ function handleResetPeriod() {
 
 input[type='number'] {
   flex: 1;
-  background: var(--bg);
-  border: 1px solid #233554;
-  border-radius: 8px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-size: 1rem;
+  background: var(--bg-subtle, #1c1c24);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--text-main, #f4f4f6);
+  font-size: 0.95rem;
+  font-family: var(--font-mono, monospace);
   outline: none;
+  transition: all 0.2s ease;
 }
 
 input[type='number']:focus {
-  border-color: var(--accent);
+  border-color: var(--accent-green, #22c55e);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .action-btn {
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
+  background: var(--accent-green, #22c55e);
+  border: 1px solid transparent;
+  color: #05200e;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.15s;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #2ed66b;
 }
 
 .action-btn:disabled {
@@ -373,61 +391,58 @@ input[type='number']:focus {
   cursor: not-allowed;
 }
 
-.action-btn:not(:disabled):active {
-  background: var(--accent);
-  color: var(--bg);
-}
-
 .success-msg {
-  font-size: 0.85rem;
-  color: var(--accent);
+  font-size: 0.8rem;
+  color: var(--accent-green, #22c55e);
   margin-top: 4px;
 }
 
 .danger-zone {
-  border-top: 1px solid #233554;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   padding-top: 16px;
 }
 
 .danger-title {
-  color: var(--danger);
+  color: var(--accent-red, #ef4444);
 }
 
 .description {
-  font-size: 0.85rem;
-  color: var(--text-dim);
+  font-size: 0.8rem;
+  color: var(--text-dim, #5c5c6e);
   line-height: 1.4;
 }
 
 .danger-btn {
-  background: transparent;
-  border: 1px solid var(--danger);
-  color: var(--danger);
+  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--accent-red, #ef4444);
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 9999px;
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
   width: 100%;
   margin-top: 4px;
   transition: all 0.15s;
 }
 
+.danger-btn:hover,
 .danger-btn:active {
-  background: var(--danger);
+  background: var(--accent-red, #ef4444);
   color: #fff;
 }
 
 .confirm-box {
-  background: rgba(255, 107, 107, 0.08);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 8px;
+  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
   padding: 12px;
   margin-top: 6px;
 }
 
 .confirm-text {
-  font-size: 0.9rem;
-  color: var(--danger);
+  font-size: 0.85rem;
+  color: var(--accent-red, #ef4444);
   font-weight: 600;
   margin-bottom: 8px;
   text-align: center;
@@ -445,20 +460,21 @@ input[type='number']:focus {
 
 .cancel-btn {
   flex: 1;
-  background: transparent;
-  border: 1px solid #233554;
-  color: var(--text-dim);
-  border-radius: 8px;
+  background: var(--bg-subtle, #1c1c24);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-muted, #8e8e9c);
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .cancel-btn:hover {
-  color: var(--text);
-  border-color: var(--text-dim);
+  color: var(--text-main, #f4f4f6);
 }
 
 .backup-zone {
-  border-top: 1px solid #233554;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   padding-top: 16px;
 }
 
@@ -470,12 +486,12 @@ input[type='number']:focus {
 
 .backup-btn {
   flex: 1;
-  background: rgba(100, 255, 218, 0.06);
-  border: 1px solid rgba(100, 255, 218, 0.3);
-  color: var(--accent);
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  background: #1f1f28;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-main, #f4f4f6);
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -483,8 +499,9 @@ input[type='number']:focus {
 
 .backup-btn:hover:not(:disabled),
 .backup-btn:active:not(:disabled) {
-  background: var(--accent);
-  color: #0a192f;
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
 }
 
 .backup-btn:disabled {
@@ -502,11 +519,11 @@ input[type='number']:focus {
   justify-content: center;
   width: 100%;
   background: transparent;
-  border: 1px dashed #233554;
-  color: var(--text-dim);
+  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.15));
+  color: var(--text-muted, #8e8e9c);
   padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
@@ -514,8 +531,8 @@ input[type='number']:focus {
 
 .import-btn:hover,
 .import-btn:active {
-  border-color: var(--accent);
-  color: var(--text);
+  border-color: var(--accent-green, #22c55e);
+  color: var(--text-main, #f4f4f6);
 }
 
 .import-btn.disabled {
@@ -534,21 +551,21 @@ input[type='number']:focus {
 }
 
 .backup-msg.success {
-  color: var(--accent);
+  color: var(--accent-green, #22c55e);
 }
 
 .backup-msg.error {
-  color: var(--danger);
+  color: var(--accent-red, #ef4444);
 }
 
 .archive-trigger-btn {
   width: 100%;
-  background: rgba(204, 214, 246, 0.05);
-  border: 1px solid #233554;
-  color: var(--text, #ccd6f6);
+  background: #1f1f28;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-main, #f4f4f6);
   padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
@@ -556,7 +573,7 @@ input[type='number']:focus {
 }
 
 .archive-trigger-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
 }
 </style>

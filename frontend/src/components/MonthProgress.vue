@@ -1,10 +1,11 @@
 <template>
-  <section class="month-progress" aria-label="Monatsfortschritt">
-    <div class="progress-row">
-      <div class="progress-label">Tag {{ day }} von {{ monthDays }}</div>
+  <section class="month-progress-card" aria-label="Monatsfortschritt">
+    <div class="progress-info">
+      <span class="progress-title">Aktuelle Periode</span>
+      <span class="progress-days">Tag {{ day }} von {{ monthDays }}</span>
     </div>
-    <div class="progress-bar">
-      <div class="progress-fill" :style="{ width: pct + '%' }"></div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" :style="{ width: pct + '%' }"></div>
     </div>
   </section>
 </template>
@@ -21,33 +22,46 @@ const pct = computed(() => Math.round((props.day / props.monthDays) * 100))
 </script>
 
 <style scoped>
-.month-progress {
-  padding: 4px 16px 8px;
+.month-progress-card {
+  margin: 4px 16px 10px;
+  background: var(--bg-card, #121216);
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
 }
 
-.progress-row {
+.progress-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 0.75rem;
   margin-bottom: 6px;
 }
 
-.progress-label {
-  font-size: 0.8rem;
-  color: #8892b0;
+.progress-title {
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 500;
 }
 
-.progress-bar {
-  height: 4px;
-  background: #233554;
-  border-radius: 2px;
+.progress-days {
+  color: var(--text-main, #f4f4f6);
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #1c1c24;
+  border-radius: 9999px;
   overflow: hidden;
 }
 
-.progress-fill {
+.progress-bar-fill {
   height: 100%;
-  background: #64ffda;
-  border-radius: 2px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, var(--accent-green, #22c55e), #4ade80);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>

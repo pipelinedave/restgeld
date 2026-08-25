@@ -45,32 +45,33 @@ defineProps<{
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: 24px;
-  font-size: 0.9rem;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 8px 24px rgba(2, 12, 27, 0.45);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   pointer-events: none;
   max-width: 90vw;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .toast-success {
-  background: rgba(16, 42, 60, 0.95);
-  color: #64ffda;
-  border: 1px solid rgba(100, 255, 218, 0.35);
+  background: rgba(18, 18, 22, 0.95);
+  color: var(--accent-green, #22c55e);
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .toast-error {
-  background: rgba(45, 18, 25, 0.95);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 107, 107, 0.35);
+  background: rgba(18, 18, 22, 0.95);
+  color: var(--accent-red, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .toast-info {
-  background: rgba(17, 34, 64, 0.95);
-  color: #ccd6f6;
-  border: 1px solid rgba(204, 214, 246, 0.2);
+  background: rgba(18, 18, 22, 0.95);
+  color: var(--text-main, #f4f4f6);
+  border: 1px solid var(--border-focus, rgba(255, 255, 255, 0.2));
 }
 
 .toast-icon {

@@ -228,8 +228,9 @@ onMounted(loadStoredNotes)
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 25, 47, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -238,13 +239,13 @@ onMounted(loadStoredNotes)
 }
 
 .modal-content {
-  background: var(--bg-card, #112240);
-  border: 1px solid #233554;
-  border-radius: 16px;
+  background: var(--bg-card, #121216);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 20px;
   width: 100%;
   max-width: 400px;
   max-height: 90dvh;
-  box-shadow: 0 10px 30px -10px rgba(2, 12, 27, 0.7);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -255,37 +256,40 @@ onMounted(loadStoredNotes)
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #233554;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   flex-shrink: 0;
 }
 
 .modal-header h2 {
-  font-size: 1.25rem;
-  color: var(--text, #ccd6f6);
+  font-size: 1.15rem;
+  color: var(--text-main, #f4f4f6);
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .close-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-dim, #8892b0);
-  font-size: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  color: var(--text-muted, #8e8e9c);
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
 .close-btn:hover {
-  color: var(--text, #ccd6f6);
+  color: var(--text-main, #f4f4f6);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .modal-body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   overflow-y: auto;
 }
 
@@ -296,9 +300,9 @@ onMounted(loadStoredNotes)
 }
 
 .form-label {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text, #ccd6f6);
+  color: var(--text-muted, #8e8e9c);
 }
 
 .amount-input-wrap {
@@ -309,107 +313,114 @@ onMounted(loadStoredNotes)
 
 .amount-input {
   width: 100%;
-  padding: 14px 44px 14px 16px;
-  font-size: 1.5rem;
-  font-weight: 600;
-  border: 2px solid #233554;
-  border-radius: 10px;
-  background: var(--bg, #0a192f);
-  color: var(--text, #ccd6f6);
+  padding: 12px 44px 12px 16px;
+  font-size: 1.4rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: var(--bg-subtle, #1c1c24);
+  color: var(--text-main, #f4f4f6);
   outline: none;
-  transition: border-color 0.15s;
+  transition: all 0.2s ease;
 }
 
 .amount-input:focus {
-  border-color: var(--accent, #64ffda);
+  border-color: var(--accent-green, #22c55e);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .amount-input::placeholder {
-  color: #495670;
+  color: var(--text-dim, #5c5c6e);
   font-weight: 400;
 }
 
 .currency-symbol {
   position: absolute;
   right: 16px;
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--accent, #64ffda);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-green, #22c55e);
   pointer-events: none;
 }
 
 .note-input {
   width: 100%;
   padding: 12px 16px;
-  font-size: 1rem;
-  border: 2px solid #233554;
-  border-radius: 10px;
-  background: var(--bg, #0a192f);
-  color: var(--text, #ccd6f6);
+  font-size: 0.95rem;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: var(--bg-subtle, #1c1c24);
+  color: var(--text-main, #f4f4f6);
   outline: none;
-  transition: border-color 0.15s;
+  transition: all 0.2s ease;
 }
 
 .note-input:focus {
-  border-color: var(--accent, #64ffda);
+  border-color: var(--accent-green, #22c55e);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
 }
 
 .note-input::placeholder {
-  color: #495670;
+  color: var(--text-dim, #5c5c6e);
 }
 
 .form-actions {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .btn {
   padding: 12px 16px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
   border: none;
 }
 
 .btn-cancel {
-  background: transparent;
-  border: 1px solid #233554;
-  color: var(--text-dim, #8892b0);
+  background: var(--bg-subtle, #1c1c24);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-muted, #8e8e9c);
 }
 
 .btn-cancel:hover,
 .btn-cancel:active {
-  color: var(--text, #ccd6f6);
-  border-color: var(--text-dim, #8892b0);
+  color: var(--text-main, #f4f4f6);
+  background: #242430;
 }
 
 .btn-confirm {
-  background: var(--accent, #64ffda);
-  color: #0a192f;
+  background: var(--accent-green, #22c55e);
+  color: #05200e;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.25);
 }
 
 .btn-confirm:hover:not(:disabled) {
-  opacity: 0.95;
+  background: #2ed66b;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
 }
 
 .btn-confirm:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .spinner-inline {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(10, 25, 47, 0.3);
-  border-top-color: #0a192f;
+  border: 2px solid rgba(5, 32, 14, 0.3);
+  border-top-color: #05200e;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -425,22 +436,22 @@ onMounted(loadStoredNotes)
   align-items: center;
   gap: 6px;
   margin-top: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 8px;
 }
 
 .impact-ok {
-  background: rgba(100, 255, 218, 0.08);
-  color: var(--accent, #64ffda);
-  border: 1px solid rgba(100, 255, 218, 0.2);
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
+  color: var(--accent-green, #22c55e);
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
 .impact-warning {
-  background: rgba(255, 107, 107, 0.08);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 107, 107, 0.25);
+  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
+  color: var(--accent-red, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .quick-chips {
@@ -451,20 +462,25 @@ onMounted(loadStoredNotes)
 }
 
 .quick-chip {
-  background: rgba(204, 214, 246, 0.05);
-  border: 1px solid #233554;
-  color: var(--text-dim, #8892b0);
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 14px;
+  background: #1f1f28;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-main, #f4f4f6);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
-.quick-chip:hover,
+.quick-chip:hover {
+  background: #2a2a36;
+  border-color: var(--accent-green, #22c55e);
+}
+
 .quick-chip.active {
-  border-color: var(--accent, #64ffda);
-  color: var(--accent, #64ffda);
-  background: rgba(100, 255, 218, 0.08);
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
 }
 </style>

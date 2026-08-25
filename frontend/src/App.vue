@@ -297,9 +297,11 @@ onUnmounted(() => {
 
 <style scoped>
 .app-shell {
-  height: 100%;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-area {
@@ -308,35 +310,43 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
-  padding: 16px;
+  gap: 20px;
+  padding: 12px 16px 16px;
 }
 
 .loading {
-  color: #495670;
-  font-size: 1.2rem;
+  color: var(--text-dim, #5c5c6e);
+  font-size: 1.1rem;
 }
 
 .add-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 200px;
-  padding: 16px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  border: 2px solid #64ffda;
-  border-radius: 12px;
-  background: transparent;
-  color: #64ffda;
+  gap: 8px;
+  width: 100%;
+  max-width: 260px;
+  padding: 13px 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: var(--accent-green, #22c55e);
+  color: #05200e;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.15s;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.add-btn:hover {
+  background-color: #2ed66b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(34, 197, 94, 0.4);
 }
 
 .add-btn:active {
-  background: #64ffda;
-  color: #0a192f;
+  transform: scale(0.97);
+  background-color: #1eb854;
 }
 
 .history-area {

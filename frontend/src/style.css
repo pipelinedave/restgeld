@@ -5,35 +5,78 @@
 }
 
 :root {
-  --bg: #0a192f;
-  --bg-card: #112240;
-  --text: #ccd6f6;
-  --text-dim: #8892b0;
-  --accent: #64ffda;
-  --danger: #ff6b6b;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --bg-color: #0a0a0c;
+  --bg-card: #121216;
+  --bg-card-hover: #181820;
+  --bg-subtle: #1c1c24;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(255, 255, 255, 0.2);
+
+  --text-main: #f4f4f6;
+  --text-muted: #8e8e9c;
+  --text-dim: #5c5c6e;
+
+  --accent-green: #22c55e;
+  --accent-green-glow: rgba(34, 197, 94, 0.25);
+  --accent-green-subtle: rgba(34, 197, 94, 0.12);
+
+  --accent-red: #ef4444;
+  --accent-red-subtle: rgba(239, 68, 68, 0.12);
+
+  --accent-flame: #f97316;
+  --accent-flame-subtle: rgba(249, 115, 22, 0.15);
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Aliases for backwards compatibility in components */
+  --bg: var(--bg-color);
+  --text: var(--text-main);
+  --accent: var(--accent-green);
+  --danger: var(--accent-red);
+  --font: var(--font-sans);
 }
 
 html, body {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  background-color: var(--bg-color);
 }
 
 body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
+  font-family: var(--font-sans);
+  background: var(--bg-color);
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+  overflow-x: hidden;
 }
 
 #app {
-  height: 100%;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   max-width: 480px;
   margin: 0 auto;
+  position: relative;
+  background-color: var(--bg-color);
+}
+
+/* Background Atmospheric Grid */
+#app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 input, textarea, button {

@@ -22,7 +22,7 @@
 
 .footer-divider {
   height: 1px;
-  background: rgba(136, 146, 176, 0.15);
+  background: var(--border-color, rgba(255, 255, 255, 0.06));
   width: 100%;
 }
 
@@ -30,9 +30,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
-  color: var(--text-dim, #8892b0);
-  opacity: 0.7;
+  font-size: 0.72rem;
+  color: var(--text-dim, #5c5c6e);
 }
 
 .footer-tagline {
@@ -40,7 +39,7 @@
 }
 
 .footer-version {
-  font-family: monospace;
-  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
 }
 </style>

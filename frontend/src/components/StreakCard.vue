@@ -36,11 +36,12 @@ defineProps<{
 
 <style scoped>
 .streak-card {
-  margin: 0 16px 16px 16px;
-  background: var(--bg-card, #112240);
-  border: 1px solid #233554;
-  border-radius: 14px;
+  margin: 0 16px 12px 16px;
+  background: var(--bg-card, #121216);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  border-radius: 16px;
   padding: 12px 16px;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.5);
 }
 
 .streak-main {
@@ -53,7 +54,7 @@ defineProps<{
 .streak-flame-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .flame-icon {
@@ -65,13 +66,12 @@ defineProps<{
 
 .flame-active .flame-icon {
   filter: grayscale(0) opacity(1);
-  text-shadow: 0 0 12px rgba(255, 165, 0, 0.6);
-  animation: pulse-flame 2s infinite ease-in-out;
+  animation: flamePulse 2s infinite ease-in-out;
 }
 
-@keyframes pulse-flame {
+@keyframes flamePulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.15) rotate(3deg); }
 }
 
 .streak-info {
@@ -80,17 +80,15 @@ defineProps<{
 }
 
 .streak-count {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  color: var(--text, #ccd6f6);
+  color: #fed7aa;
   line-height: 1.2;
 }
 
 .streak-label {
-  font-size: 0.72rem;
-  color: var(--text-dim, #8892b0);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 0.7rem;
+  color: var(--text-muted, #8e8e9c);
 }
 
 .streak-badges {
@@ -103,11 +101,11 @@ defineProps<{
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--bg, #0a192f);
-  border: 1px solid #233554;
-  border-radius: 8px;
+  background: #1a1a22;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
   padding: 4px 8px;
-  min-width: 54px;
+  min-width: 52px;
 }
 
 .badge-icon {
@@ -117,15 +115,17 @@ defineProps<{
 }
 
 .badge-val {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent, #64ffda);
+  color: var(--accent-green, #22c55e);
+  font-family: var(--font-mono, monospace);
   line-height: 1.1;
 }
 
 .badge-name {
   font-size: 0.6rem;
-  color: var(--text-dim, #8892b0);
+  color: var(--text-dim, #5c5c6e);
   text-transform: uppercase;
+  font-weight: 600;
 }
 </style>
