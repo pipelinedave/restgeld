@@ -181,14 +181,44 @@ const liveImpact = computed(() => {
   }
 })
 
+// Versucht die virtuelle Tastatur programmatisch zu öffnen.
+// Mobile Browser blockieren Autofocus ohne User-Gesture; die VirtualKeyboard-API
+// (Chrome/Android) hebt diese Einschränkung in standalone-PWAs oft auf.
+function requestSoftKeyboard() {
+  const navigatorAny = navigator as Navigator & {
+    virtualKeyboard?: { show: () => void }
+    keyboard?: { show: () => Promise<void> }
+  }
+  if (navigatorAny.virtualKeyboard?.show) {
+    try {
+      navigatorAny.virtualKeyboard.show()
+      return
+    } catch {
+      // Fallback unten
+    }
+  }
+  if (navigatorAny.keyboard?.show) {
+    navigatorAny.keyboard.show().catch(() => {})
+  }
+}
+
 function triggerFocus() {
   nextTick(() => {
     if (amountInputRef.value) {
-      amountInputRef.value.focus()
+      amountInputRef.value.focus({ preventScroll: false })
+      requestSoftKeyboard()
       // Android / mobile virtual keyboard trigger
       amountInputRef.value.click()
     }
   })
+}
+
+// Wiederholte Versuche, damit die Tastatur auch beim Cold-Start
+// (PWA-Shortcut ohne User-Gesture + Service-Worker-Rendering) zuverlässig aufgeht.
+function scheduleFocusRetries(totalAttempts = 8, delayMs = 150) {
+  for (let i = 0; i < totalAttempts; i++) {
+    setTimeout(triggerFocus, i * delayMs)
+  }
 }
 
 watch(
@@ -201,6 +231,8 @@ watch(
       triggerFocus()
       // Fallback delay for Android WebView PWA shortcut rendering
       setTimeout(triggerFocus, 100)
+      // Mehrere spätere Versuche gegen das ohne-Gesture-Öffnungslimit
+      scheduleFocusRetries()
     }
   },
   { immediate: true }

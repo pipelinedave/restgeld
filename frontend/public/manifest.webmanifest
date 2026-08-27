@@ -1,14 +1,17 @@
 {
-  "name": "Restgeld",
-  "short_name": "Restgeld",
+  "name": "restgeld.",
+  "short_name": "restgeld.",
   "description": "Daily Allowance Tracker",
-  "theme_color": "#1a1a2e",
-  "background_color": "#1a1a2e",
+  "theme_color": "#0a0a0c",
+  "background_color": "#0a0a0c",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "/",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
     {
@@ -16,7 +19,7 @@
       "short_name": "Buchen",
       "description": "Direkt eine neue Ausgabe erfassen",
       "url": "/?action=add-expense",
-      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

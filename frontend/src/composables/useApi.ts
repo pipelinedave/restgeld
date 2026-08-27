@@ -59,7 +59,9 @@ export interface Period {
 export interface PeriodSummary {
   id: string
   startDate: string
+  endDate: string
   monthDays: number
+  actualDays: number
   baseBudget: number
   monthlyTotal: number
   totalSpent: number

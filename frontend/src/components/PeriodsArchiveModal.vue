@@ -33,7 +33,8 @@
             <div class="period-card-header">
               <div class="period-title-group">
                 <span class="period-title">{{ formatPeriodTitle(period.startDate) }}</span>
-                <span class="period-daterange">{{ formatDateRange(period.startDate, period.monthDays) }}</span>
+                <span class="period-daterange">{{ formatDateRange(period.startDate, period.endDate, period.actualDays) }}</span>
+                <span v-if="configHint(period)" class="period-config-hint">{{ configHint(period) }}</span>
               </div>
               <div class="badge-group">
                 <span class="period-badge" :class="period.savings >= 0 ? 'saving' : 'deficit'">
@@ -55,7 +56,7 @@
               </div>
               <div class="kpi-col">
                 <span class="kpi-label">&Oslash; / Tag</span>
-                <span class="kpi-val">{{ formatAvgDaily(period.totalSpent, period.monthDays) }} €</span>
+                <span class="kpi-val">{{ formatAvgDaily(period.totalSpent, period.actualDays) }} €</span>
               </div>
               <div class="kpi-col">
                 <span class="kpi-label">Buchungen</span>
@@ -179,18 +180,22 @@ function formatPeriodTitle(dateStr: string): string {
   }
 }
 
-function formatDateRange(startDateStr: string, days: number): string {
+function formatDateRange(startDateStr: string, endDateStr: string, actualDays: number): string {
   try {
     const start = new Date(startDateStr)
-    const end = new Date(start)
-    end.setDate(start.getDate() + days - 1)
-
+    const end = new Date(endDateStr)
     const startFormatted = start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })
     const endFormatted = end.toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' })
-    return `${startFormatted} – ${endFormatted} (${days} Tage)`
+    return `${startFormatted} – ${endFormatted} (${actualDays} Tage)`
   } catch {
-    return `${days} Tage`
+    return `${actualDays} Tage`
   }
+}
+
+// Zeigt, dass die tatsächliche Laufzeit von der konfigurierten abweicht (z. B. vorzeitig beendet).
+function configHint(period: PeriodSummary): string {
+  if (period.monthDays === period.actualDays) return ''
+  return `konfiguriert: ${period.monthDays} Tage`
 }
 
 function formatExpenseDate(dateStr: string): string {
@@ -388,6 +393,13 @@ function formatAmount(val: number): string {
 .period-daterange {
   font-size: 0.72rem;
   color: var(--text-dim, #5c5c6e);
+  font-family: var(--font-mono, monospace);
+}
+
+.period-config-hint {
+  font-size: 0.68rem;
+  color: var(--accent-green, #22c55e);
+  opacity: 0.75;
   font-family: var(--font-mono, monospace);
 }
 
