@@ -33,7 +33,7 @@ test.describe('Restgeld E2E', () => {
     expenses = []
 
     // Mock GET /api/budget
-    await page.route('**/api/budget', async (route) => {
+    await page.route(/\/api\/budget/, async (route) => {
       if (route.request().method() === 'GET') {
         const totalSpent = expenses.reduce((acc, exp) => acc + exp.amount, 0)
         const day = 15
@@ -63,7 +63,7 @@ test.describe('Restgeld E2E', () => {
     })
 
     // Mock /api/expenses endpoints
-    await page.route('**/api/expenses**', async (route) => {
+    await page.route(/\/api\/expenses/, async (route) => {
       const method = route.request().method()
       const url = route.request().url()
 
