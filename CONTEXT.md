@@ -153,6 +153,7 @@ restgeld/
 - 🔮 Header Popover Architecture & UX Refinements: Monatsende-Prognose (🔮) und Spar-Streak (🔥) als elegante Popover in den Header verlagert (100% Zero-Scroll freigespielt), Hero-Anzeige präzisiert auf echten Tages-Bruch (`x € / y €`), Footer mit leuchtender Commit-Badge & `lowlifehigh.tech`-Energy-Referenz verfeinert und mit 109 Vitest- & 31 Go-Tests abgesichert ✅
 - 🎨 Logo- & Favicon-Redesign: Modernes 'r.'-Logo mit dunkelgrauem Squircle-Hintergrund, off-weißem Text und smaragdgrünem Akzentpunkt als Vektorgrafik (SVG) für App-Favicon und Landing Page implementiert ✅
 - 🚀 Release-Promotion: `develop` (inkl. Epic 5 SaaS Multi-Tenancy & Magic Link Auth) per Fast-Forward in `main` gemerged und gepusht → Production Deployment getriggert ✅
+- 🛠️ UX-Verbesserungen (Batch): HTML-Titel konsistent auf "restgeld." (App + Landing Page), App-Icon ohne weißen Rand (SVG bereinigt + generierte PNG 192/512 + maskable für Android), Android-Tastatur-Autofocus bei PWA-Quick-Action via VirtualKeyboard-API, Archiv zeigt jetzt tatsächliche statt konfigurierte Laufzeit (`endDate` + `actualDays` mit Abweichungs-Hinweis) und Main-Page-Layout für Zero-Scroll komprimiert (dichte Anordnung statt space-between, kompakter Tages-Verlauf, begrenzte Ausgabenliste) ✅
 
 ---
 
