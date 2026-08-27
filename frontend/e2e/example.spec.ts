@@ -12,6 +12,9 @@ test.describe('Restgeld E2E', () => {
   let expenses: Expense[] = []
 
   test.beforeEach(async ({ page }) => {
+    page.on('console', msg => console.log('BROWSER LOG:', msg.text()))
+    page.on('pageerror', err => console.log('BROWSER ERROR:', err.message))
+
     // Reset state vor jedem Test
     expenses = []
 
@@ -104,7 +107,7 @@ test.describe('Restgeld E2E', () => {
   test('seite laedt und zeigt budget', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByText(/Tag \d+ von \d+/)).toBeVisible()
-    await expect(page.getByText(/[\d.,]+ €/)).toBeVisible()
+    await expect(page.getByText(/[\d.,]+ €/).first()).toBeVisible()
     await expect(page.getByText(/angespart/)).toBeVisible()
   })
 
