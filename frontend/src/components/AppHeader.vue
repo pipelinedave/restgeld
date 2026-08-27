@@ -6,7 +6,7 @@
     </div>
 
     <div class="header-right">
-      <!-- Status Badge mit Klick zum Öffnen des Status-Popovers -->
+      <!-- 1. Status Badge -->
       <button
         type="button"
         class="status-badge"
@@ -18,6 +18,30 @@
         <span class="status-text">{{ badgeText }}</span>
       </button>
 
+      <!-- 2. Streak Badge & Button (🔥) -->
+      <button
+        type="button"
+        class="header-icon-btn streak-btn"
+        :class="{ active: (streak?.currentStreak ?? 0) > 0 }"
+        title="Streak & Spartage ansehen"
+        @click="toggleStreakPopover"
+      >
+        <span class="icon-emoji">🔥</span>
+        <span class="btn-badge">{{ streak?.currentStreak ?? 0 }}</span>
+      </button>
+
+      <!-- 3. Monatsende-Prognose Glaskugel (🔮) -->
+      <button
+        type="button"
+        class="header-icon-btn projection-btn"
+        :class="projection?.status === 'saving' ? 'proj-saving' : 'proj-deficit'"
+        title="Monatsende-Prognose anzeigen"
+        @click="toggleProjectionPopover"
+      >
+        <span class="icon-emoji">🔮</span>
+      </button>
+
+      <!-- 4. Settings Button (⚙️) -->
       <button class="settings-btn" aria-label="Einstellungen" title="Einstellungen" @click="$emit('open-settings')">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -26,12 +50,12 @@
       </button>
     </div>
 
-    <!-- Health & Uptime Popover -->
-    <div v-if="showStatusPopover" class="popover-backdrop" @click="showStatusPopover = false">
-      <div class="status-popover" @click.stop>
+    <!-- 1. Health & Uptime Popover -->
+    <div v-if="activePopover === 'status'" class="popover-backdrop" @click="activePopover = null">
+      <div class="header-popover" @click.stop>
         <div class="popover-header">
           <span class="popover-title">System- & Sync-Status</span>
-          <button class="popover-close" @click="showStatusPopover = false">&times;</button>
+          <button class="popover-close" @click="activePopover = null">&times;</button>
         </div>
 
         <div class="status-list">
@@ -70,17 +94,94 @@
         </div>
       </div>
     </div>
+
+    <!-- 2. Streak Popover -->
+    <div v-if="activePopover === 'streak'" class="popover-backdrop" @click="activePopover = null">
+      <div class="header-popover streak-popover" @click.stop>
+        <div class="popover-header">
+          <span class="popover-title">🔥 Spar-Streak & Disziplin</span>
+          <button class="popover-close" @click="activePopover = null">&times;</button>
+        </div>
+
+        <div class="streak-popover-body">
+          <div class="streak-hero-stat">
+            <span class="streak-flame-icon">🔥</span>
+            <div class="streak-hero-text">
+              <span class="streak-big-val">{{ streak?.currentStreak ?? 0 }} Tage</span>
+              <span class="streak-sub-val">im Tagesbudget geblieben</span>
+            </div>
+          </div>
+
+          <div class="streak-stats-grid">
+            <div class="streak-stat-box">
+              <span class="stat-box-label">Längster Streak</span>
+              <span class="stat-box-num">{{ streak?.longestStreak ?? 0 }} Tage</span>
+            </div>
+            <div class="streak-stat-box">
+              <span class="stat-box-label">Null-Ausgaben-Tage</span>
+              <span class="stat-box-num">🎯 {{ streak?.noSpendDays ?? 0 }}</span>
+            </div>
+          </div>
+
+          <p class="streak-motivation-text">
+            {{ getStreakMotivation(streak?.currentStreak ?? 0) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Monatsende-Prognose Popover (🔮) -->
+    <div v-if="activePopover === 'projection'" class="popover-backdrop" @click="activePopover = null">
+      <div class="header-popover projection-popover" @click.stop>
+        <div class="popover-header">
+          <span class="popover-title">🔮 Monatsende-Prognose</span>
+          <button class="popover-close" @click="activePopover = null">&times;</button>
+        </div>
+
+        <div class="projection-popover-body">
+          <div class="proj-hero-card" :class="isProjectedSaving ? 'card-saving' : 'card-deficit'">
+            <span class="proj-hero-label">PROJIZIERTE ERSPARNIS</span>
+            <span class="proj-hero-val">{{ isProjectedSaving ? '+' : '' }}{{ formatAmount(projection?.projectedSavings ?? 0) }} &euro;</span>
+            <span class="proj-hero-sub">
+              {{ isProjectedSaving ? 'Voraussichtlicher Sparpuffer zum Periodenende' : 'Voraussichtliches Monats-Defizit' }}
+            </span>
+          </div>
+
+          <div class="proj-stats-grid">
+            <div class="proj-stat-box">
+              <span class="stat-box-label">Vorauss. Ausgaben</span>
+              <span class="stat-box-num">{{ formatAmount(projection?.projectedTotalSpent ?? 0) }} &euro;</span>
+            </div>
+            <div class="proj-stat-box">
+              <span class="stat-box-label">&Oslash; Ausgaben / Tag</span>
+              <span class="stat-box-num">{{ formatAmount(projection?.avgDailySpend ?? 0) }} &euro;</span>
+            </div>
+          </div>
+
+          <div class="proj-tip-box">
+            <span class="tip-icon">💡</span>
+            <span class="tip-text">{{ getProjectionTip() }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import type { StreakInfo, ProjectionInfo } from '../composables/useApi'
 
 const props = withDefaults(
   defineProps<{
     isOffline?: boolean
     pendingSyncCount?: number
+    streak?: StreakInfo
+    projection?: ProjectionInfo
+    day?: number
+    monthDays?: number
+    baseBudget?: number
   }>(),
   {
     isOffline: false,
@@ -93,7 +194,7 @@ defineEmits<{
 }>()
 
 const haptics = useHaptics()
-const showStatusPopover = ref(false)
+const activePopover = ref<'status' | 'streak' | 'projection' | null>(null)
 const apiHealthy = ref(true)
 const dbStatus = ref('connected')
 const latencyMs = ref(12)
@@ -134,6 +235,38 @@ const badgeTooltip = computed(() => {
   return 'Online - Alle Systeme einsatzbereit. Klicke für Status-Details.'
 })
 
+const isProjectedSaving = computed(() => {
+  return (props.projection?.projectedSavings ?? 0) >= 0
+})
+
+function formatAmount(val: number): string {
+  return val.toLocaleString('de-DE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+function getStreakMotivation(current: number): string {
+  if (current >= 7) return '🔥 Unglaublich stark! Über eine Woche diszipliniert im Sparplan.'
+  if (current >= 3) return '💪 Starker Lauf! Halte die Serie am Laufen.'
+  if (current >= 1) return '🌱 Guter Start in den Tag. Bleib dran!'
+  return 'Starte heute deinen neuen Spar-Streak!'
+}
+
+function getProjectionTip(): string {
+  const savings = props.projection?.projectedSavings ?? 0
+  const avg = props.projection?.avgDailySpend ?? 0
+  const base = props.baseBudget ?? 15
+
+  if (savings > 50) {
+    return `Exzellent! Du gibst im Schnitt nur ${formatAmount(avg)} €/Tag aus (${formatAmount(base)} € Basis). Am Periodenende winkt ein toller Puffer.`
+  }
+  if (savings >= 0) {
+    return `Gut im Kurs! Dein Schnitt von ${formatAmount(avg)} €/Tag passt perfekt zu deinem Basisbudget von ${formatAmount(base)} €/Tag.`
+  }
+  return `Vorsicht: Bei aktuellem Schnitt (${formatAmount(avg)} €/Tag) droht ein Defizit. Ein paar Null-Euro-Tage gleichen das schnell aus!`
+}
+
 const BASE = typeof window !== 'undefined' && import.meta.env.PROD ? window.location.origin : ''
 
 async function checkHealth() {
@@ -170,10 +303,20 @@ async function checkHealth() {
 
 function toggleStatusPopover() {
   haptics.tap()
-  showStatusPopover.value = !showStatusPopover.value
-  if (showStatusPopover.value) {
+  activePopover.value = activePopover.value === 'status' ? null : 'status'
+  if (activePopover.value === 'status') {
     checkHealth()
   }
+}
+
+function toggleStreakPopover() {
+  haptics.tap()
+  activePopover.value = activePopover.value === 'streak' ? null : 'streak'
+}
+
+function toggleProjectionPopover() {
+  haptics.tap()
+  activePopover.value = activePopover.value === 'projection' ? null : 'projection'
 }
 
 onMounted(() => {
@@ -188,9 +331,9 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px 8px;
+  padding: 12px 16px 6px;
   position: relative;
-  z-index: 20;
+  z-index: 30;
 }
 
 .brand {
@@ -218,18 +361,18 @@ onMounted(() => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .status-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
+  gap: 5px;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted, #8e8e9c);
   background: rgba(255, 255, 255, 0.04);
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: 9999px;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   cursor: pointer;
@@ -269,22 +412,17 @@ onMounted(() => {
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
 }
 
-.status-online {
-  color: var(--text-muted, #8e8e9c);
-}
-
+.status-online { color: var(--text-muted, #8e8e9c); }
 .status-offline {
   background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
   border-color: rgba(239, 68, 68, 0.25);
   color: var(--accent-red, #ef4444);
 }
-
 .status-degraded {
   background: rgba(245, 158, 11, 0.12);
   border-color: rgba(245, 158, 11, 0.25);
   color: #f59e0b;
 }
-
 .status-syncing {
   background: rgba(245, 158, 11, 0.12);
   border-color: rgba(245, 158, 11, 0.25);
@@ -296,12 +434,45 @@ onMounted(() => {
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  padding: 5px 8px;
+  border-radius: 9999px;
+  cursor: pointer;
+  font-size: 0.76rem;
+  transition: all 0.15s ease;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.icon-emoji {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.btn-badge {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: var(--text-main, #f4f4f6);
+}
+
+.projection-btn {
+  padding: 5px 7px;
+}
+
 .settings-btn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   color: var(--text-muted, #8e8e9c);
   cursor: pointer;
-  padding: 7px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,29 +487,27 @@ onMounted(() => {
   transform: rotate(45deg);
 }
 
-.settings-btn:active {
-  transform: scale(0.95);
-}
-
-/* Status Popover */
+/* Popover Modals */
 .popover-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  padding: 55px 16px 0 0;
+  padding: 52px 14px 0;
 }
 
-.status-popover {
+.header-popover {
   background: #18181e;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  border-radius: 14px;
-  width: 290px;
+  border-radius: 16px;
+  width: 310px;
   padding: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -359,7 +528,7 @@ onMounted(() => {
 }
 
 .popover-title {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-main, #f4f4f6);
 }
@@ -373,6 +542,7 @@ onMounted(() => {
   line-height: 1;
 }
 
+/* Health status list */
 .status-list {
   display: flex;
   flex-direction: column;
@@ -386,26 +556,15 @@ onMounted(() => {
   font-size: 0.72rem;
 }
 
-.status-row-label {
-  color: var(--text-muted, #8e8e9c);
-}
-
+.status-row-label { color: var(--text-muted, #8e8e9c); }
 .status-row-val {
   font-family: var(--font-mono, monospace);
   font-weight: 600;
 }
 
-.val-ok {
-  color: var(--accent-green, #22c55e);
-}
-
-.val-warn {
-  color: #f59e0b;
-}
-
-.val-error {
-  color: var(--accent-red, #ef4444);
-}
+.val-ok { color: var(--accent-green, #22c55e); }
+.val-warn { color: #f59e0b; }
+.val-error { color: var(--accent-red, #ef4444); }
 
 .popover-footer {
   display: flex;
@@ -416,10 +575,7 @@ onMounted(() => {
   font-size: 0.68rem;
 }
 
-.uptime-hint {
-  color: var(--text-dim, #5c5c6e);
-}
-
+.uptime-hint { color: var(--text-dim, #5c5c6e); }
 .recheck-btn {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
@@ -430,8 +586,149 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.recheck-btn:hover {
+/* Streak Popover details */
+.streak-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.streak-hero-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.streak-flame-icon {
+  font-size: 1.8rem;
+}
+
+.streak-hero-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.streak-big-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f59e0b;
+  font-family: var(--font-mono, monospace);
+}
+
+.streak-sub-val {
+  font-size: 0.7rem;
+  color: var(--text-dim, #5c5c6e);
+}
+
+.streak-stats-grid,
+.proj-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.streak-stat-box,
+.proj-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-box-label {
+  font-size: 0.65rem;
+  color: var(--text-dim, #5c5c6e);
+  text-transform: uppercase;
+}
+
+.stat-box-num {
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--text-main, #f4f4f6);
-  border-color: var(--accent-green, #22c55e);
+  font-family: var(--font-mono, monospace);
+}
+
+.streak-motivation-text {
+  font-size: 0.74rem;
+  color: var(--text-muted, #8e8e9c);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* Projection Popover details */
+.projection-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.proj-hero-card {
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.card-saving {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.1));
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.card-deficit {
+  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.proj-hero-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-dim, #5c5c6e);
+  text-transform: uppercase;
+}
+
+.proj-hero-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+}
+
+.card-saving .proj-hero-val { color: var(--accent-green, #22c55e); }
+.card-deficit .proj-hero-val { color: var(--accent-red, #ef4444); }
+
+.proj-hero-sub {
+  font-size: 0.7rem;
+  color: var(--text-dim, #5c5c6e);
+}
+
+.proj-tip-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tip-icon {
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.tip-text {
+  font-size: 0.72rem;
+  color: var(--text-muted, #8e8e9c);
+  line-height: 1.35;
 }
 </style>

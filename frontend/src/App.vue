@@ -9,6 +9,11 @@
     <AppHeader
       :isOffline="!offlineSync.isOnline.value"
       :pendingSyncCount="offlineSync.pendingCount.value"
+      :streak="budget?.streak"
+      :projection="budget?.projection"
+      :day="budget?.day"
+      :monthDays="budget?.monthDays"
+      :baseBudget="budget?.baseBudget"
       @open-settings="openSettings"
     />
 
@@ -16,13 +21,12 @@
     <div v-if="isLoading" class="loading-streak" aria-hidden="true"></div>
 
     <main class="dashboard-viewport">
-      <!-- Obere Leiste: Monatsfortschritt & Prognose -->
+      <!-- Obere Leiste: Monatsfortschritt -->
       <section class="meta-section">
         <MonthProgress
           :day="budget?.day ?? 1"
           :monthDays="budget?.monthDays ?? 30"
         />
-        <MonthProjection :projection="budget?.projection" />
       </section>
 
       <!-- Hero Restgeld & Action Button -->
@@ -33,6 +37,7 @@
           :baseBudget="budget.baseBudget"
           :savings="budget.savings"
           :color="budget.color"
+          :spentToday="spentToday"
         />
         <div v-else class="loading">Lade Budget...</div>
 
@@ -41,9 +46,8 @@
         </button>
       </section>
 
-      <!-- Widgets: Streak & Trend-Sparkline -->
+      <!-- Widgets: Trend-Sparkline -->
       <section class="widgets-section">
-        <StreakCard :streak="budget?.streak" />
         <SpendingTrend
           :stats="budget?.dailyStats"
           :baseBudget="budget?.baseBudget ?? 15"
@@ -104,16 +108,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useApi, type BudgetData } from './composables/useApi'
 import { useHaptics } from './composables/useHaptics'
 import { useOfflineSync } from './composables/useOfflineSync'
 import { useTheme } from './composables/useTheme'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
-import MonthProjection from './components/MonthProjection.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
-import StreakCard from './components/StreakCard.vue'
 import SpendingTrend from './components/SpendingTrend.vue'
 import Numpad from './components/Numpad.vue'
 import RecentExpenses from './components/RecentExpenses.vue'
@@ -129,6 +131,12 @@ const haptics = useHaptics()
 const offlineSync = useOfflineSync()
 const theme = useTheme()
 const budget = ref<BudgetData | null>(null)
+
+const spentToday = computed(() => {
+  if (!budget.value || !budget.value.dailyStats) return 0
+  const todayStat = budget.value.dailyStats.find((s) => s.day === budget.value!.day)
+  return todayStat?.spent ?? 0
+})
 const showNumpad = ref(false)
 const showSettings = ref(false)
 const showExpensesModal = ref(false)

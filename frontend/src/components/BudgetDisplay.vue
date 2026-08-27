@@ -2,11 +2,13 @@
   <section class="mockup-hero-card">
     <div class="hero-top-row">
       <span class="hero-label">HEUTE VERFÜGBAR</span>
-      <span class="hero-base-tag">Start: {{ baseBudgetFormatted }} &euro;</span>
+      <span class="hero-base-tag">Basis: {{ baseBudgetFormatted }} &euro;</span>
     </div>
     
-    <div class="hero-amount" :class="['color-' + color, { 'budget-pulse': isPulsing }]">
-      {{ formatted }}
+    <div class="hero-amount-row" :class="['color-' + color, { 'budget-pulse': isPulsing }]">
+      <span class="current-amount">{{ currentFormatted }}</span>
+      <span class="fraction-slash">/</span>
+      <span class="start-amount">{{ startTodayFormatted }}</span>
     </div>
 
     <div class="hero-meta">
@@ -24,9 +26,6 @@
           Perfekt im Plan
         </span>
       </div>
-      <span class="hero-base">
-        <span class="hero-fraction">{{ formatted }}</span> von {{ baseBudgetFormatted }} &euro; heute
-      </span>
     </div>
   </section>
 </template>
@@ -34,12 +33,18 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 
-const props = defineProps<{
-  currentBudget: number
-  baseBudget: number
-  savings: number
-  color: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    currentBudget: number
+    baseBudget: number
+    savings: number
+    color: string
+    spentToday?: number
+  }>(),
+  {
+    spentToday: 0,
+  }
+)
 
 const isPulsing = ref(false)
 
@@ -55,8 +60,16 @@ watch(
   }
 )
 
-const formatted = computed(() =>
+const currentFormatted = computed(() =>
   props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+)
+
+const startTodayAmount = computed(() => {
+  return props.currentBudget + (props.spentToday || 0)
+})
+
+const startTodayFormatted = computed(() =>
+  startTodayAmount.value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 )
 
 const savingsFormatted = computed(() =>
@@ -73,7 +86,7 @@ const baseBudgetFormatted = computed(() =>
   width: 100%;
   max-width: 380px;
   background: radial-gradient(circle at top, #1c1c24 0%, #121216 100%);
-  padding: 22px 16px;
+  padding: 18px 16px;
   border-radius: 20px;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   text-align: center;
@@ -81,6 +94,7 @@ const baseBudgetFormatted = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
 }
 
 .hero-top-row {
@@ -100,78 +114,88 @@ const baseBudgetFormatted = computed(() =>
 }
 
 .hero-base-tag {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono, monospace);
   color: var(--text-dim, #5c5c6e);
   font-weight: 600;
 }
 
-.hero-amount {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: var(--text-main, #f4f4f6);
-  margin: 6px 0 10px;
-  line-height: 1.1;
+.hero-amount-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  transition: transform 0.15s ease, filter 0.15s ease;
+  line-height: 1;
+}
+
+.current-amount {
+  font-size: 2.35rem;
+  font-weight: 800;
   letter-spacing: -1px;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+}
+
+.fraction-slash {
+  font-size: 1.5rem;
+  color: var(--text-dim, #5c5c6e);
+  font-weight: 400;
+}
+
+.start-amount {
+  font-size: 1.4rem;
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 600;
 }
 
 .budget-pulse {
-  animation: budget-bump 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: pulse-glow 0.4s ease-out;
 }
 
-@keyframes budget-bump {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); color: var(--accent-green, #22c55e); }
-  100% { transform: scale(1); }
+@keyframes pulse-glow {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.04); filter: brightness(1.3); }
+  100% { transform: scale(1); filter: brightness(1); }
 }
-
-.color-green { color: var(--text-main, #f4f4f6); }
-.color-white { color: var(--text-main, #f4f4f6); }
-.color-red { color: var(--accent-red, #ef4444); }
 
 .hero-meta {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
+  width: 100%;
 }
 
 .hero-badge-pill {
-  font-size: 0.78rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 12px;
   border-radius: 9999px;
-  transition: all 0.3s ease;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  border: 1px solid transparent;
 }
+
+.color-green .current-amount { color: var(--accent-green, #22c55e); text-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+.color-amber .current-amount { color: #f59e0b; text-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+.color-red .current-amount { color: var(--accent-red, #ef4444); text-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
 
 .badge-green {
   background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
   color: var(--accent-green, #22c55e);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
-.badge-white {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted, #8e8e9c);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+.badge-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.25);
 }
 
 .badge-red {
   background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
   color: var(--accent-red, #ef4444);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-
-.hero-base {
-  font-size: 0.72rem;
-  color: var(--text-dim, #5c5c6e);
-  font-weight: 500;
-}
-
-.hero-fraction {
-  color: var(--text-muted, #8e8e9c);
-  font-weight: 600;
+  border-color: rgba(239, 68, 68, 0.25);
 }
 </style>

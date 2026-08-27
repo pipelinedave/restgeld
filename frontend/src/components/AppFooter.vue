@@ -2,18 +2,32 @@
   <footer class="app-footer">
     <div class="footer-divider"></div>
     <div class="footer-content">
-      <span class="footer-tagline">Track daily. Stay in budget.</span>
+      <div class="footer-left">
+        <span class="footer-tagline">Track daily. Stay in budget.</span>
+        <span class="footer-energy">
+          ⚡ made with high energy by
+          <a
+            href="https://lowlifehigh.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="lowlife-link"
+          >
+            lowlifehigh.tech
+          </a>
+        </span>
+      </div>
+
       <a
         v-if="commitHash && commitHash !== 'dev'"
         :href="`https://github.com/pipelinedave/restgeld/commit/${commitHash}`"
         target="_blank"
         rel="noopener noreferrer"
-        class="footer-commit"
-        title="Commit auf GitHub anzeigen"
+        class="commit-badge"
+        title="Commit auf GitHub ansehen"
       >
         <span class="commit-icon">#</span>{{ commitHash }}
       </a>
-      <span v-else class="footer-commit">dev</span>
+      <span v-else class="commit-badge">dev</span>
     </div>
   </footer>
 </template>
@@ -25,7 +39,7 @@ const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev
 <style scoped>
 .app-footer {
   flex-shrink: 0;
-  padding: 6px 16px 12px;
+  padding: 6px 16px 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -41,27 +55,58 @@ const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-dim, #5c5c6e);
+}
+
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .footer-tagline {
   letter-spacing: 0.02em;
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 500;
 }
 
-.footer-commit {
+.footer-energy {
+  font-size: 0.64rem;
+  color: var(--text-dim, #5c5c6e);
+}
+
+.lowlife-link {
+  color: var(--accent-green, #22c55e);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.lowlife-link:hover {
+  text-decoration: underline;
+}
+
+.commit-badge {
   font-family: var(--font-mono, monospace);
   font-size: 0.68rem;
-  color: var(--text-dim, #5c5c6e);
+  font-weight: 600;
+  color: var(--accent-green, #22c55e);
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.1));
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  transition: color 0.15s;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-.footer-commit:hover {
-  color: var(--accent, #22c55e);
+.commit-badge:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: var(--accent-green, #22c55e);
+  transform: translateY(-1px);
 }
 
 .commit-icon {

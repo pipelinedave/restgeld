@@ -37,7 +37,7 @@
 
         <section class="about-section meta-section">
           <div class="meta-row">
-            <span class="meta-label">Git Commit</span>
+            <span class="meta-label">Version</span>
             <a
               :href="`https://github.com/pipelinedave/restgeld/commit/${gitCommit}`"
               target="_blank"
