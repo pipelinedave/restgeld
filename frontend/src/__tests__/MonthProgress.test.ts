@@ -10,19 +10,19 @@ describe('MonthProgress', () => {
 
   it('setzt breite auf 55% bei 17/31', () => {
     const wrapper = mount(MonthProgress, { props: { day: 17, monthDays: 31 } })
-    const fill = wrapper.find('.progress-fill')
+    const fill = wrapper.find('.progress-bar-fill')
     expect(fill.attributes('style')).toContain('width: 55%')
   })
 
   it('setzt breite auf 3% am ersten tag', () => {
     const wrapper = mount(MonthProgress, { props: { day: 1, monthDays: 31 } })
-    const fill = wrapper.find('.progress-fill')
+    const fill = wrapper.find('.progress-bar-fill')
     expect(fill.attributes('style')).toContain('width: 3%')
   })
 
   it('setzt breite auf 100% am letzten tag', () => {
     const wrapper = mount(MonthProgress, { props: { day: 31, monthDays: 31 } })
-    const fill = wrapper.find('.progress-fill')
+    const fill = wrapper.find('.progress-bar-fill')
     expect(fill.attributes('style')).toContain('width: 100%')
   })
 })

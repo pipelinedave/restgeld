@@ -3,9 +3,9 @@ import { mount } from '@vue/test-utils'
 import AppFooter from '../components/AppFooter.vue'
 
 describe('AppFooter', () => {
-  it('rendert den Tagline und die Version', () => {
+  it('rendert den Tagline und den Commit/Dev-Hash', () => {
     const wrapper = mount(AppFooter)
     expect(wrapper.find('.footer-tagline').text()).toContain('Track daily. Stay in budget.')
-    expect(wrapper.find('.footer-version').text()).toBe('v0.1.0')
+    expect(wrapper.find('.footer-commit').exists()).toBe(true)
   })
 })

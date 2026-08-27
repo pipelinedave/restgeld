@@ -12,43 +12,54 @@
       @open-settings="openSettings"
     />
 
-    <MonthProgress
-      :day="budget?.day ?? 1"
-      :monthDays="budget?.monthDays ?? 30"
-    />
+    <!-- Top Loading Streak -->
+    <div v-if="isLoading" class="loading-streak" aria-hidden="true"></div>
 
-    <MonthProjection :projection="budget?.projection" />
+    <main class="dashboard-viewport">
+      <!-- Obere Leiste: Monatsfortschritt & Prognose -->
+      <section class="meta-section">
+        <MonthProgress
+          :day="budget?.day ?? 1"
+          :monthDays="budget?.monthDays ?? 30"
+        />
+        <MonthProjection :projection="budget?.projection" />
+      </section>
 
-    <div class="hero-area">
-      <BudgetDisplay
-        v-if="budget"
-        :currentBudget="budget.currentBudget"
-        :baseBudget="budget.baseBudget"
-        :savings="budget.savings"
-        :color="budget.color"
-      />
-      <div v-else class="loading">Lade...</div>
+      <!-- Hero Restgeld & Action Button -->
+      <section class="hero-section">
+        <BudgetDisplay
+          v-if="budget"
+          :currentBudget="budget.currentBudget"
+          :baseBudget="budget.baseBudget"
+          :savings="budget.savings"
+          :color="budget.color"
+        />
+        <div v-else class="loading">Lade Budget...</div>
 
-      <button class="add-btn" @click="openNumpad">
-        &minus; Ausgabe
-      </button>
-    </div>
+        <button class="add-btn" @click="openNumpad">
+          <span class="btn-icon">&minus;</span> Ausgabe buchen
+        </button>
+      </section>
 
-    <StreakCard :streak="budget?.streak" />
+      <!-- Widgets: Streak & Trend-Sparkline -->
+      <section class="widgets-section">
+        <StreakCard :streak="budget?.streak" />
+        <SpendingTrend
+          :stats="budget?.dailyStats"
+          :baseBudget="budget?.baseBudget ?? 15"
+          :currentDay="budget?.day ?? 1"
+        />
+      </section>
 
-    <SpendingTrend
-      :stats="budget?.dailyStats"
-      :baseBudget="budget?.baseBudget ?? 15"
-      :currentDay="budget?.day ?? 1"
-    />
-
-    <div class="history-area">
-      <RecentExpenses
-        :expenses="budget?.expenses ?? []"
-        @delete="handleDelete"
-        @open-all="openExpensesModal"
-      />
-    </div>
+      <!-- Ausgaben-Schnellansicht -->
+      <section class="history-section">
+        <RecentExpenses
+          :expenses="budget?.expenses ?? []"
+          @delete="handleDelete"
+          @open-all="openExpensesModal"
+        />
+      </section>
+    </main>
 
     <AppFooter />
 
@@ -114,6 +125,7 @@ const showSettings = ref(false)
 const showExpensesModal = ref(false)
 const showArchiveModal = ref(false)
 const isSavingExpense = ref(false)
+const isLoading = ref(false)
 
 const toast = reactive({
   visible: false,
@@ -155,10 +167,13 @@ function openArchiveModal() {
 }
 
 async function loadBudget() {
+  isLoading.value = true
   try {
     budget.value = await api.getBudget()
   } catch (e: any) {
     console.error('Fehler beim Laden:', e.message)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -297,26 +312,58 @@ onUnmounted(() => {
 
 <style scoped>
 .app-shell {
-  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
   z-index: 1;
 }
 
-.hero-area {
+/* Top Loading Streak */
+.loading-streak {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-green, #22c55e), transparent);
+  background-size: 200% 100%;
+  animation: loading-pulse 1s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes loading-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.dashboard-viewport {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+  gap: 8px;
+}
+
+.meta-section {
+  flex-shrink: 0;
+}
+
+.hero-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 12px 16px 16px;
+  gap: 12px;
+  padding: 4px 16px;
 }
 
 .loading {
   color: var(--text-dim, #5c5c6e);
-  font-size: 1.1rem;
+  font-size: 1rem;
+  font-family: var(--font-mono, monospace);
 }
 
 .add-btn {
@@ -325,23 +372,23 @@ onUnmounted(() => {
   justify-content: center;
   gap: 8px;
   width: 100%;
-  max-width: 260px;
-  padding: 13px 24px;
-  font-size: 1rem;
+  max-width: 240px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
   font-weight: 700;
   border-radius: 9999px;
   background-color: var(--accent-green, #22c55e);
   color: #05200e;
   border: 1px solid transparent;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.25);
+  box-shadow: 0 4px 18px rgba(34, 197, 94, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .add-btn:hover {
   background-color: #2ed66b;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(34, 197, 94, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(34, 197, 94, 0.4);
 }
 
 .add-btn:active {
@@ -349,7 +396,20 @@ onUnmounted(() => {
   background-color: #1eb854;
 }
 
-.history-area {
+.btn-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.widgets-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-section {
   flex-shrink: 0;
 }
 </style>

@@ -16,13 +16,13 @@ describe('AppHeader', () => {
 
   it('zeigt Offline-Badge an wenn isOffline=true', () => {
     const wrapper = mount(AppHeader, { props: { isOffline: true } })
-    expect(wrapper.find('.offline-badge').exists()).toBe(true)
-    expect(wrapper.find('.offline-badge').text()).toContain('Offline')
+    expect(wrapper.find('.status-offline').exists()).toBe(true)
+    expect(wrapper.find('.status-offline').text()).toContain('Offline')
   })
 
   it('zeigt Sync-Badge an wenn pendingSyncCount > 0', () => {
     const wrapper = mount(AppHeader, { props: { pendingSyncCount: 3 } })
-    expect(wrapper.find('.syncing-badge').exists()).toBe(true)
-    expect(wrapper.find('.syncing-badge').text()).toContain('3 ungesynct')
+    expect(wrapper.find('.status-syncing').exists()).toBe(true)
+    expect(wrapper.find('.status-syncing').text()).toContain('3 ungesynct')
   })
 })

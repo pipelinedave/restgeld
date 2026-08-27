@@ -146,8 +146,8 @@ restgeld/
 - 📜 Vorherige Perioden & Monats-Rückblick: Backend-Endpoint `GET /api/periods` mit aggregierten Perioden-Metriken (`totalSpent`, `savings`, `expenseCount`), Archiv-Modal `PeriodsArchiveModal.vue` und Aufruf in `SettingsModal.vue` implementiert und mit 98 Vitest- & 30 Go-Tests abgesichert ✅
 - Preview Environment & Branching-Strategie: Vercel Preview Deployments und Pre-Production Branch `develop` eingerichtet, CI/CD-Pipelines & Agent-Workflow-Dokumentation (`AGENTS.md`, `CONTEXT.md`, `README.md`) für sichere Iteration ohne Gefahr für Live-Daten aktualisiert ✅
 - 🌐 Landing Page & GitHub Pages Deployment: Responsive, eigenständige Landing Page in `docs/` mit interaktivem Live-Mockup, dynamischem Budget-Rechner, Bento-Feature-Grid, FAQ und GitHub Actions Workflow (`pages.yml`) für automatisches GitHub Pages Hosting implementiert ✅
-- 🌐 Landing Page & GitHub Pages Deployment: Responsive, eigenständige Landing Page in `docs/` mit interaktivem Live-Mockup, dynamischem Budget-Rechner, Bento-Feature-Grid, FAQ und GitHub Actions Workflow (`pages.yml`) für automatisches GitHub Pages Hosting implementiert ✅
 - 🎨 UI Redesign nach Landing-Page Vorbild: Vollständige Übernahme des modernen OLED Dark Mode Designs (`#0a0a0c`, Plus Jakarta Sans, JetBrains Mono, Emerald Green `#22c55e`, abgerundete Hero- & Progress-Cards, Glow-Border und Glassmorphism-Modals) in der Vue 3 PWA ✅
+- 🚀 Mobile-UX & Zero-Scroll Dashboard (Epic 1 & 2): Numpad mit initialem "Heute verfügbar" Banner, Android/iOS Autofocus-Optimierung, Hero-Display "x / y noch übrig", Top Loading-Streak unter dem Header, scroll-freies `100dvh` Viewport-Layout und Git-Commit Verlinkung im Footer implementiert und mit 98 Vitest- & 30 Go-Tests abgedeckt ✅
 
 ---
 

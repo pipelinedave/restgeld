@@ -87,12 +87,16 @@ describe('Numpad / Ausgabe-Modal', () => {
       props: { visible: true, currentBudget: 15.0 },
     })
 
+    // Initialer Stand vor Eingabe
+    expect(wrapper.find('.impact-preview').exists()).toBe(true)
+    expect(wrapper.find('.impact-preview').classes()).toContain('impact-neutral')
+    expect(wrapper.find('.impact-text').text()).toContain('Heute verfügbar: 15,00 €')
+
     const amountInput = wrapper.find<HTMLInputElement>('#expense-amount-input')
     await amountInput.setValue('8.50')
 
-    expect(wrapper.find('.impact-preview').exists()).toBe(true)
     expect(wrapper.find('.impact-preview').classes()).toContain('impact-ok')
-    expect(wrapper.find('.impact-text').text()).toContain('Heute verbleiben: 6,50 €')
+    expect(wrapper.find('.impact-text').text()).toContain('Verbleibt danach: 6,50 €')
 
     // Überzogenes Budget
     await amountInput.setValue('20.00')

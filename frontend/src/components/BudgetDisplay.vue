@@ -1,6 +1,10 @@
 <template>
   <section class="mockup-hero-card">
-    <span class="hero-label">HEUTE VERFÜGBAR</span>
+    <div class="hero-top-row">
+      <span class="hero-label">HEUTE VERFÜGBAR</span>
+      <span class="hero-base-tag">Start: {{ baseBudgetFormatted }} &euro;</span>
+    </div>
+    
     <div class="hero-amount" :class="['color-' + color, { 'budget-pulse': isPulsing }]">
       {{ formatted }}
     </div>
@@ -20,7 +24,9 @@
           Perfekt im Plan
         </span>
       </div>
-      <span class="hero-base">Basis: {{ baseBudgetFormatted }} &euro;/Tag</span>
+      <span class="hero-base">
+        <span class="hero-fraction">{{ formatted }}</span> von {{ baseBudgetFormatted }} &euro; heute
+      </span>
     </div>
   </section>
 </template>
@@ -77,12 +83,27 @@ const baseBudgetFormatted = computed(() =>
   align-items: center;
 }
 
+.hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 4px;
+}
+
 .hero-label {
   font-size: 0.72rem;
   letter-spacing: 1.5px;
   font-weight: 700;
   color: var(--text-muted, #8e8e9c);
   text-transform: uppercase;
+}
+
+.hero-base-tag {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.7rem;
+  color: var(--text-dim, #5c5c6e);
+  font-weight: 600;
 }
 
 .hero-amount {
@@ -147,5 +168,10 @@ const baseBudgetFormatted = computed(() =>
   font-size: 0.72rem;
   color: var(--text-dim, #5c5c6e);
   font-weight: 500;
+}
+
+.hero-fraction {
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 600;
 }
 </style>

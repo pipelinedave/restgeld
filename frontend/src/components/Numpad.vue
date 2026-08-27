@@ -154,14 +154,22 @@ const parsedAmount = computed(() => {
 const isValidAmount = computed(() => parsedAmount.value > 0)
 
 const liveImpact = computed(() => {
-  if (!isValidAmount.value || props.currentBudget === undefined) return null
+  if (props.currentBudget === undefined) return null
+
+  if (!isValidAmount.value) {
+    return {
+      type: 'impact-neutral',
+      icon: '💶',
+      text: `Heute verfügbar: ${props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+    }
+  }
 
   const diff = props.currentBudget - parsedAmount.value
   if (diff >= 0) {
     return {
       type: 'impact-ok',
       icon: '✓',
-      text: `Heute verbleiben: ${diff.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+      text: `Verbleibt danach: ${diff.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
     }
   } else {
     const over = Math.abs(diff)
@@ -173,6 +181,16 @@ const liveImpact = computed(() => {
   }
 })
 
+function triggerFocus() {
+  nextTick(() => {
+    if (amountInputRef.value) {
+      amountInputRef.value.focus()
+      // Android / mobile virtual keyboard trigger
+      amountInputRef.value.click()
+    }
+  })
+}
+
 watch(
   () => props.visible,
   (isVis) => {
@@ -180,9 +198,9 @@ watch(
       amountInput.value = ''
       noteInput.value = ''
       loadStoredNotes()
-      nextTick(() => {
-        amountInputRef.value?.focus()
-      })
+      triggerFocus()
+      // Fallback delay for Android WebView PWA shortcut rendering
+      setTimeout(triggerFocus, 100)
     }
   },
   { immediate: true }
@@ -440,6 +458,12 @@ onMounted(loadStoredNotes)
   font-weight: 600;
   padding: 5px 10px;
   border-radius: 8px;
+}
+
+.impact-neutral {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted, #9494a8);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
 }
 
 .impact-ok {
