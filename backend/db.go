@@ -483,16 +483,29 @@ func (s *postgresStore) GetAllExpenses(userID, periodID string) ([]Expense, erro
 func (s *postgresStore) GetAllPeriods(userID string, now time.Time) ([]PeriodSummary, error) {
 	var rows *sql.Rows
 	var err error
-	query := `SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
+
+	// Vorbestehenden Bug vermeiden: leerer String darf nie gegen das UUID-Feld
+	// geparst werden (pq: invalid input syntax for type uuid). Wie im Rest des
+	// Codes wird deshalb in Go zwischen Guest (IS NULL) und Account (Rückweg) verzweigt.
+	where := "p.user_id = $1"
+	if userID == "" {
+		where = "p.user_id IS NULL"
+	}
+
+	query := fmt.Sprintf(`SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
 	                 COALESCE(SUM(e.amount), 0) as total_spent,
 	                 COUNT(e.id) as expense_count
 	          FROM periods p
 	          LEFT JOIN expenses e ON p.id = e.period_id
-	          WHERE (p.user_id = $1 OR ($1 = '' AND p.user_id IS NULL))
+	          WHERE %s
 	          GROUP BY p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total
-	          ORDER BY p.start_date DESC`
+	          ORDER BY p.start_date DESC`, where)
 
-	rows, err = s.db.Query(query, userID)
+	if userID == "" {
+		rows, err = s.db.Query(query)
+	} else {
+		rows, err = s.db.Query(query, userID)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("perioden abfragen: %w", err)
 	}

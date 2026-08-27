@@ -101,6 +101,26 @@ func TestIntegrationCreateDuplicatePeriod(t *testing.T) {
 	}
 }
 
+// Regressionstest: GetAllPeriods im Guest-Pfad ("" userID) darf keinen
+// UUID-Parse-Fehler ("invalid input syntax for type uuid") mehr werfen,
+// sondern das Archiv sauber zurückgeben (vormals 500 im Archiv-Modal).
+func TestIntegrationGetAllPeriodsGuest(t *testing.T) {
+	store := newIntegrationStore(t)
+	if _, err := store.GetOrCreatePeriod(""); err != nil {
+		t.Fatalf("periode anlegen: %v", err)
+	}
+	periods, err := store.GetAllPeriods("", time.Now())
+	if err != nil {
+		t.Fatalf("GetAllPeriods guest: %v", err)
+	}
+	if len(periods) == 0 {
+		t.Fatal("erwartet mindestens eine periode im guest archiv")
+	}
+	if periods[0].ActualDays < 1 || periods[0].EndDate.IsZero() {
+		t.Fatalf("erwartet aktuelle laufzeit (endDate + actualDays), bekommen: %+v", periods[0])
+	}
+}
+
 func TestIntegrationAddAndListExpenses(t *testing.T) {
 	store := newIntegrationStore(t)
 	p, _ := store.GetOrCreatePeriod("")
