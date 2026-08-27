@@ -200,17 +200,25 @@ Strukturierte Erfassung der Praxistest-Erkenntnisse und Feature-Wünsche für ko
 4. **Landing Page Sync**:
    - Ziel: Aktualisierung des interaktiven Mockups in `docs/index.html` auf das exakte Layout der PWA.
 
-### Epic 5: SaaS Architecture & Multi-Tenancy (Konzept & Planung)
+### Epic 5: SaaS Architecture, Multi-Tenancy & Magic Link Auth (✅ Umgesetzt)
 1. **User Accounts & Tenant Isolation**:
-   - Architektur-Entwurf für Multi-User Betrieb (User ID Scoping in DB-Tabellen `periods`, `expenses`, `settings`).
-   - Auth-Optionen: Passkeys / WebAuthn, Magic Links oder einfaches JWT/Session-Management.
-   - Vorbereitung für SaaS-Hosting & Skalierung.
+   - Multi-Tenant DB Schema mit Tabellen `users`, `magic_links`, `auth_sessions` und `user_id` Foreign Keys auf `periods` & `expenses`.
+   - Vollständige Tenant-Isolation auf DB- und Store-Ebene (`(user_id = $userID OR ($userID = '' AND user_id IS NULL))`).
+2. **Magic Link Authentifizierung**:
+   - Endpoints: `POST /api/auth/magic-link`, `POST /api/auth/verify`, `GET /api/auth/me`, `PATCH /api/auth/settings`, `POST /api/auth/logout`, `DELETE /api/auth/me` (DSGVO-konforme Kontolöschung).
+   - Sichere SHA-256 gehashte Einmal-Tokens, HttpOnly Session-Cookies und Bearer-Token Fallback.
+   - Dev/Preview Debug-Token Link für instant zero-setup Testing ohne SMTP-Zwang.
+3. **Frontend Integration**:
+   - `useAuth.ts` Composable für reaktiven State, automatische URL-Token-Verifikation (`?auth_token=...`).
+   - `AuthModal.vue` für Magic-Link-Anfrage, Profil-Übersicht und DSGVO-Löschung.
+   - Gast-Daten-Migration: Vorhandene lokale Ausgaben & Perioden können nahtlos in einen neuen Account übertragen werden (`/api/auth/migrate-guest`).
+   - `SettingsModal.vue` Account-Sektion mit Schnellzugriff.
 
 ---
 
 ### 🔄 Nächste Schritte
-1. **Epic 1 & Epic 2 abarbeiten** (Mobile Focus, Numpad Banner, Zero-Scroll Dashboard Layout).
-2. **Deployment auf k3s**
+1. **Passkeys / WebAuthn**: Nachgelagerte Erweiterung für biometrisches Einloggen (FaceID / Fingerprint).
+2. **Deployment auf k3s**:
    - `kubectl create namespace restgeld`
    - SealedSecret für Postgres-Passwort erstellen
    - Flux Kustomization in k3s-config repo übernehmen
