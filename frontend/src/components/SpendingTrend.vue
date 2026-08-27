@@ -149,7 +149,7 @@ function formatDate(dateStr: string) {
 
 <style scoped>
 .spending-trend {
-  padding: 14px 16px;
+  padding: 10px 16px 8px;
   background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 16px;
@@ -160,7 +160,7 @@ function formatDate(dateStr: string) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .trend-title {
@@ -194,9 +194,9 @@ function formatDate(dateStr: string) {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  height: 85px;
+  height: 48px;
   min-width: 100%;
-  padding-top: 8px;
+  padding-top: 4px;
 }
 
 .bar-column {
@@ -260,10 +260,10 @@ function formatDate(dateStr: string) {
 }
 
 .bar-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-dim, #5c5c6e);
   font-family: var(--font-mono, monospace);
-  margin-top: 4px;
+  margin-top: 2px;
   line-height: 1;
 }
 
@@ -277,14 +277,14 @@ function formatDate(dateStr: string) {
 }
 
 .detail-preview {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: 4px;
+  padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 24px;
+  min-height: 18px;
 }
 
 .detail-hint {
