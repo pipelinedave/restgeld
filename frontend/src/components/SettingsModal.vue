@@ -112,19 +112,43 @@
             </div>
           </div>
 
-          <!-- Live Kalkulator Card -->
+          <!-- Live Kalkulator Card: Tages-Restgeld bidirektional gekoppelt -->
           <div class="calc-card">
-            <div class="calc-left">
-              <span class="calc-label">Tages-Restgeld:</span>
-              <span class="calc-value">&empty; {{ calculatedDailyBudget }} &euro; / Tag</span>
+            <div class="calc-header">
+              <span class="calc-label">Tages-Restgeld</span>
+              <div class="input-badge">
+                <input
+                  id="day-budget-input"
+                  v-model.number="dayEditor"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  placeholder="0,00"
+                  class="num-input"
+                  @change="setDayBudget(dayEditor)"
+                />
+                <span class="currency-symbol">&euro;</span>
+              </div>
             </div>
-            <button
-              class="save-btn"
-              :disabled="!isValidSettings"
-              @click="handleSaveSettings"
-            >
-              Speichern
-            </button>
+            <input
+              v-model.number="dayEditor"
+              type="range"
+              min="0.5"
+              :max="Math.max(50, Math.round(budgetInput / Math.max(daysInput, 1)) * 2)"
+              step="0.5"
+              class="range-slider"
+              @change="setDayBudget(dayEditor)"
+            />
+            <div class="calc-footer">
+              <span class="calc-value">&empty; {{ calculatedDailyBudget }} &euro; / Tag</span>
+              <button
+                class="save-btn"
+                :disabled="!isValidSettings"
+                @click="handleSaveSettings"
+              >
+                Speichern
+              </button>
+            </div>
           </div>
 
           <p v-if="budgetSavedMsg" class="success-msg">{{ budgetSavedMsg }}</p>
@@ -244,7 +268,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useApi } from '../composables/useApi'
 import { useTheme } from '../composables/useTheme'
@@ -279,6 +303,47 @@ const isExporting = ref(false)
 const isImporting = ref(false)
 const backupMsg = ref('')
 const backupMsgType = ref<'success' | 'error'>('success')
+
+// Bidirektionale Tages-Restgeld-Kopplung (Epic 3 #1):
+// Tages-Restgeld ist editierbar (Slider/Nummer) und treibt beim Ändern das
+// Monatsbudget (Tag * Tage), während das Monatsbudget umgekehrt das Tagesbudget anzeigt.
+const dayEditor = ref(0)
+const isAdjustingDay = ref(false)
+
+function syncDayEditor() {
+  if (isAdjustingDay.value) return
+  const days = daysInput.value
+  if (days > 0) {
+    dayEditor.value = Math.round((budgetInput.value / days) * 100) / 100
+  }
+}
+
+function setDayBudget(val: number) {
+  if (typeof val !== 'number' || !isFinite(val) || val <= 0) return
+  isAdjustingDay.value = true
+  dayEditor.value = val
+  const days = daysInput.value
+  if (days > 0) {
+    budgetInput.value = Math.round(val * days * 100) / 100
+  }
+  nextTick(() => {
+    isAdjustingDay.value = false
+  })
+}
+
+watch([budgetInput, daysInput], () => {
+  syncDayEditor()
+})
+
+watch(
+  () => props.visible,
+  (newVal) => {
+    if (newVal) {
+      isAdjustingDay.value = false
+      nextTick(syncDayEditor)
+    }
+  }
+)
 
 watch(
   () => props.currentMonthlyBudget,
@@ -640,6 +705,13 @@ function handleResetPeriod() {
   background: rgba(34, 197, 94, 0.06);
   border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-header,
+.calc-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
