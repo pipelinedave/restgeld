@@ -89,4 +89,15 @@ describe('SettingsModal', () => {
     expect(backupBtns[0].text()).toContain('CSV (Excel)')
     expect(backupBtns[1].text()).toContain('JSON Backup')
   })
+
+  it('renders account section and emits open-auth on button click', async () => {
+    const wrapper = mount(SettingsModal, {
+      props: { visible: true }
+    })
+
+    const accountBtn = wrapper.find('.account-btn')
+    expect(accountBtn.exists()).toBe(true)
+    await accountBtn.trigger('click')
+    expect(wrapper.emitted('open-auth')).toBeTruthy()
+  })
 })

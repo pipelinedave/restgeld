@@ -7,6 +7,21 @@
       </div>
 
       <div class="modal-body">
+        <!-- Konto & Cloud-Sync Sektion -->
+        <section class="setting-section account-section">
+          <div class="account-header">
+            <div class="account-info">
+              <span class="section-title">{{ auth.isLoggedIn.value ? 'Konto & Cloud-Sync' : 'Cloud-Sync & Backup' }}</span>
+              <p class="description">
+                {{ auth.isLoggedIn.value ? `Angemeldet als ${auth.user.value?.email}` : 'Synchronisiere deine Daten sicher & passwortlos über alle deine Geräte.' }}
+              </p>
+            </div>
+            <button class="account-btn" @click="$emit('open-auth')">
+              {{ auth.isLoggedIn.value ? 'Konto verwalten ⚙️' : 'Anmelden / Registrieren ☁️' }}
+            </button>
+          </div>
+        </section>
+
         <!-- Interaktiver Budget- & Perioden-Konfigurator -->
         <section class="setting-section config-section">
           <!-- Monatsbudget -->
@@ -233,6 +248,7 @@ import { ref, computed, watch } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useApi } from '../composables/useApi'
 import { useTheme } from '../composables/useTheme'
+import { useAuth } from '../composables/useAuth'
 
 const props = defineProps<{
   visible: boolean
@@ -247,11 +263,13 @@ const emit = defineEmits<{
   (e: 'data-imported', count: number): void
   (e: 'open-archive'): void
   (e: 'open-about'): void
+  (e: 'open-auth'): void
 }>()
 
 const api = useApi()
 const haptics = useHaptics()
 const theme = useTheme()
+const auth = useAuth()
 const budgetInput = ref<number>(props.currentMonthlyBudget ?? 450)
 const daysInput = ref<number>(props.currentMonthDays ?? 30)
 const confirmReset = ref(false)
@@ -499,6 +517,42 @@ function handleResetPeriod() {
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 14px;
   padding: 14px;
+}
+
+.account-section {
+  background: rgba(34, 197, 94, 0.04);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-btn {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
+  border: 1px solid var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.account-btn:hover {
+  background: var(--accent-green, #22c55e);
+  color: #000;
 }
 
 .slider-group {

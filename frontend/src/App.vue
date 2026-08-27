@@ -92,7 +92,17 @@
       @data-imported="handleDataImported"
       @open-archive="openArchiveModal"
       @open-about="openAboutModal"
+      @open-auth="openAuthModal"
       @close="showSettings = false"
+    />
+
+    <AuthModal
+      :visible="showAuthModal"
+      :guestExpenses="budget?.expenses"
+      @login-success="handleLoginSuccess"
+      @logout-success="handleLogoutSuccess"
+      @migration-complete="handleMigrationComplete"
+      @close="showAuthModal = false"
     />
 
     <PeriodsArchiveModal
@@ -113,6 +123,7 @@ import { useApi, type BudgetData } from './composables/useApi'
 import { useHaptics } from './composables/useHaptics'
 import { useOfflineSync } from './composables/useOfflineSync'
 import { useTheme } from './composables/useTheme'
+import { useAuth } from './composables/useAuth'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
@@ -123,6 +134,7 @@ import ExpensesModal from './components/ExpensesModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import PeriodsArchiveModal from './components/PeriodsArchiveModal.vue'
 import AboutModal from './components/AboutModal.vue'
+import AuthModal from './components/AuthModal.vue'
 import AppFooter from './components/AppFooter.vue'
 import ToastNotification from './components/ToastNotification.vue'
 
@@ -130,6 +142,7 @@ const api = useApi()
 const haptics = useHaptics()
 const offlineSync = useOfflineSync()
 const theme = useTheme()
+const auth = useAuth()
 const budget = ref<BudgetData | null>(null)
 
 const spentToday = computed(() => {
@@ -142,6 +155,7 @@ const showSettings = ref(false)
 const showExpensesModal = ref(false)
 const showArchiveModal = ref(false)
 const showAboutModal = ref(false)
+const showAuthModal = ref(false)
 const isSavingExpense = ref(false)
 const isLoading = ref(false)
 
@@ -188,6 +202,30 @@ function openAboutModal() {
   haptics.tap()
   showSettings.value = false
   showAboutModal.value = true
+}
+
+function openAuthModal() {
+  haptics.tap()
+  showSettings.value = false
+  showAuthModal.value = true
+}
+
+async function handleLoginSuccess() {
+  showAuthModal.value = false
+  await loadBudget()
+  showToast('✓ Erfolgreich angemeldet', 'success')
+}
+
+async function handleLogoutSuccess() {
+  showAuthModal.value = false
+  await loadBudget()
+  showToast('✓ Erfolgreich abgemeldet', 'info')
+}
+
+async function handleMigrationComplete(count: number) {
+  showAuthModal.value = false
+  await loadBudget()
+  showToast(`✓ ${count} Ausgaben erfolgreich synchronisiert`, 'success')
 }
 
 async function loadBudget() {
@@ -319,6 +357,15 @@ let cleanupListeners: (() => void) | undefined
 
 onMounted(async () => {
   theme.initTheme()
+
+  // Magic Link Token in URL abfangen
+  const autoLoggedIn = await auth.checkUrlForAuthToken()
+  if (autoLoggedIn) {
+    showToast('✓ Erfolgreich eingeloggt', 'success')
+  } else {
+    await auth.fetchMe()
+  }
+
   await loadBudget()
   cleanupListeners = offlineSync.initListeners(handleAutoSync)
 

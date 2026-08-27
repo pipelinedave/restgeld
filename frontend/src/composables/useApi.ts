@@ -48,6 +48,14 @@ export interface BudgetData {
   projection?: ProjectionInfo
 }
 
+export interface Period {
+  id?: string
+  startDate: string
+  monthDays: number
+  baseBudget: number
+  monthlyTotal: number
+}
+
 export interface PeriodSummary {
   id: string
   startDate: string
@@ -64,9 +72,18 @@ const BASE = import.meta.env.PROD
   : ''
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('restgeld_auth_token') : null
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string>),
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers,
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))
