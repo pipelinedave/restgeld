@@ -155,6 +155,7 @@ restgeld/
 - 🚀 Release-Promotion: `develop` (inkl. Epic 5 SaaS Multi-Tenancy & Magic Link Auth) per Fast-Forward in `main` gemerged und gepusht → Production Deployment getriggert ✅
 - 🛠️ UX-Verbesserungen (Batch): HTML-Titel konsistent auf "restgeld." (App + Landing Page), App-Icon ohne weißen Rand (SVG bereinigt + generierte PNG 192/512 + maskable für Android), Android-Tastatur-Autofocus bei PWA-Quick-Action via VirtualKeyboard-API, Archiv zeigt jetzt tatsächliche statt konfigurierte Laufzeit (`endDate` + `actualDays` mit Abweichungs-Hinweis) und Main-Page-Layout für Zero-Scroll komprimiert (dichte Anordnung statt space-between, kompakter Tages-Verlauf, begrenzte Ausgabenliste) ✅
 - 🐛 Bugfix: Perioder-Archiv lieferte 500 (vorbestehender UUID-Leerstring-Fehler in `GetAllPeriods` Guest-Pfad: `p.user_id = ''` gegen UUID-Feld geparst); gefixt durch Go-Verzweigung zwischen `IS NULL` (Guest) und `= $1` (Account) inkl. Integration-Test-Buildfix + Regressionstest `TestIntegrationGetAllPeriodsGuest` ✅
+- ✨ Feature: Tages-Detail-Drilldown im Tages-Verlauf — Tap auf einen Tag lädt die konkreten Buchungen des Tages über neuen Endpoint `GET /api/expenses/day?date=YYYY-MM-DD` (tenant-scoped, inkl. Store + Integrationstest) und zeigt sie kompakt an ✅
 
 ---
 
