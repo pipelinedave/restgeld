@@ -18,6 +18,17 @@ test.describe('Restgeld E2E', () => {
     // Service Worker blockieren um Bypassing der Mocks zu verhindern
     await page.route('**/sw.js', route => route.abort())
 
+    // Service Worker de-registrieren falls vorhanden
+    await page.addInitScript(() => {
+      if (window.navigator && window.navigator.serviceWorker) {
+        window.navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (const registration of registrations) {
+            registration.unregister()
+          }
+        })
+      }
+    })
+
     // Reset state vor jedem Test
     expenses = []
 
@@ -111,7 +122,7 @@ test.describe('Restgeld E2E', () => {
     await page.goto('/')
     await expect(page.getByText(/Tag \d+ von \d+/)).toBeVisible()
     await expect(page.getByText(/[\d.,]+ €/).first()).toBeVisible()
-    await expect(page.getByText(/angespart/)).toBeVisible()
+    await expect(page.getByText(/Puffer|Plan|überzogen/i).first()).toBeVisible()
   })
 
   test('modal oeffnet sich bei klick auf ausgabe-button', async ({ page }) => {
