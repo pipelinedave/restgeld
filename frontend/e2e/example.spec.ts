@@ -181,12 +181,12 @@ test.describe('Restgeld E2E', () => {
     // Modal geöffnet
     await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).toBeVisible()
     await expect(page.getByText('Seite 1 von 2')).toBeVisible()
-    await expect(page.getByText('Ausgabe 7')).toBeVisible()
+    await expect(page.locator('.modal-content').getByText('Ausgabe 7')).toBeVisible()
 
     // Zur nächsten Seite blättern
     await page.getByRole('button', { name: 'Nächste Seite' }).click()
     await expect(page.getByText('Seite 2 von 2')).toBeVisible()
-    await expect(page.getByText('Ausgabe 1')).toBeVisible()
+    await expect(page.locator('.modal-content').getByText('Ausgabe 1')).toBeVisible()
 
     // Schließen
     await page.getByRole('button', { name: 'Schließen' }).click()
