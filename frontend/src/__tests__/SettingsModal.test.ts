@@ -42,7 +42,7 @@ describe('SettingsModal', () => {
     await input.setValue(750)
     const daysInput = wrapper.find<HTMLInputElement>('input#period-days-input')
     await daysInput.setValue(14)
-    await wrapper.find('.action-btn').trigger('click')
+    await wrapper.find('.save-btn').trigger('click')
 
     expect(wrapper.emitted('update-budget')).toBeTruthy()
     expect(wrapper.emitted('update-budget')?.[0]).toEqual([750, 14])

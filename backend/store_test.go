@@ -122,7 +122,14 @@ func (m *memoryStore) GetExpenses(periodID string, page, limit int) (*PaginatedE
 		limit = 10
 	}
 
-	total := len(m.expenses)
+	var periodExpenses []Expense
+	for _, e := range m.expenses {
+		if e.PeriodID == periodID {
+			periodExpenses = append(periodExpenses, e)
+		}
+	}
+
+	total := len(periodExpenses)
 	offset := (page - 1) * limit
 
 	var items []Expense
@@ -133,7 +140,7 @@ func (m *memoryStore) GetExpenses(periodID string, page, limit int) (*PaginatedE
 			end = total
 		}
 		for i := offset; i < end; i++ {
-			items = append(items, m.expenses[total-1-i])
+			items = append(items, periodExpenses[total-1-i])
 		}
 	}
 

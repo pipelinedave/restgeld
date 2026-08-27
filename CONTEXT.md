@@ -148,6 +148,7 @@ restgeld/
 - 🌐 Landing Page & GitHub Pages Deployment: Responsive, eigenständige Landing Page in `docs/` mit interaktivem Live-Mockup, dynamischem Budget-Rechner, Bento-Feature-Grid, FAQ und GitHub Actions Workflow (`pages.yml`) für automatisches GitHub Pages Hosting implementiert ✅
 - 🎨 UI Redesign nach Landing-Page Vorbild: Vollständige Übernahme des modernen OLED Dark Mode Designs (`#0a0a0c`, Plus Jakarta Sans, JetBrains Mono, Emerald Green `#22c55e`, abgerundete Hero- & Progress-Cards, Glow-Border und Glassmorphism-Modals) in der Vue 3 PWA ✅
 - 🚀 Mobile-UX & Zero-Scroll Dashboard (Epic 1 & 2): Numpad mit initialem "Heute verfügbar" Banner, Android/iOS Autofocus-Optimierung, Hero-Display "x / y noch übrig", Top Loading-Streak unter dem Header, scroll-freies `100dvh` Viewport-Layout und Git-Commit Verlinkung im Footer implementiert und mit 98 Vitest- & 30 Go-Tests abgedeckt ✅
+- 🎛️ Interaktive Settings-Slider & Abschlussbericht-Archiv (Epic 3): Granulare 1 €-Budget- & Tages-Slider mit bidirektionalem Live-Kalkulator in `SettingsModal.vue`, `GET /api/expenses?period_id=...` im Backend und interaktiver Monats-Abschlussbericht mit Ausgabenliste in `PeriodsArchiveModal.vue` implementiert und mit 99 Vitest- & 31 Go-Tests abgesichert ✅
 
 ---
 

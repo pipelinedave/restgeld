@@ -79,8 +79,11 @@ export function useApi() {
   return {
     getBudget: () => api<BudgetData>('/api/budget'),
     getPeriods: () => api<PeriodSummary[]>('/api/periods'),
-    getExpenses: (page = 1, limit = 10) =>
-      api<PaginatedExpenses>(`/api/expenses?page=${page}&limit=${limit}`),
+    getExpenses: (page = 1, limit = 10, periodId?: string) => {
+      const query = new URLSearchParams({ page: String(page), limit: String(limit) })
+      if (periodId) query.set('period_id', periodId)
+      return api<PaginatedExpenses>(`/api/expenses?${query.toString()}`)
+    },
     addExpense: (amount: number, note: string) =>
       api<Expense>('/api/expenses', {
         method: 'POST',

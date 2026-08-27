@@ -742,6 +742,30 @@ func TestGetPeriods(t *testing.T) {
 	}
 }
 
+func TestGetExpensesWithPeriodID(t *testing.T) {
+	store := newMemoryStore()
+	store.AddExpense("2026-07", 42.0, "Alte Ausgabe")
+	store.AddExpense("2026-08", 10.0, "Neue Ausgabe")
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/expenses?period_id=2026-07", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp PaginatedExpenses
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode fehler: %v", err)
+	}
+
+	if resp.Total != 1 || len(resp.Items) != 1 || resp.Items[0].Note != "Alte Ausgabe" {
+		t.Errorf("unerwartete Ausgaben für Periode 2026-07: %+v", resp)
+	}
+}
+
 func decodeJSON(t *testing.T, body interface{ Read([]byte) (int, error) }, v interface{}) {
 	t.Helper()
 	b := make([]byte, 4096)

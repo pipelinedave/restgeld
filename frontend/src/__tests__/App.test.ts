@@ -100,7 +100,7 @@ describe('App', () => {
     await wrapper.find('.settings-btn').trigger('click')
     const input = wrapper.find<HTMLInputElement>('input#monthly-budget-input')
     await input.setValue(800)
-    await wrapper.find('.setting-section .action-btn').trigger('click')
+    await wrapper.find('.setting-section .save-btn').trigger('click')
     await flushPromises()
     expect(mockApi().updateBudget).toHaveBeenCalledWith(800, 31)
     expect(mockApi().getBudget).toHaveBeenCalledTimes(2)

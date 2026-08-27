@@ -150,10 +150,14 @@ func (s *server) handleExpenses(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
-	period, err := s.store.GetOrCreatePeriod()
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
-		return
+	periodID := r.URL.Query().Get("period_id")
+	if periodID == "" {
+		period, err := s.store.GetOrCreatePeriod()
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
+			return
+		}
+		periodID = period.ID
 	}
 
 	page := 1
@@ -171,7 +175,7 @@ func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	expenses, err := s.store.GetExpenses(period.ID, page, limit)
+	expenses, err := s.store.GetExpenses(periodID, page, limit)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
 		return

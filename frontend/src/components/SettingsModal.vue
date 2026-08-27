@@ -7,43 +7,119 @@
       </div>
 
       <div class="modal-body">
-        <section class="setting-section">
-          <label for="monthly-budget-input" class="section-title">Budget (€)</label>
-          <div class="input-row">
+        <!-- Interaktiver Budget- & Perioden-Konfigurator -->
+        <section class="setting-section config-section">
+          <!-- Monatsbudget -->
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="monthly-budget-input" class="section-title">Monatsbudget</label>
+              <div class="input-badge">
+                <input
+                  id="monthly-budget-input"
+                  v-model.number="budgetInput"
+                  type="number"
+                  min="10"
+                  max="5000"
+                  step="1"
+                  placeholder="600"
+                  class="num-input"
+                  @keyup.enter="handleSaveSettings"
+                />
+                <span class="currency-symbol">&euro;</span>
+              </div>
+            </div>
+
             <input
-              id="monthly-budget-input"
               v-model.number="budgetInput"
-              type="number"
-              min="1"
-              step="10"
-              placeholder="z. B. 600"
-              @keyup.enter="handleSaveSettings"
+              type="range"
+              min="50"
+              max="2500"
+              step="1"
+              class="range-slider"
             />
+
+            <!-- Presets -->
+            <div class="preset-row">
+              <button
+                v-for="p in [300, 450, 600, 1000]"
+                :key="p"
+                type="button"
+                class="preset-chip"
+                :class="{ active: budgetInput === p }"
+                @click="setBudget(p)"
+              >
+                {{ p }} &euro;
+              </button>
+            </div>
           </div>
 
-          <label for="period-days-input" class="section-title" style="margin-top: 14px;">Dauer der Periode (Tage)</label>
-          <div class="input-row">
+          <!-- Periodendauer -->
+          <div class="slider-group" style="margin-top: 14px;">
+            <div class="slider-header">
+              <label for="period-days-input" class="section-title">Periodendauer</label>
+              <div class="input-badge">
+                <input
+                  id="period-days-input"
+                  v-model.number="daysInput"
+                  type="number"
+                  min="1"
+                  max="365"
+                  step="1"
+                  placeholder="30"
+                  class="num-input"
+                  @keyup.enter="handleSaveSettings"
+                />
+                <span class="currency-symbol">Tage</span>
+              </div>
+            </div>
+
             <input
-              id="period-days-input"
               v-model.number="daysInput"
-              type="number"
-              min="1"
-              max="365"
+              type="range"
+              min="7"
+              max="45"
               step="1"
-              placeholder="z. B. 30"
-              @keyup.enter="handleSaveSettings"
+              class="range-slider"
             />
-            <button class="action-btn" :disabled="!isValidSettings" @click="handleSaveSettings">
+
+            <!-- Days Presets -->
+            <div class="preset-row">
+              <button
+                v-for="d in [14, 28, 30, 31]"
+                :key="d"
+                type="button"
+                class="preset-chip"
+                :class="{ active: daysInput === d }"
+                @click="setDays(d)"
+              >
+                {{ d }} Tage
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Kalkulator Card -->
+          <div class="calc-card">
+            <div class="calc-left">
+              <span class="calc-label">Tages-Restgeld:</span>
+              <span class="calc-value">&empty; {{ calculatedDailyBudget }} &euro; / Tag</span>
+            </div>
+            <button
+              class="save-btn"
+              :disabled="!isValidSettings"
+              @click="handleSaveSettings"
+            >
               Speichern
             </button>
           </div>
+
           <p v-if="budgetSavedMsg" class="success-msg">{{ budgetSavedMsg }}</p>
         </section>
 
+        <!-- Backup & Archiv -->
         <section class="setting-section backup-zone">
-          <span class="section-title">Daten & Backup</span>
+          <span class="section-title">Daten & Archiv</span>
           <p class="description">
-            Exportiere deine Daten als CSV für Excel oder erstelle ein JSON-Backup zur Wiederherstellung.
+            Sichere deine Ausgaben oder wirf einen Blick in frühere Perioden.
           </p>
 
           <div class="backup-actions">
@@ -69,17 +145,18 @@
           </div>
           <p v-if="backupMsg" class="backup-msg" :class="backupMsgType">{{ backupMsg }}</p>
 
-          <div style="margin-top: 6px;">
+          <div style="margin-top: 8px;">
             <button type="button" class="archive-trigger-btn" @click="handleOpenArchive">
               📜 Frühere Monate / Archiv ansehen
             </button>
           </div>
         </section>
 
+        <!-- Danger Zone -->
         <section class="setting-section danger-zone">
           <span class="section-title danger-title">Neue Periode ab heute starten</span>
           <p class="description">
-            Startet deinen Gehalts-/Abrechnungszyklus ab heute bei Tag 1 mit dem oben konfigurierten Budget und der Dauer. Bisherige Ausgaben dieser Periode werden zurückgesetzt.
+            Startet deinen Abrechnungszyklus ab heute bei Tag 1 mit dem konfigurierten Budget.
           </p>
 
           <div v-if="!confirmReset">
@@ -125,8 +202,8 @@ const emit = defineEmits<{
 
 const api = useApi()
 const haptics = useHaptics()
-const budgetInput = ref<number | null>(props.currentMonthlyBudget ?? null)
-const daysInput = ref<number | null>(props.currentMonthDays ?? null)
+const budgetInput = ref<number>(props.currentMonthlyBudget ?? 450)
+const daysInput = ref<number>(props.currentMonthDays ?? 30)
 const confirmReset = ref(false)
 const budgetSavedMsg = ref('')
 
@@ -159,46 +236,62 @@ watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
-      confirmReset.value = false
-      budgetSavedMsg.value = ''
-      backupMsg.value = ''
       if (props.currentMonthlyBudget) {
         budgetInput.value = props.currentMonthlyBudget
       }
       if (props.currentMonthDays) {
         daysInput.value = props.currentMonthDays
       }
+      confirmReset.value = false
+      budgetSavedMsg.value = ''
+      backupMsg.value = ''
     }
   }
 )
 
 const isValidSettings = computed(() => {
-  const validBudget = typeof budgetInput.value === 'number' && budgetInput.value > 0
-  const validDays = daysInput.value === null || (typeof daysInput.value === 'number' && daysInput.value > 0)
-  return validBudget && validDays
+  const b = budgetInput.value
+  const d = daysInput.value
+  return typeof b === 'number' && b > 0 && typeof d === 'number' && d > 0 && d <= 365
 })
 
+const calculatedDailyBudget = computed(() => {
+  if (!isValidSettings.value) return '0,00'
+  const daily = budgetInput.value / daysInput.value
+  return daily.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+})
+
+function setBudget(val: number) {
+  haptics.tap()
+  budgetInput.value = val
+}
+
+function setDays(val: number) {
+  haptics.tap()
+  daysInput.value = val
+}
+
 function handleSaveSettings() {
-  if (isValidSettings.value && budgetInput.value) {
-    haptics.success()
-    emit('update-budget', budgetInput.value, daysInput.value || undefined)
-    budgetSavedMsg.value = 'Einstellungen erfolgreich gespeichert!'
-    setTimeout(() => {
-      budgetSavedMsg.value = ''
-    }, 2500)
-  }
+  if (!isValidSettings.value) return
+  haptics.success()
+  emit('update-budget', budgetInput.value, daysInput.value)
+  budgetSavedMsg.value = '✓ Einstellungen gespeichert'
+  setTimeout(() => {
+    budgetSavedMsg.value = ''
+  }, 2500)
 }
 
 async function handleExport(format: 'json' | 'csv') {
   isExporting.value = true
   haptics.tap()
+
   try {
     const blob = await api.exportData(format)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    const dateStr = new Date().toISOString().split('T')[0]
     a.href = url
-    a.download = `restgeld-${format === 'csv' ? 'export' : 'backup'}-${dateStr}.${format}`
+    const dateStr = new Date().toISOString().slice(0, 10)
+    a.download = `restgeld-backup-${dateStr}.${format}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -206,7 +299,7 @@ async function handleExport(format: 'json' | 'csv') {
 
     haptics.success()
     backupMsgType.value = 'success'
-    backupMsg.value = `${format.toUpperCase()} erfolgreich heruntergeladen!`
+    backupMsg.value = `Export als ${format.toUpperCase()} erfolgreich!`
     setTimeout(() => {
       backupMsg.value = ''
     }, 3000)
@@ -257,11 +350,8 @@ function handleOpenArchive() {
 function handleResetPeriod() {
   haptics.warning()
   confirmReset.value = false
-  emit(
-    'new-period',
-    isValidSettings.value && budgetInput.value ? budgetInput.value : undefined,
-    isValidSettings.value && daysInput.value ? daysInput.value : undefined
-  )
+  emit('new-period', budgetInput.value, daysInput.value)
+  emit('close')
 }
 </script>
 
@@ -269,7 +359,7 @@ function handleResetPeriod() {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 12, 0.85);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -277,16 +367,22 @@ function handleResetPeriod() {
   justify-content: center;
   z-index: 100;
   padding: 16px;
+  animation: modal-fade 0.2s ease-out;
+}
+
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
-  background: var(--bg-card, #121216);
+  background: #121216;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   width: 100%;
   max-width: 440px;
-  max-height: 85vh;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+  max-height: 85dvh;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.9);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -298,7 +394,6 @@ function handleResetPeriod() {
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
-  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -306,19 +401,22 @@ function handleResetPeriod() {
   color: var(--text-main, #f4f4f6);
   margin: 0;
   font-weight: 700;
-  letter-spacing: -0.3px;
 }
 
 .close-btn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   color: var(--text-muted, #8e8e9c);
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
 }
 
 .close-btn:hover {
@@ -327,218 +425,205 @@ function handleResetPeriod() {
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 14px;
   overflow-y: auto;
 }
 
 .setting-section {
+  background: #18181e;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.slider-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.section-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: var(--text-main, #f4f4f6);
-}
-
-.input-row {
+.slider-header {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
 }
 
-input[type='number'] {
-  flex: 1;
-  background: var(--bg-subtle, #1c1c24);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  border-radius: 12px;
-  padding: 10px 14px;
+.section-title {
+  font-size: 0.8rem;
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
+.num-input {
+  width: 60px;
+  background: transparent;
+  border: none;
   color: var(--text-main, #f4f4f6);
-  font-size: 0.95rem;
   font-family: var(--font-mono, monospace);
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-input[type='number']:focus {
-  border-color: var(--accent-green, #22c55e);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
-}
-
-.action-btn {
-  background: var(--accent-green, #22c55e);
-  border: 1px solid transparent;
-  color: #05200e;
-  padding: 10px 18px;
-  border-radius: 9999px;
+  font-size: 0.95rem;
   font-weight: 700;
-  font-size: 0.9rem;
+  text-align: right;
+  outline: none;
+}
+
+.currency-symbol {
+  font-size: 0.8rem;
+  color: var(--text-dim, #5c5c6e);
+  font-weight: 600;
+}
+
+.range-slider {
+  width: 100%;
+  accent-color: var(--accent-green, #22c55e);
+  cursor: pointer;
+}
+
+.preset-row {
+  display: flex;
+  gap: 6px;
+}
+
+.preset-chip {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  color: var(--text-muted, #8e8e9c);
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.action-btn:hover:not(:disabled) {
-  background: #2ed66b;
+.preset-chip.active,
+.preset-chip:hover {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
+  color: var(--accent-green, #22c55e);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
-.action-btn:disabled {
-  opacity: 0.4;
+.calc-card {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.calc-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-label {
+  font-size: 0.68rem;
+  color: var(--text-dim, #5c5c6e);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calc-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-green, #22c55e);
+  font-family: var(--font-mono, monospace);
+}
+
+.save-btn {
+  background: var(--accent-green, #22c55e);
+  color: #05200e;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .success-msg {
-  font-size: 0.8rem;
   color: var(--accent-green, #22c55e);
-  margin-top: 4px;
-}
-
-.danger-zone {
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
-  padding-top: 16px;
-}
-
-.danger-title {
-  color: var(--accent-red, #ef4444);
+  font-size: 0.8rem;
+  margin: 6px 0 0;
+  font-weight: 600;
 }
 
 .description {
-  font-size: 0.8rem;
   color: var(--text-dim, #5c5c6e);
-  line-height: 1.4;
-}
-
-.danger-btn {
-  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: var(--accent-red, #ef4444);
-  padding: 10px 16px;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 4px;
-  transition: all 0.15s;
-}
-
-.danger-btn:hover,
-.danger-btn:active {
-  background: var(--accent-red, #ef4444);
-  color: #fff;
-}
-
-.confirm-box {
-  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 6px;
-}
-
-.confirm-text {
-  font-size: 0.85rem;
-  color: var(--accent-red, #ef4444);
-  font-weight: 600;
-  margin-bottom: 8px;
-  text-align: center;
-}
-
-.confirm-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.confirm-actions .danger-btn {
-  margin-top: 0;
-  flex: 1;
-}
-
-.cancel-btn {
-  flex: 1;
-  background: var(--bg-subtle, #1c1c24);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-  color: var(--text-muted, #8e8e9c);
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cancel-btn:hover {
-  color: var(--text-main, #f4f4f6);
-}
-
-.backup-zone {
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
-  padding-top: 16px;
+  font-size: 0.75rem;
+  margin: 4px 0 10px;
+  line-height: 1.35;
 }
 
 .backup-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .backup-btn {
   flex: 1;
-  background: #1f1f28;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   color: var(--text-main, #f4f4f6);
-  padding: 9px 12px;
-  border-radius: 10px;
+  padding: 8px;
+  border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.backup-btn:hover:not(:disabled),
-.backup-btn:active:not(:disabled) {
-  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
+.backup-btn:hover:not(:disabled) {
   border-color: var(--accent-green, #22c55e);
   color: var(--accent-green, #22c55e);
 }
 
-.backup-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .import-wrap {
-  margin-top: 8px;
+  width: 100%;
 }
 
 .import-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 100%;
-  background: transparent;
-  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.15));
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.12));
   color: var(--text-muted, #8e8e9c);
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 0.82rem;
-  font-weight: 500;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  text-align: center;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.import-btn:hover,
-.import-btn:active {
-  border-color: var(--accent-green, #22c55e);
+.import-btn:hover {
+  border-color: var(--text-main, #f4f4f6);
   color: var(--text-main, #f4f4f6);
-}
-
-.import-btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
 }
 
 .file-input-hidden {
@@ -546,34 +631,81 @@ input[type='number']:focus {
 }
 
 .backup-msg {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   margin-top: 6px;
 }
 
-.backup-msg.success {
-  color: var(--accent-green, #22c55e);
-}
-
-.backup-msg.error {
-  color: var(--accent-red, #ef4444);
-}
+.backup-msg.success { color: var(--accent-green, #22c55e); }
+.backup-msg.error { color: var(--accent-red, #ef4444); }
 
 .archive-trigger-btn {
   width: 100%;
-  background: #1f1f28;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   color: var(--text-main, #f4f4f6);
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 0.82rem;
-  font-weight: 500;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  text-align: center;
 }
 
 .archive-trigger-btn:hover {
   border-color: var(--accent-green, #22c55e);
   color: var(--accent-green, #22c55e);
+}
+
+.danger-title {
+  color: var(--accent-red, #ef4444);
+}
+
+.danger-btn {
+  width: 100%;
+  background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--accent-red, #ef4444);
+  padding: 9px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.danger-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.confirm-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.confirm-text {
+  font-size: 0.78rem;
+  color: var(--text-main, #f4f4f6);
+  margin: 0;
+  text-align: center;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.cancel-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  color: var(--text-muted, #8e8e9c);
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
 }
 </style>

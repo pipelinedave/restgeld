@@ -22,30 +22,77 @@
         </div>
 
         <div v-else class="periods-list">
-          <div v-for="period in periods" :key="period.id" class="period-item">
-            <div class="period-item-header">
-              <span class="period-title">{{ formatPeriodTitle(period.startDate) }}</span>
-              <span class="period-badge" :class="period.savings >= 0 ? 'saving' : 'deficit'">
-                {{ period.savings >= 0 ? '+' : '' }}{{ formatAmount(period.savings) }} €
-              </span>
+          <div
+            v-for="period in periods"
+            :key="period.id"
+            class="period-card"
+            :class="{ expanded: selectedPeriodId === period.id }"
+            @click="togglePeriodDetails(period)"
+          >
+            <!-- Card Header -->
+            <div class="period-card-header">
+              <div class="period-title-group">
+                <span class="period-title">{{ formatPeriodTitle(period.startDate) }}</span>
+                <span class="period-daterange">{{ formatDateRange(period.startDate, period.monthDays) }}</span>
+              </div>
+              <div class="badge-group">
+                <span class="period-badge" :class="period.savings >= 0 ? 'saving' : 'deficit'">
+                  {{ period.savings >= 0 ? '+' : '' }}{{ formatAmount(period.savings) }} €
+                </span>
+                <span class="expand-arrow" :class="{ 'is-open': selectedPeriodId === period.id }">▾</span>
+              </div>
             </div>
 
-            <div class="period-details">
-              <div class="detail-col">
-                <span class="detail-label">Budget</span>
-                <span class="detail-val">{{ formatAmount(period.monthlyTotal) }} €</span>
+            <!-- Summary KPI Grid -->
+            <div class="period-kpi-grid">
+              <div class="kpi-col">
+                <span class="kpi-label">Budget</span>
+                <span class="kpi-val">{{ formatAmount(period.monthlyTotal) }} €</span>
               </div>
-              <div class="detail-col">
-                <span class="detail-label">Ausgaben</span>
-                <span class="detail-val">{{ formatAmount(period.totalSpent) }} €</span>
+              <div class="kpi-col">
+                <span class="kpi-label">Ausgaben</span>
+                <span class="kpi-val">{{ formatAmount(period.totalSpent) }} €</span>
               </div>
-              <div class="detail-col">
-                <span class="detail-label">Buchungen</span>
-                <span class="detail-val">{{ period.expenseCount }}</span>
+              <div class="kpi-col">
+                <span class="kpi-label">&Oslash; / Tag</span>
+                <span class="kpi-val">{{ formatAvgDaily(period.totalSpent, period.monthDays) }} €</span>
               </div>
-              <div class="detail-col">
-                <span class="detail-label">Dauer</span>
-                <span class="detail-val">{{ period.monthDays }} Tage</span>
+              <div class="kpi-col">
+                <span class="kpi-label">Buchungen</span>
+                <span class="kpi-val">{{ period.expenseCount }}</span>
+              </div>
+            </div>
+
+            <!-- Abschlussbericht Detail-Bereich -->
+            <div v-if="selectedPeriodId === period.id" class="report-section" @click.stop>
+              <div class="report-header">
+                <span class="report-title">📊 Abschlussbericht & Buchungen</span>
+              </div>
+
+              <!-- Lade-Status für Buchungen -->
+              <div v-if="loadingExpenses" class="report-loading">
+                <span class="spinner-small"></span>
+                <span>Lade Buchungen...</span>
+              </div>
+
+              <!-- Keine Ausgaben in Periode -->
+              <div v-else-if="periodExpenses.length === 0" class="report-empty">
+                <span>Keine Buchungen in dieser Periode erfasst (0 € ausgegeben).</span>
+              </div>
+
+              <!-- Ausgaben-Tabelle -->
+              <div v-else class="report-expenses-list">
+                <div
+                  v-for="exp in periodExpenses"
+                  :key="exp.id"
+                  class="report-expense-item"
+                >
+                  <div class="exp-left">
+                    <span class="exp-date">{{ formatExpenseDate(exp.createdAt) }}</span>
+                    <span class="exp-note">{{ exp.note || 'Ausgabe' }}</span>
+                  </div>
+                  <span class="exp-amount">-{{ formatAmount(exp.amount) }} €</span>
+                </div>
               </div>
             </div>
           </div>
@@ -57,7 +104,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { useApi, type PeriodSummary } from '../composables/useApi'
+import { useApi, type PeriodSummary, type Expense } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
 
 const props = defineProps<{
@@ -74,9 +121,14 @@ const periods = ref<PeriodSummary[]>([])
 const loading = ref(false)
 const error = ref('')
 
+const selectedPeriodId = ref<string | null>(null)
+const periodExpenses = ref<Expense[]>([])
+const loadingExpenses = ref(false)
+
 async function loadPeriods() {
   loading.value = true
   error.value = ''
+  selectedPeriodId.value = null
   try {
     periods.value = await api.getPeriods()
   } catch (err: any) {
@@ -84,6 +136,27 @@ async function loadPeriods() {
     haptics.error()
   } finally {
     loading.value = false
+  }
+}
+
+async function togglePeriodDetails(period: PeriodSummary) {
+  haptics.tap()
+  if (selectedPeriodId.value === period.id) {
+    selectedPeriodId.value = null
+    return
+  }
+
+  selectedPeriodId.value = period.id
+  loadingExpenses.value = true
+  periodExpenses.value = []
+
+  try {
+    const res = await api.getExpenses(1, 100, period.id)
+    periodExpenses.value = res.items
+  } catch {
+    periodExpenses.value = []
+  } finally {
+    loadingExpenses.value = false
   }
 }
 
@@ -106,6 +179,37 @@ function formatPeriodTitle(dateStr: string): string {
   }
 }
 
+function formatDateRange(startDateStr: string, days: number): string {
+  try {
+    const start = new Date(startDateStr)
+    const end = new Date(start)
+    end.setDate(start.getDate() + days - 1)
+
+    const startFormatted = start.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })
+    const endFormatted = end.toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' })
+    return `${startFormatted} – ${endFormatted} (${days} Tage)`
+  } catch {
+    return `${days} Tage`
+  }
+}
+
+function formatExpenseDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+  } catch {
+    return ''
+  }
+}
+
+function formatAvgDaily(spent: number, days: number): string {
+  if (days <= 0) return '0,00'
+  return (spent / days).toLocaleString('de-DE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
 function formatAmount(val: number): string {
   return val.toLocaleString('de-DE', {
     minimumFractionDigits: 2,
@@ -118,7 +222,7 @@ function formatAmount(val: number): string {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 12, 0.85);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -126,16 +230,22 @@ function formatAmount(val: number): string {
   justify-content: center;
   z-index: 100;
   padding: 16px;
+  animation: modal-fade 0.2s ease-out;
+}
+
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
-  background: var(--bg-card, #121216);
+  background: #121216;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   width: 100%;
   max-width: 440px;
   max-height: 85dvh;
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.9);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -147,7 +257,6 @@ function formatAmount(val: number): string {
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
-  flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -155,19 +264,22 @@ function formatAmount(val: number): string {
   color: var(--text-main, #f4f4f6);
   margin: 0;
   font-weight: 700;
-  letter-spacing: -0.3px;
 }
 
 .close-btn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   color: var(--text-muted, #8e8e9c);
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
 }
 
 .close-btn:hover {
@@ -199,7 +311,16 @@ function formatAmount(val: number): string {
 .spinner {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--bg-subtle, #1c1c24);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--accent-green, #22c55e);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
   border-top-color: var(--accent-green, #22c55e);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -210,13 +331,11 @@ function formatAmount(val: number): string {
 }
 
 .retry-btn {
-  background: var(--bg-subtle, #1c1c24);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  background: transparent;
+  border: 1px solid var(--accent-green, #22c55e);
   color: var(--accent-green, #22c55e);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -226,20 +345,37 @@ function formatAmount(val: number): string {
   gap: 10px;
 }
 
-.period-item {
-  background: var(--bg-subtle, #1c1c24);
+.period-card {
+  background: #18181e;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 14px;
-  padding: 14px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.period-item-header {
+.period-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.period-card.expanded {
+  border-color: var(--accent-green, #22c55e);
+  box-shadow: 0 4px 20px -5px rgba(34, 197, 94, 0.2);
+}
+
+.period-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.period-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .period-title {
@@ -249,12 +385,24 @@ function formatAmount(val: number): string {
   text-transform: capitalize;
 }
 
+.period-daterange {
+  font-size: 0.72rem;
+  color: var(--text-dim, #5c5c6e);
+  font-family: var(--font-mono, monospace);
+}
+
+.badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .period-badge {
   font-size: 0.8rem;
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   padding: 3px 8px;
-  border-radius: 9999px;
+  border-radius: 6px;
 }
 
 .period-badge.saving {
@@ -269,30 +417,115 @@ function formatAmount(val: number): string {
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-.period-details {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
-  padding-top: 10px;
+.expand-arrow {
+  font-size: 0.9rem;
+  color: var(--text-dim, #5c5c6e);
+  transition: transform 0.2s;
 }
 
-.detail-col {
+.expand-arrow.is-open {
+  transform: rotate(180deg);
+  color: var(--accent-green, #22c55e);
+}
+
+.period-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 8px;
+}
+
+.kpi-col {
   display: flex;
   flex-direction: column;
 }
 
-.detail-label {
+.kpi-label {
   font-size: 0.65rem;
   color: var(--text-dim, #5c5c6e);
   text-transform: uppercase;
-  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
-.detail-val {
-  font-size: 0.82rem;
+.kpi-val {
+  font-size: 0.8rem;
   font-weight: 600;
-  font-family: var(--font-mono, monospace);
   color: var(--text-main, #f4f4f6);
+  font-family: var(--font-mono, monospace);
+}
+
+.report-section {
+  margin-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.report-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #8e8e9c);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-loading,
+.report-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-dim, #5c5c6e);
+  padding: 8px 0;
+}
+
+.report-expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.report-expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.exp-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exp-date {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  color: var(--text-dim, #5c5c6e);
+}
+
+.exp-note {
+  color: var(--text-main, #f4f4f6);
+}
+
+.exp-amount {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: var(--text-muted, #8e8e9c);
 }
 </style>
