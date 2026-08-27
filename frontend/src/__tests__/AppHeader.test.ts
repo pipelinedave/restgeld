@@ -25,4 +25,12 @@ describe('AppHeader', () => {
     expect(wrapper.find('.status-syncing').exists()).toBe(true)
     expect(wrapper.find('.status-syncing').text()).toContain('3 ungesynct')
   })
+
+  it('oeffnet Health-Popover bei Klick auf Status-Badge', async () => {
+    const wrapper = mount(AppHeader, { props: { isOffline: false } })
+    expect(wrapper.find('.status-popover').exists()).toBe(false)
+    await wrapper.find('.status-badge').trigger('click')
+    expect(wrapper.find('.status-popover').exists()).toBe(true)
+    expect(wrapper.find('.popover-title').text()).toContain('System- & Sync-Status')
+  })
 })

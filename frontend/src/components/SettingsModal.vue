@@ -115,6 +115,42 @@
           <p v-if="budgetSavedMsg" class="success-msg">{{ budgetSavedMsg }}</p>
         </section>
 
+        <!-- Design & Theming -->
+        <section class="setting-section theme-section">
+          <span class="section-title">Design & Akzentfarbe</span>
+          <p class="description">
+            Wähle dein Lieblings-Farbschema oder stelle eine eigene Farbe ein.
+          </p>
+
+          <div class="theme-palette-row">
+            <button
+              v-for="preset in theme.presets"
+              :key="preset.id"
+              type="button"
+              class="theme-color-btn"
+              :class="{ active: theme.currentAccent.value.toLowerCase() === preset.accent.toLowerCase() }"
+              :style="{ backgroundColor: preset.accent }"
+              :title="preset.name"
+              @click="theme.applyTheme(preset.accent)"
+            >
+              <span v-if="theme.currentAccent.value.toLowerCase() === preset.accent.toLowerCase()" class="check-icon">✓</span>
+            </button>
+
+            <!-- Custom Color Picker -->
+            <label class="custom-color-picker" title="Eigene Farbe wählen">
+              <input
+                type="color"
+                :value="theme.currentAccent.value"
+                class="color-picker-input"
+                @input="handleCustomColorChange"
+              />
+              <span class="custom-color-indicator" :style="{ backgroundColor: theme.currentAccent.value }">
+                🎨
+              </span>
+            </label>
+          </div>
+        </section>
+
         <!-- Backup & Archiv -->
         <section class="setting-section backup-zone">
           <span class="section-title">Daten & Archiv</span>
@@ -145,9 +181,12 @@
           </div>
           <p v-if="backupMsg" class="backup-msg" :class="backupMsgType">{{ backupMsg }}</p>
 
-          <div style="margin-top: 8px;">
+          <div style="margin-top: 8px; display: flex; gap: 8px;">
             <button type="button" class="archive-trigger-btn" @click="handleOpenArchive">
-              📜 Frühere Monate / Archiv ansehen
+              📜 Frühere Monate / Archiv
+            </button>
+            <button type="button" class="about-trigger-btn" @click="handleOpenAbout">
+              ℹ️ Über Restgeld
             </button>
           </div>
         </section>
@@ -185,6 +224,7 @@
 import { ref, computed, watch } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useApi } from '../composables/useApi'
+import { useTheme } from '../composables/useTheme'
 
 const props = defineProps<{
   visible: boolean
@@ -198,10 +238,12 @@ const emit = defineEmits<{
   (e: 'new-period', monthlyTotal?: number, days?: number): void
   (e: 'data-imported', count: number): void
   (e: 'open-archive'): void
+  (e: 'open-about'): void
 }>()
 
 const api = useApi()
 const haptics = useHaptics()
+const theme = useTheme()
 const budgetInput = ref<number>(props.currentMonthlyBudget ?? 450)
 const daysInput = ref<number>(props.currentMonthDays ?? 30)
 const confirmReset = ref(false)
@@ -342,9 +384,21 @@ async function handleFileInput(e: Event) {
   }
 }
 
+function handleCustomColorChange(e: Event) {
+  const target = e.target as HTMLInputElement
+  if (target && target.value) {
+    theme.applyTheme(target.value)
+  }
+}
+
 function handleOpenArchive() {
   haptics.tap()
   emit('open-archive')
+}
+
+function handleOpenAbout() {
+  haptics.tap()
+  emit('open-about')
 }
 
 function handleResetPeriod() {
@@ -638,22 +692,87 @@ function handleResetPeriod() {
 .backup-msg.success { color: var(--accent-green, #22c55e); }
 .backup-msg.error { color: var(--accent-red, #ef4444); }
 
-.archive-trigger-btn {
-  width: 100%;
+.archive-trigger-btn,
+.about-trigger-btn {
+  flex: 1;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   color: var(--text-main, #f4f4f6);
-  padding: 8px;
+  padding: 8px 10px;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  text-align: center;
 }
 
-.archive-trigger-btn:hover {
+.archive-trigger-btn:hover,
+.about-trigger-btn:hover {
   border-color: var(--accent-green, #22c55e);
   color: var(--accent-green, #22c55e);
+}
+
+.theme-palette-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.theme-color-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #05200e;
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: transform 0.15s, border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.theme-color-btn:hover {
+  transform: scale(1.1);
+}
+
+.theme-color-btn.active {
+  border-color: #ffffff;
+  transform: scale(1.12);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}
+
+.check-icon {
+  font-weight: 900;
+}
+
+.custom-color-picker {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.2));
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.color-picker-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.custom-color-indicator {
+  font-size: 1rem;
 }
 
 .danger-title {

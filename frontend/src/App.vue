@@ -87,12 +87,18 @@
       @new-period="handleNewPeriod"
       @data-imported="handleDataImported"
       @open-archive="openArchiveModal"
+      @open-about="openAboutModal"
       @close="showSettings = false"
     />
 
     <PeriodsArchiveModal
       :visible="showArchiveModal"
       @close="showArchiveModal = false"
+    />
+
+    <AboutModal
+      :visible="showAboutModal"
+      @close="showAboutModal = false"
     />
   </div>
 </template>
@@ -102,6 +108,7 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useApi, type BudgetData } from './composables/useApi'
 import { useHaptics } from './composables/useHaptics'
 import { useOfflineSync } from './composables/useOfflineSync'
+import { useTheme } from './composables/useTheme'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import MonthProjection from './components/MonthProjection.vue'
@@ -113,17 +120,20 @@ import RecentExpenses from './components/RecentExpenses.vue'
 import ExpensesModal from './components/ExpensesModal.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import PeriodsArchiveModal from './components/PeriodsArchiveModal.vue'
+import AboutModal from './components/AboutModal.vue'
 import AppFooter from './components/AppFooter.vue'
 import ToastNotification from './components/ToastNotification.vue'
 
 const api = useApi()
 const haptics = useHaptics()
 const offlineSync = useOfflineSync()
+const theme = useTheme()
 const budget = ref<BudgetData | null>(null)
 const showNumpad = ref(false)
 const showSettings = ref(false)
 const showExpensesModal = ref(false)
 const showArchiveModal = ref(false)
+const showAboutModal = ref(false)
 const isSavingExpense = ref(false)
 const isLoading = ref(false)
 
@@ -164,6 +174,12 @@ function openArchiveModal() {
   haptics.tap()
   showSettings.value = false
   showArchiveModal.value = true
+}
+
+function openAboutModal() {
+  haptics.tap()
+  showSettings.value = false
+  showAboutModal.value = true
 }
 
 async function loadBudget() {
@@ -287,6 +303,7 @@ async function handleDataImported(count: number) {
 let cleanupListeners: (() => void) | undefined
 
 onMounted(async () => {
+  theme.initTheme()
   await loadBudget()
   cleanupListeners = offlineSync.initListeners(handleAutoSync)
 
