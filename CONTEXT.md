@@ -146,12 +146,69 @@ restgeld/
 - 📜 Vorherige Perioden & Monats-Rückblick: Backend-Endpoint `GET /api/periods` mit aggregierten Perioden-Metriken (`totalSpent`, `savings`, `expenseCount`), Archiv-Modal `PeriodsArchiveModal.vue` und Aufruf in `SettingsModal.vue` implementiert und mit 98 Vitest- & 30 Go-Tests abgesichert ✅
 - Preview Environment & Branching-Strategie: Vercel Preview Deployments und Pre-Production Branch `develop` eingerichtet, CI/CD-Pipelines & Agent-Workflow-Dokumentation (`AGENTS.md`, `CONTEXT.md`, `README.md`) für sichere Iteration ohne Gefahr für Live-Daten aktualisiert ✅
 - 🌐 Landing Page & GitHub Pages Deployment: Responsive, eigenständige Landing Page in `docs/` mit interaktivem Live-Mockup, dynamischem Budget-Rechner, Bento-Feature-Grid, FAQ und GitHub Actions Workflow (`pages.yml`) für automatisches GitHub Pages Hosting implementiert ✅
+- 🌐 Landing Page & GitHub Pages Deployment: Responsive, eigenständige Landing Page in `docs/` mit interaktivem Live-Mockup, dynamischem Budget-Rechner, Bento-Feature-Grid, FAQ und GitHub Actions Workflow (`pages.yml`) für automatisches GitHub Pages Hosting implementiert ✅
 - 🎨 UI Redesign nach Landing-Page Vorbild: Vollständige Übernahme des modernen OLED Dark Mode Designs (`#0a0a0c`, Plus Jakarta Sans, JetBrains Mono, Emerald Green `#22c55e`, abgerundete Hero- & Progress-Cards, Glow-Border und Glassmorphism-Modals) in der Vue 3 PWA ✅
 
+---
+
+## 📋 Master Roadmap & Feedback Backlog
+
+Strukturierte Erfassung der Praxistest-Erkenntnisse und Feature-Wünsche für kommende Entwicklungs-Zyklen.
+
+### Epic 1: Mobile- & Numpad-UX Polishing
+1. **Android Quick Action Auto-Focus & Virtual Keyboard Trigger**:
+   - Problem: Beim Öffnen via PWA Shortcut (`/?action=add-expense`) öffnet sich das Android-Keyboard nicht sofort automatisch.
+   - Ziel: Zuverlässiges Fokussieren und Aufklappen der Bildschirmtastatur auf Android & iOS.
+2. **Initialer "Heute verfügbar"-Status im Numpad**:
+   - Problem: Die Live-Impact Box erscheint aktuell erst, nachdem eine Ziffer eingetippt wurde.
+   - Ziel: Bereits vor Eingabe den aktuellen Stand anzeigen (z. B. *"Heute verfügbar: 15,00 €"*), der sich beim Tippen nahtlos in *"Verbleibt danach: 6,50 €"* wandelt.
+3. **Hero-Display: "x / y noch übrig"**:
+   - Ziel: Neben dem Restbetrag klar anzeigen, wie viel heute ursprünglich zur Verfügung stand (z. B. `12,50 € / 15,00 €` oder Untertitel *"von 15,00 € heute"*).
+
+### Epic 2: Main Dashboard Layout & Zero-Scroll Information Architecture
+1. **Zero-Scroll Viewport Konzept (100dvh)**:
+   - Problem: Die Hauptseite ist auf vielen Smartphones vertikal leicht überschritten und erfordert Scrollen zum Footer.
+   - Ziel: Absolut scroll-freie Hauptseite (`100dvh`). Intelligente Informationsarchitektur:
+     - Kompakte, aufklappbare Widgets oder Tabs (z. B. Streak & Projection als elegante Pill-Widgets).
+     - Ausgaben-Vorschau als elegante Drawer-/Footer-Leiste oder Schnellansicht.
+     - Maximaler Fokus auf Hero-Restgeld und Schnellbuchung.
+2. **Instant-Operations & Top Loading-Streak**:
+   - Ziel: Alle Aktionen passieren optimistisch und instant.
+   - Dezente, pulsierende Ladeleiste ("Loading Streak") direkt unter dem Header für alle asynchronen Background-Syncs.
+3. **Git Commit im Footer**:
+   - Ziel: Statt einer manuellen Versionsnummer den aktuellen Git-Commit-Hash (z. B. `2e783da`) mit Link zum GitHub-Commit anzeigen.
+
+### Epic 3: Interaktive Settings & Abschlussbericht-Archiv
+1. **Interaktive Slider für Budget & Periode (wie Landing Page)**:
+   - Ziel: Slider für Monatsbudget, Periodendauer und Tages-Restgeld mit bidirektionaler, intelligenter Kopplung (z. B. Verschieben des Tagesbudgets passt das Monatsbudget live an).
+2. **Überarbeitetes Perioden-Archiv ("Abschlussbericht")**:
+   - Problem: Periodennamen sind teilweise kryptisch und genaue Zeitspannen fehlen.
+   - Ziel: Klare Anzeige *"1. Aug 2026 – 31. Aug 2026 (31 Tage)"*.
+   - Detail-Ansicht beim Antippen einer Periode: Kompletter Abschlussbericht (End-Ersparnis, Gesamtausgaben, Tagesdurchschnitt, Streak-Statistiken und Ausgabenliste des Monats).
+
+### Epic 4: Theming, Monitoring & Pages
+1. **Custom Color / RGB & Hex Theming**:
+   - Ziel: Farbwähler für Akzentfarben (Emerald, Cyan, Sunset Amber, Cyberpunk) und OLED-Theme-Optionen mit CSS-Variablen & `localStorage`.
+2. **Uptime Monitoring & Health Popover**:
+   - Ziel: Uptime Kuma Status / Service-Health hinter dem Online-Badge im Header. Antippen öffnet ein Popover mit Status aller Komponenten (DB, API, Sync-Queue).
+3. **About Page / Modal**:
+   - Ziel: Kompakte Info-Seite zur Philosophie von Restgeld (Achtsamkeit, Zero-Bloat, Open Source).
+4. **Landing Page Sync**:
+   - Ziel: Aktualisierung des interaktiven Mockups in `docs/index.html` auf das exakte Layout der PWA.
+
+### Epic 5: SaaS Architecture & Multi-Tenancy (Konzept & Planung)
+1. **User Accounts & Tenant Isolation**:
+   - Architektur-Entwurf für Multi-User Betrieb (User ID Scoping in DB-Tabellen `periods`, `expenses`, `settings`).
+   - Auth-Optionen: Passkeys / WebAuthn, Magic Links oder einfaches JWT/Session-Management.
+   - Vorbereitung für SaaS-Hosting & Skalierung.
+
+---
+
 ### 🔄 Nächste Schritte
-1. **Deployment auf k3s**
+1. **Epic 1 & Epic 2 abarbeiten** (Mobile Focus, Numpad Banner, Zero-Scroll Dashboard Layout).
+2. **Deployment auf k3s**
    - `kubectl create namespace restgeld`
    - SealedSecret für Postgres-Passwort erstellen
    - Flux Kustomization in k3s-config repo übernehmen
-2. **Domain verifizieren** (restgeld.stillon.top)
-3. **PWA-End-to-End-Test** im Produktions-Setup
+3. **Domain verifizieren** (restgeld.stillon.top)
+
