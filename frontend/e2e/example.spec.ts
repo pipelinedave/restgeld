@@ -130,7 +130,7 @@ test.describe('Restgeld E2E', () => {
 
     // ausgabe in der liste
     await expect(page.getByText('Mittagessen')).toBeVisible()
-    await expect(page.getByText('-12,50')).toBeVisible()
+    await expect(page.getByText(/-12,50/)).toBeVisible()
   })
 
   test('ausgabe loeschen', async ({ page }) => {
@@ -140,9 +140,9 @@ test.describe('Restgeld E2E', () => {
     await page.getByPlaceholder(/notiz/i).fill('Test')
     await page.getByRole('button', { name: 'Speichern' }).click()
 
-    await expect(page.getByText('-10,00')).toBeVisible()
+    await expect(page.getByText(/-10,00/)).toBeVisible()
     await page.getByRole('button', { name: 'Löschen' }).click()
-    await expect(page.getByText('-10,00')).not.toBeVisible()
+    await expect(page.getByText(/-10,00/)).not.toBeVisible()
   })
 
   test('oeffnet ausgaben-historie und paginiert', async ({ page }) => {

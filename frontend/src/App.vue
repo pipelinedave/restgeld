@@ -238,6 +238,13 @@ async function handleConfirm(amount: number, note: string) {
     offlineSync.enqueueExpense(amount, note)
     if (budget.value) {
       budget.value.currentBudget -= amount
+      budget.value.expenses.unshift({
+        id: `offline-${Date.now()}`,
+        periodId: budget.value.periodId,
+        amount,
+        note,
+        createdAt: new Date().toISOString(),
+      })
     }
     showNumpad.value = false
     haptics.warning()
