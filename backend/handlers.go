@@ -96,7 +96,7 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 		dailyStats = []DailyStat{}
 	}
 
-	streak := calcStreakInfo(dailyStats, period.BaseBudget)
+	streak := calcStreakInfo(dailyStats, period.BaseBudget, day)
 	projection := calcProjection(totalSpent, day, period.MonthDays, period.MonthlyTotal)
 
 	resp := BudgetResponse{

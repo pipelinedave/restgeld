@@ -150,22 +150,35 @@ func TestCalcStreakInfo(t *testing.T) {
 		{Day: 2, Date: "2026-08-02", Spent: 0.0},  // zero spend
 		{Day: 3, Date: "2026-08-03", Spent: 25.0}, // over budget (breaks streak)
 		{Day: 4, Date: "2026-08-04", Spent: 5.0},  // in budget
-		{Day: 5, Date: "2026-08-05", Spent: 0.0},  // zero spend
+		{Day: 5, Date: "2026-08-05", Spent: 0.0},  // active day 5
 	}
 
-	streak := calcStreakInfo(stats, 15.0)
+	// An Tag 5 (aktiver Tag, Vortage 1..4 abgeschlossen)
+	streak := calcStreakInfo(stats, 15.0, 5)
 
-	if streak.CurrentStreak != 2 {
-		t.Errorf("erwartet CurrentStreak=2, bekommen %d", streak.CurrentStreak)
+	if streak.CurrentStreak != 1 {
+		t.Errorf("erwartet CurrentStreak=1 (von Tag 4), bekommen %d", streak.CurrentStreak)
 	}
 	if streak.LongestStreak != 2 {
-		t.Errorf("erwartet LongestStreak=2, bekommen %d", streak.LongestStreak)
+		t.Errorf("erwartet LongestStreak=2 (Tag 1-2), bekommen %d", streak.LongestStreak)
 	}
-	if streak.NoSpendDays != 2 {
-		t.Errorf("erwartet NoSpendDays=2, bekommen %d", streak.NoSpendDays)
+	if streak.NoSpendDays != 1 {
+		t.Errorf("erwartet NoSpendDays=1 (nur Tag 2 abgeschlossen), bekommen %d", streak.NoSpendDays)
 	}
-	if streak.UnderBudgetDays != 4 {
-		t.Errorf("erwartet UnderBudgetDays=4, bekommen %d", streak.UnderBudgetDays)
+	if streak.UnderBudgetDays != 3 {
+		t.Errorf("erwartet UnderBudgetDays=3 (Tage 1, 2, 4), bekommen %d", streak.UnderBudgetDays)
+	}
+
+	// Wenn Tag 5 abgeschlossen ist (an Tag 6)
+	streakDay6 := calcStreakInfo(stats, 15.0, 6)
+	if streakDay6.NoSpendDays != 2 {
+		t.Errorf("erwartet NoSpendDays=2 nach Abschluss von Tag 5, bekommen %d", streakDay6.NoSpendDays)
+	}
+	if streakDay6.UnderBudgetDays != 4 {
+		t.Errorf("erwartet UnderBudgetDays=4 nach Abschluss von Tag 5, bekommen %d", streakDay6.UnderBudgetDays)
+	}
+	if streakDay6.CurrentStreak != 2 {
+		t.Errorf("erwartet CurrentStreak=2 nach Abschluss von Tag 5, bekommen %d", streakDay6.CurrentStreak)
 	}
 }
 

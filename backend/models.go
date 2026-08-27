@@ -103,7 +103,7 @@ func calcProjection(totalSpent float64, day, monthDays int, monthlyTotal float64
 	}
 }
 
-func calcStreakInfo(stats []DailyStat, baseBudget float64) StreakInfo {
+func calcStreakInfo(stats []DailyStat, baseBudget float64, currentDay int) StreakInfo {
 	if len(stats) == 0 {
 		return StreakInfo{}
 	}
@@ -115,21 +115,28 @@ func calcStreakInfo(stats []DailyStat, baseBudget float64) StreakInfo {
 	runningStreak := 0
 
 	for _, s := range stats {
-		if s.Spent == 0 {
-			noSpendDays++
-		}
-		if s.Spent <= baseBudget {
-			underBudgetDays++
-			runningStreak++
-			if runningStreak > longestStreak {
-				longestStreak = runningStreak
+		// Nur abgeschlossene Vortage zählen als Spar-Tage und Null-Ausgaben-Tage
+		if s.Day < currentDay {
+			if s.Spent == 0 {
+				noSpendDays++
 			}
-		} else {
-			runningStreak = 0
+			if s.Spent <= baseBudget {
+				underBudgetDays++
+				runningStreak++
+				if runningStreak > longestStreak {
+					longestStreak = runningStreak
+				}
+			} else {
+				runningStreak = 0
+			}
+		} else if s.Day == currentDay {
+			// Aktiver Tag heute: Wenn heute bereits das Basisbudget überzogen wurde, bricht der Streak ab
+			if s.Spent > baseBudget {
+				runningStreak = 0
+			}
 		}
 	}
 
-	// Current streak is the streak running up to the last day
 	currentStreak = runningStreak
 
 	return StreakInfo{
