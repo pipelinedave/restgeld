@@ -47,7 +47,7 @@
           class="detail-spent"
           :class="selectedStat.spent > baseBudget ? 'spent-over' : 'spent-ok'"
         >
-          {{ selectedStat.spent > 0 ? formatAmount(selectedStat.spent) + ' €' : '0,00 € (Spar-Tag! 🎯)' }}
+          {{ getDayDetailText(selectedStat) }}
         </span>
       </template>
       <template v-else>
@@ -122,6 +122,19 @@ function selectDay(stat: DailyStat) {
 
 function formatAmount(amount: number) {
   return amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function getDayDetailText(stat: DailyStat): string {
+  if (stat.day === props.currentDay) {
+    return stat.spent > 0 ? `${formatAmount(stat.spent)} € (heute aktiv)` : '0,00 € (heute aktiv)'
+  }
+  if (stat.spent === 0) {
+    return '0,00 € (Null-Ausgaben-Tag 🎯)'
+  }
+  if (stat.spent <= props.baseBudget) {
+    return `${formatAmount(stat.spent)} € (im Budget 👍)`
+  }
+  return `${formatAmount(stat.spent)} € (über Budget ⚠️)`
 }
 
 function formatDate(dateStr: string) {

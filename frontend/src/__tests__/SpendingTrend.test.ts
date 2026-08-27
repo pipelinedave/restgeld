@@ -40,23 +40,29 @@ describe('SpendingTrend', () => {
 
   it('zeigt Detail-Informationen bei Klick auf einen Tag', async () => {
     const sampleStats = [
-      { day: 1, date: '2026-08-01', spent: 8.5 },
-      { day: 2, date: '2026-08-02', spent: 0 },
+      { day: 1, date: '2026-08-01', spent: 0 },
+      { day: 2, date: '2026-08-02', spent: 8.5 },
+      { day: 3, date: '2026-08-03', spent: 0 },
     ]
 
     const wrapper = mount(SpendingTrend, {
-      props: { stats: sampleStats, baseBudget: 15, currentDay: 2 },
+      props: { stats: sampleStats, baseBudget: 15, currentDay: 3 },
     })
 
     const columns = wrapper.findAll('.bar-column')
+    // Klick auf abgeschlossenen Tag 1 (0 €)
     await columns[0].trigger('click')
-
     expect(wrapper.find('.detail-day').text()).toContain('Tag 1 (01.08.):')
-    expect(wrapper.find('.detail-spent').text()).toContain('8,50 €')
+    expect(wrapper.find('.detail-spent').text()).toContain('Null-Ausgaben-Tag 🎯')
 
-    // Klick auf Tag 2 (Spar-Tag)
+    // Klick auf abgeschlossenen Tag 2 (8,50 €)
     await columns[1].trigger('click')
     expect(wrapper.find('.detail-day').text()).toContain('Tag 2 (02.08.):')
-    expect(wrapper.find('.detail-spent').text()).toContain('Spar-Tag!')
+    expect(wrapper.find('.detail-spent').text()).toContain('8,50 € (im Budget 👍)')
+
+    // Klick auf heutigen aktiven Tag 3 (0 €)
+    await columns[2].trigger('click')
+    expect(wrapper.find('.detail-day').text()).toContain('Tag 3 (03.08.):')
+    expect(wrapper.find('.detail-spent').text()).toContain('0,00 € (heute aktiv)')
   })
 })
