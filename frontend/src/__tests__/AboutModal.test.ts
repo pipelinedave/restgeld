@@ -13,6 +13,9 @@ describe('AboutModal', () => {
     expect(wrapper.find('.brand-title').text()).toBe('restgeld')
     expect(wrapper.text()).toContain('Die Philosophie')
     expect(wrapper.text()).toContain('Key Features')
+    expect(wrapper.find('.meta-label').text()).toContain('Git Commit')
+    expect(wrapper.find('.commit-link').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('v0.')
     expect(wrapper.find('.github-link').attributes('href')).toBe('https://github.com/pipelinedave/restgeld')
   })
 

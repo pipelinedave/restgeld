@@ -181,14 +181,22 @@
           </div>
           <p v-if="backupMsg" class="backup-msg" :class="backupMsgType">{{ backupMsg }}</p>
 
-          <div style="margin-top: 8px; display: flex; gap: 8px;">
+          <div style="margin-top: 8px;">
             <button type="button" class="archive-trigger-btn" @click="handleOpenArchive">
-              📜 Frühere Monate / Archiv
-            </button>
-            <button type="button" class="about-trigger-btn" @click="handleOpenAbout">
-              ℹ️ Über Restgeld
+              📜 Frühere Monate / Archiv ansehen
             </button>
           </div>
+        </section>
+
+        <!-- Über Restgeld / Info Zone -->
+        <section class="setting-section about-zone">
+          <span class="section-title">App-Info & Philosophie</span>
+          <p class="description">
+            Erfahre mehr über die Prinzipien von Restgeld, Shortcuts und Open-Source-Quellcode.
+          </p>
+          <button type="button" class="about-trigger-btn" @click="handleOpenAbout">
+            ℹ️ Über Restgeld öffnen
+          </button>
         </section>
 
         <!-- Danger Zone -->
@@ -694,13 +702,14 @@ function handleResetPeriod() {
 
 .archive-trigger-btn,
 .about-trigger-btn {
-  flex: 1;
+  width: 100%;
+  display: block;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   color: var(--text-main, #f4f4f6);
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;

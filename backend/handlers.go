@@ -281,12 +281,12 @@ func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.store.Ping(); err != nil {
 		log.Printf("health check fehler: %v", err)
-		writeError(w, http.StatusServiceUnavailable, "datenbank nicht erreichbar")
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "datenbank nicht erreichbar", "db": "disconnected"})
 		return
 	}
 
 	jsonHeader(w)
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "db": "connected"})
 }
 
 type ExportBackup struct {

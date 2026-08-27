@@ -37,8 +37,15 @@
 
         <section class="about-section meta-section">
           <div class="meta-row">
-            <span class="meta-label">Version</span>
-            <span class="meta-val">v0.2.0 (Epic 4)</span>
+            <span class="meta-label">Git Commit</span>
+            <a
+              :href="`https://github.com/pipelinedave/restgeld/commit/${gitCommit}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="commit-link"
+            >
+              {{ gitCommit }} ↗
+            </a>
           </div>
           <div class="meta-row">
             <span class="meta-label">Lizenz</span>
@@ -69,6 +76,8 @@ defineProps<{
 defineEmits<{
   (e: 'close'): void
 }>()
+
+const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev'
 </script>
 
 <style scoped>
@@ -241,13 +250,16 @@ defineEmits<{
   font-weight: 600;
 }
 
-.github-link {
+.github-link,
+.commit-link {
   color: var(--accent-green, #22c55e);
   text-decoration: none;
   font-weight: 600;
+  font-family: var(--font-mono, monospace);
 }
 
-.github-link:hover {
+.github-link:hover,
+.commit-link:hover {
   text-decoration: underline;
 }
 </style>

@@ -44,15 +44,15 @@
 
           <div class="status-row">
             <span class="status-row-label">API Service Health</span>
-            <span class="status-row-val" :class="apiHealthy ? 'val-ok' : 'val-warn'">
-              {{ apiHealthy ? `OK (${latencyMs}ms)` : 'Prüfe...' }}
+            <span class="status-row-val" :class="apiHealthy ? 'val-ok' : 'val-error'">
+              {{ apiHealthy ? `OK (${latencyMs}ms)` : 'Nicht erreichbar' }}
             </span>
           </div>
 
           <div class="status-row">
             <span class="status-row-label">PostgreSQL Datenbank</span>
-            <span class="status-row-val" :class="dbStatus === 'ok' ? 'val-ok' : 'val-warn'">
-              {{ dbStatus === 'ok' ? 'Verbunden & bereit' : 'Nicht erreichbar' }}
+            <span class="status-row-val" :class="isDbConnected ? 'val-ok' : 'val-warn'">
+              {{ isDbConnected ? 'Verbunden & bereit' : (dbStatus === 'offline' ? 'Offline' : 'Nicht erreichbar') }}
             </span>
           </div>
 
@@ -95,58 +95,75 @@ defineEmits<{
 const haptics = useHaptics()
 const showStatusPopover = ref(false)
 const apiHealthy = ref(true)
-const dbStatus = ref('ok')
+const dbStatus = ref('connected')
 const latencyMs = ref(12)
+
+const isDbConnected = computed(() => {
+  return dbStatus.value === 'connected' || dbStatus.value === 'ok'
+})
 
 const badgeClass = computed(() => {
   if (props.isOffline) return 'status-offline'
+  if (!apiHealthy.value) return 'status-offline'
+  if (!isDbConnected.value) return 'status-degraded'
   if (props.pendingSyncCount > 0) return 'status-syncing'
   return 'status-online'
 })
 
 const dotClass = computed(() => {
   if (props.isOffline) return 'dot-offline'
+  if (!apiHealthy.value) return 'dot-offline'
+  if (!isDbConnected.value) return 'dot-degraded'
   if (props.pendingSyncCount > 0) return 'dot-syncing'
   return 'dot-online'
 })
 
 const badgeText = computed(() => {
   if (props.isOffline) return 'Offline'
+  if (!apiHealthy.value) return 'Server getrennt'
+  if (!isDbConnected.value) return 'DB getrennt'
   if (props.pendingSyncCount > 0) return `${props.pendingSyncCount} ungesynct`
   return 'Online'
 })
 
 const badgeTooltip = computed(() => {
   if (props.isOffline) return 'Offline - Daten werden lokal gespeichert. Klicke für Details.'
+  if (!apiHealthy.value) return 'API-Server nicht erreichbar. Klicke für Details.'
+  if (!isDbConnected.value) return 'Datenbank-Verbindung unterbrochen. Klicke für Details.'
   if (props.pendingSyncCount > 0) return 'Ausstehende Synchronisierung. Klicke für Details.'
-  return 'Online - Alles synchron. Klicke für Status-Details.'
+  return 'Online - Alle Systeme einsatzbereit. Klicke für Status-Details.'
 })
+
+const BASE = typeof window !== 'undefined' && import.meta.env.PROD ? window.location.origin : ''
 
 async function checkHealth() {
   if (typeof window === 'undefined' || (import.meta as any).env?.MODE === 'test') {
     apiHealthy.value = true
-    dbStatus.value = 'ok'
+    dbStatus.value = 'connected'
     latencyMs.value = 8
     return
   }
 
   const start = performance.now()
   try {
-    const res = await fetch('/api/health')
+    const res = await fetch(`${BASE}/api/health`)
     latencyMs.value = Math.max(1, Math.round(performance.now() - start))
     if (res.ok) {
       const data = await res.json().catch(() => ({}))
       apiHealthy.value = true
-      dbStatus.value = data.db || 'ok'
+      dbStatus.value = data.db || 'connected'
     } else {
       apiHealthy.value = false
-      dbStatus.value = 'error'
+      dbStatus.value = 'disconnected'
     }
   } catch {
     latencyMs.value = Math.max(1, Math.round(performance.now() - start))
     if (props.isOffline) {
       apiHealthy.value = false
       dbStatus.value = 'offline'
+    } else {
+      apiHealthy.value = false
+      dbStatus.value = 'disconnected'
     }
   }
 }
@@ -241,15 +258,31 @@ onMounted(() => {
   animation: pulse-dot 1.5s infinite;
 }
 
+.dot-degraded {
+  background-color: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+  animation: pulse-dot 2s infinite;
+}
+
 .dot-syncing {
   background-color: #f59e0b;
   box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.status-online {
+  color: var(--text-muted, #8e8e9c);
 }
 
 .status-offline {
   background: var(--accent-red-subtle, rgba(239, 68, 68, 0.12));
   border-color: rgba(239, 68, 68, 0.25);
   color: var(--accent-red, #ef4444);
+}
+
+.status-degraded {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
 }
 
 .status-syncing {
