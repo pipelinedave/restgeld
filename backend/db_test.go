@@ -54,7 +54,7 @@ func TestIntegrationMigrations(t *testing.T) {
 		t.Fatalf("erneute migration schlug fehl: %v", err)
 	}
 
-	// Tabellen prüfen (periods und expenses müssen existieren)
+	// Tabellen prüfen (periods, expenses, users müssen existieren)
 	var count int
 	err = db.QueryRow("SELECT COUNT(*) FROM periods").Scan(&count)
 	if err != nil {
@@ -65,11 +65,16 @@ func TestIntegrationMigrations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expenses tabelle nicht abfragbar: %v", err)
 	}
+
+	err = db.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	if err != nil {
+		t.Fatalf("users tabelle nicht abfragbar: %v", err)
+	}
 }
 
 func TestIntegrationCreateAndReadPeriod(t *testing.T) {
 	store := newIntegrationStore(t)
-	p, err := store.GetOrCreatePeriod()
+	p, err := store.GetOrCreatePeriod("")
 	if err != nil {
 		t.Fatalf("get or create: %v", err)
 	}
@@ -86,11 +91,11 @@ func TestIntegrationCreateAndReadPeriod(t *testing.T) {
 
 func TestIntegrationCreateDuplicatePeriod(t *testing.T) {
 	store := newIntegrationStore(t)
-	_, err := store.CreatePeriod()
+	_, err := store.CreatePeriod("")
 	if err != nil {
 		t.Fatalf("erste periode: %v", err)
 	}
-	_, err = store.CreatePeriod()
+	_, err = store.CreatePeriod("")
 	if err != nil {
 		t.Fatalf("zweite periode (on conflict): %v", err)
 	}
@@ -98,9 +103,9 @@ func TestIntegrationCreateDuplicatePeriod(t *testing.T) {
 
 func TestIntegrationAddAndListExpenses(t *testing.T) {
 	store := newIntegrationStore(t)
-	p, _ := store.GetOrCreatePeriod()
+	p, _ := store.GetOrCreatePeriod("")
 
-	e1, err := store.AddExpense(p.ID, 8.50, "Frühstück")
+	e1, err := store.AddExpense("", p.ID, 8.50, "Frühstück")
 	if err != nil {
 		t.Fatalf("add expense 1: %v", err)
 	}
@@ -114,9 +119,9 @@ func TestIntegrationAddAndListExpenses(t *testing.T) {
 		t.Error("id sollte generiert werden")
 	}
 
-	store.AddExpense(p.ID, 3.50, "Kaffee")
+	store.AddExpense("", p.ID, 3.50, "Kaffee")
 
-	expenses, err := store.GetRecentExpenses(p.ID, 2)
+	expenses, err := store.GetRecentExpenses("", p.ID, 2)
 	if err != nil {
 		t.Fatalf("list expenses: %v", err)
 	}
@@ -130,15 +135,15 @@ func TestIntegrationAddAndListExpenses(t *testing.T) {
 
 func TestIntegrationDeleteExpense(t *testing.T) {
 	store := newIntegrationStore(t)
-	p, _ := store.GetOrCreatePeriod()
+	p, _ := store.GetOrCreatePeriod("")
 
-	e, _ := store.AddExpense(p.ID, 5.00, "Test")
-	err := store.DeleteExpense(e.ID)
+	e, _ := store.AddExpense("", p.ID, 5.00, "Test")
+	err := store.DeleteExpense("", e.ID)
 	if err != nil {
 		t.Fatalf("delete: %v", err)
 	}
 
-	total, _ := store.GetTotalExpenses(p.ID)
+	total, _ := store.GetTotalExpenses("", p.ID)
 	if total != 0 {
 		t.Errorf("erwartet 0 nach delete, bekommen %.2f", total)
 	}
@@ -146,7 +151,7 @@ func TestIntegrationDeleteExpense(t *testing.T) {
 
 func TestIntegrationDeleteExpenseNotFound(t *testing.T) {
 	store := newIntegrationStore(t)
-	err := store.DeleteExpense("00000000-0000-0000-0000-000000000000")
+	err := store.DeleteExpense("", "00000000-0000-0000-0000-000000000000")
 	if err == nil {
 		t.Fatal("erwartet fehler bei nicht-existenter id")
 	}
@@ -154,13 +159,13 @@ func TestIntegrationDeleteExpenseNotFound(t *testing.T) {
 
 func TestIntegrationGetTotalExpenses(t *testing.T) {
 	store := newIntegrationStore(t)
-	p, _ := store.GetOrCreatePeriod()
+	p, _ := store.GetOrCreatePeriod("")
 
-	store.AddExpense(p.ID, 10.00, "")
-	store.AddExpense(p.ID, 20.00, "")
-	store.AddExpense(p.ID, 30.00, "")
+	store.AddExpense("", p.ID, 10.00, "")
+	store.AddExpense("", p.ID, 20.00, "")
+	store.AddExpense("", p.ID, 30.00, "")
 
-	total, err := store.GetTotalExpenses(p.ID)
+	total, err := store.GetTotalExpenses("", p.ID)
 	if err != nil {
 		t.Fatalf("get total: %v", err)
 	}
@@ -171,12 +176,12 @@ func TestIntegrationGetTotalExpenses(t *testing.T) {
 
 func TestIntegrationUpdateBudget(t *testing.T) {
 	store := newIntegrationStore(t)
-	err := store.UpdateBudget(600, 0)
+	err := store.UpdateBudget("", 600, 0)
 	if err != nil {
 		t.Fatalf("update budget: %v", err)
 	}
 
-	p, _ := store.GetOrCreatePeriod()
+	p, _ := store.GetOrCreatePeriod("")
 	if p.MonthlyTotal != 600 {
 		t.Errorf("erwartet monthly_total 600, bekommen %.2f", p.MonthlyTotal)
 	}
@@ -184,20 +189,20 @@ func TestIntegrationUpdateBudget(t *testing.T) {
 
 func TestIntegrationCreatePeriodClearsExpenses(t *testing.T) {
 	store := newIntegrationStore(t)
-	p, _ := store.GetOrCreatePeriod()
-	store.AddExpense(p.ID, 100.00, "Alt")
+	p, _ := store.GetOrCreatePeriod("")
+	store.AddExpense("", p.ID, 100.00, "Alt")
 
-	_, err := store.CreatePeriod()
+	_, err := store.CreatePeriod("")
 	if err != nil {
 		t.Fatalf("create period: %v", err)
 	}
 
-	expenses, _ := store.GetRecentExpenses(p.ID, 10)
+	expenses, _ := store.GetRecentExpenses("", p.ID, 10)
 	if len(expenses) != 0 {
 		t.Errorf("erwartet 0 expenses nach reset, bekommen %d", len(expenses))
 	}
 
-	total, _ := store.GetTotalExpenses(p.ID)
+	total, _ := store.GetTotalExpenses("", p.ID)
 	if total != 0 {
 		t.Errorf("erwartet total 0 nach reset, bekommen %.2f", total)
 	}
@@ -206,7 +211,7 @@ func TestIntegrationCreatePeriodClearsExpenses(t *testing.T) {
 func TestIntegrationCreatePeriodWithStart(t *testing.T) {
 	store := newIntegrationStore(t)
 	start := time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)
-	p, err := store.CreatePeriodWithStart(start, 400.0, 0)
+	p, err := store.CreatePeriodWithStart("", start, 400.0, 0)
 	if err != nil {
 		t.Fatalf("create period with start: %v", err)
 	}
@@ -229,7 +234,7 @@ func TestIntegrationCreatePeriodWithStart(t *testing.T) {
 func TestIntegrationCreatePeriodWithCustomDays(t *testing.T) {
 	store := newIntegrationStore(t)
 	start := time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)
-	p, err := store.CreatePeriodWithStart(start, 140.0, 14)
+	p, err := store.CreatePeriodWithStart("", start, 140.0, 14)
 	if err != nil {
 		t.Fatalf("create period with custom days: %v", err)
 	}
@@ -241,12 +246,12 @@ func TestIntegrationCreatePeriodWithCustomDays(t *testing.T) {
 		t.Errorf("erwartet base_budget 10.00, bekommen %.2f", p.BaseBudget)
 	}
 
-	err = store.UpdateBudget(200.0, 20)
+	err = store.UpdateBudget("", 200.0, 20)
 	if err != nil {
 		t.Fatalf("update budget and days: %v", err)
 	}
 
-	updated, err := store.GetOrCreatePeriod()
+	updated, err := store.GetOrCreatePeriod("")
 	if err != nil {
 		t.Fatalf("get period: %v", err)
 	}
@@ -280,8 +285,11 @@ func newIntegrationStore(t *testing.T) Store {
 	store := newPostgresStoreFromDB(db)
 
 	// Clean tables
+	db.Exec("DELETE FROM auth_sessions")
+	db.Exec("DELETE FROM magic_links")
 	db.Exec("DELETE FROM expenses")
 	db.Exec("DELETE FROM periods")
+	db.Exec("DELETE FROM users")
 	time.Sleep(50 * time.Millisecond)
 
 	return store

@@ -21,9 +21,15 @@ func newServer(store Store) *server {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS, PUT")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -59,14 +65,16 @@ func (s *server) handleBudget(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
-	period, err := s.store.GetOrCreatePeriod()
+	userID := s.getUserIDFromRequest(r)
+
+	period, err := s.store.GetOrCreatePeriod(userID)
 	if err != nil {
 		log.Printf("fehler beim laden der periode: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
 		return
 	}
 
-	totalSpent, err := s.store.GetTotalExpenses(period.ID)
+	totalSpent, err := s.store.GetTotalExpenses(userID, period.ID)
 	if err != nil {
 		log.Printf("fehler beim laden der ausgaben: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
@@ -74,13 +82,13 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := s.now()
-	todaySpent, err := s.store.GetTodayExpenses(period.ID, now)
+	todaySpent, err := s.store.GetTodayExpenses(userID, period.ID, now)
 	if err != nil {
 		log.Printf("fehler beim laden der heutigen ausgaben: %v", err)
 		todaySpent = 0
 	}
 
-	expenses, err := s.store.GetRecentExpenses(period.ID, 3)
+	expenses, err := s.store.GetRecentExpenses(userID, period.ID, 3)
 	if err != nil {
 		log.Printf("fehler beim laden der letzten ausgaben: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
@@ -90,7 +98,7 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 	day := period.dayOfMonth(now)
 	currentBudget, savings, color := period.calcBudget(totalSpent, todaySpent, now)
 
-	dailyStats, err := s.store.GetDailyExpenses(period.ID, period.StartDate, day)
+	dailyStats, err := s.store.GetDailyExpenses(userID, period.ID, period.StartDate, day)
 	if err != nil {
 		log.Printf("fehler beim laden der tages-statistiken: %v", err)
 		dailyStats = []DailyStat{}
@@ -118,65 +126,99 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) updateBudgetHandler(w http.ResponseWriter, r *http.Request) {
+	userID := s.getUserIDFromRequest(r)
+
 	var req UpdateBudgetRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "ungültige anfrage")
+		writeError(w, http.StatusBadRequest, "ungültiges json")
 		return
 	}
 
 	if req.MonthlyTotal <= 0 && req.Days <= 0 {
-		writeError(w, http.StatusBadRequest, "mindestens budget oder tage müssen > 0 sein")
+		writeError(w, http.StatusBadRequest, "monthlyTotal oder days erforderlich und muss > 0 sein")
 		return
 	}
 
-	if err := s.store.UpdateBudget(req.MonthlyTotal, req.Days); err != nil {
+	if err := s.store.UpdateBudget(userID, req.MonthlyTotal, req.Days); err != nil {
 		log.Printf("fehler beim aktualisieren des budgets: %v", err)
-		writeError(w, http.StatusInternalServerError, "fehler beim aktualisieren")
+		writeError(w, http.StatusInternalServerError, "fehler beim aktualisieren des budgets")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	s.getBudget(w, r)
 }
 
 func (s *server) handleExpenses(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodGet:
-		s.getExpenses(w, r)
 	case http.MethodPost:
 		s.createExpense(w, r)
+	case http.MethodGet:
+		s.getExpenses(w, r)
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 	}
 }
 
+func (s *server) createExpense(w http.ResponseWriter, r *http.Request) {
+	userID := s.getUserIDFromRequest(r)
+
+	var req ExpenseRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "ungültiges json")
+		return
+	}
+
+	if req.Amount <= 0 {
+		writeError(w, http.StatusBadRequest, "betrag muss positiv sein")
+		return
+	}
+
+	period, err := s.store.GetOrCreatePeriod(userID)
+	if err != nil {
+		log.Printf("fehler beim laden der periode: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
+		return
+	}
+
+	expense, err := s.store.AddExpense(userID, period.ID, req.Amount, req.Note)
+	if err != nil {
+		log.Printf("fehler beim erstellen der ausgabe: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim erstellen der ausgabe")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusCreated, expense)
+}
+
 func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
-	periodID := r.URL.Query().Get("period_id")
+	userID := s.getUserIDFromRequest(r)
+
+	query := r.URL.Query()
+	page, err := strconv.Atoi(query.Get("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(query.Get("limit"))
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	periodID := query.Get("period_id")
 	if periodID == "" {
-		period, err := s.store.GetOrCreatePeriod()
+		period, err := s.store.GetOrCreatePeriod(userID)
 		if err != nil {
+			log.Printf("fehler beim laden der periode: %v", err)
 			writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
 			return
 		}
 		periodID = period.ID
 	}
 
-	page := 1
-	limit := 10
-
-	if p := r.URL.Query().Get("page"); p != "" {
-		if val, err := strconv.Atoi(p); err == nil && val > 0 {
-			page = val
-		}
-	}
-
-	if l := r.URL.Query().Get("limit"); l != "" {
-		if val, err := strconv.Atoi(l); err == nil && val > 0 {
-			limit = val
-		}
-	}
-
-	expenses, err := s.store.GetExpenses(periodID, page, limit)
+	expenses, err := s.store.GetExpenses(userID, periodID, page, limit)
 	if err != nil {
+		log.Printf("fehler beim laden der paginierten ausgaben: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
 		return
 	}
@@ -185,60 +227,28 @@ func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, expenses)
 }
 
-func (s *server) createExpense(w http.ResponseWriter, r *http.Request) {
-	var req ExpenseRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "ungültige anfrage")
-		return
-	}
-
-	if req.Amount <= 0 {
-		writeError(w, http.StatusBadRequest, "betrag muss > 0 sein")
-		return
-	}
-
-	period, err := s.store.GetOrCreatePeriod()
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
-		return
-	}
-
-	expense, err := s.store.AddExpense(period.ID, req.Amount, req.Note)
-	if err != nil {
-		log.Printf("fehler beim erstellen der ausgabe: %v", err)
-		writeError(w, http.StatusInternalServerError, "fehler beim speichern")
-		return
-	}
-
-	jsonHeader(w)
-	writeJSON(w, http.StatusCreated, expense)
-}
-
 func (s *server) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) < 4 {
-		writeError(w, http.StatusBadRequest, "fehlende ausgaben-id")
-		return
-	}
-	expenseID := parts[3]
-
-	if err := s.store.DeleteExpense(expenseID); err != nil {
-		msg := err.Error()
-		if strings.Contains(msg, "nicht gefunden") || strings.Contains(msg, "uuid") {
-			writeError(w, http.StatusNotFound, "ausgabe nicht gefunden")
-		} else {
-			log.Printf("fehler beim löschen: %v", err)
-			writeError(w, http.StatusInternalServerError, "fehler beim löschen")
-		}
+	userID := s.getUserIDFromRequest(r)
+	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(parts) < 3 || parts[2] == "" {
+		writeError(w, http.StatusBadRequest, "ausgaben-id erforderlich")
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	expenseID := parts[2]
+	if err := s.store.DeleteExpense(userID, expenseID); err != nil {
+		log.Printf("fehler beim löschen der ausgabe %s: %v", expenseID, err)
+		writeError(w, http.StatusNotFound, "ausgabe nicht gefunden")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "gelöscht"})
 }
 
 func (s *server) handleNewPeriod(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +256,8 @@ func (s *server) handleNewPeriod(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
+
+	userID := s.getUserIDFromRequest(r)
 
 	var req NewPeriodRequest
 	if r.Body != nil {
@@ -259,10 +271,7 @@ func (s *server) handleNewPeriod(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var period *Period
-	var err error
-	period, err = s.store.CreatePeriodWithStart(startDate, req.MonthlyTotal, req.Days)
-
+	period, err := s.store.CreatePeriodWithStart(userID, startDate, req.MonthlyTotal, req.Days)
 	if err != nil {
 		log.Printf("fehler beim erstellen der periode: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim erstellen der periode")
@@ -306,14 +315,16 @@ func (s *server) handleExport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	period, err := s.store.GetOrCreatePeriod()
+	userID := s.getUserIDFromRequest(r)
+
+	period, err := s.store.GetOrCreatePeriod(userID)
 	if err != nil {
 		log.Printf("fehler beim laden der periode fuer export: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
 		return
 	}
 
-	expenses, err := s.store.GetAllExpenses(period.ID)
+	expenses, err := s.store.GetAllExpenses(userID, period.ID)
 	if err != nil {
 		log.Printf("fehler beim laden der ausgaben fuer export: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der ausgaben")
@@ -357,7 +368,9 @@ func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	period, err := s.store.GetOrCreatePeriod()
+	userID := s.getUserIDFromRequest(r)
+
+	period, err := s.store.GetOrCreatePeriod(userID)
 	if err != nil {
 		log.Printf("fehler beim laden der periode fuer import: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
@@ -380,7 +393,6 @@ func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
 			if line == "" || (i == 0 && (strings.HasPrefix(strings.ToLower(line), "datum") || strings.HasPrefix(strings.ToLower(line), "date"))) {
 				continue
 			}
-			// Trennzeichen: Semikolon oder Komma
 			sep := ";"
 			if !strings.Contains(line, ";") && strings.Contains(line, ",") {
 				sep = ","
@@ -416,7 +428,7 @@ func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		// JSON Import (akzeptiert ExportBackup oder Array []Expense oder ImportRequest)
+		// JSON Import
 		bodyBytes, err := ioReadAll(r.Body)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "fehler beim lesen des request-bodys")
@@ -444,7 +456,7 @@ func (s *server) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imported, err := s.store.ImportExpenses(period.ID, expensesToImport)
+	imported, err := s.store.ImportExpenses(userID, period.ID, expensesToImport)
 	if err != nil {
 		log.Printf("fehler beim importieren: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim importieren der ausgaben")
@@ -486,7 +498,9 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	periods, err := s.store.GetAllPeriods()
+	userID := s.getUserIDFromRequest(r)
+
+	periods, err := s.store.GetAllPeriods(userID)
 	if err != nil {
 		log.Printf("fehler beim abrufen aller perioden: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim abrufen der perioden")
@@ -495,6 +509,17 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 
 	jsonHeader(w)
 	writeJSON(w, http.StatusOK, periods)
+}
+
+func (s *server) handleAuthMe(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.getMeHandler(w, r)
+	case http.MethodDelete:
+		s.deleteAccountHandler(w, r)
+	default:
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+	}
 }
 
 func (s *server) router() http.Handler {
@@ -507,5 +532,14 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/periods", s.handleGetPeriods)
 	mux.HandleFunc("/api/export", s.handleExport)
 	mux.HandleFunc("/api/import", s.handleImport)
+
+	// Auth & SaaS Endpoints
+	mux.HandleFunc("/api/auth/magic-link", s.requestMagicLinkHandler)
+	mux.HandleFunc("/api/auth/verify", s.verifyMagicLinkHandler)
+	mux.HandleFunc("/api/auth/me", s.handleAuthMe)
+	mux.HandleFunc("/api/auth/settings", s.updateUserSettingsHandler)
+	mux.HandleFunc("/api/auth/logout", s.logoutHandler)
+	mux.HandleFunc("/api/auth/migrate-guest", s.migrateGuestHandler)
+
 	return corsMiddleware(mux)
 }

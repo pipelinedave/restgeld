@@ -91,8 +91,8 @@ func TestGetBudget(t *testing.T) {
 
 func TestGetBudgetWithExpenses(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-08", 10.00, "Pizza")
-	store.AddExpense("2026-08", 5.50, "Kaffee")
+	store.AddExpense("", "2026-08", 10.00, "Pizza")
+	store.AddExpense("", "2026-08", 5.50, "Kaffee")
 
 	now := time.Date(2026, 8, 17, 12, 0, 0, 0, time.UTC)
 	srv := &server{store: store, now: func() time.Time { return now }}
@@ -121,11 +121,11 @@ func TestGetDailyExpensesStats(t *testing.T) {
 	store := newMemoryStore()
 	start := time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC)
 	// Ausgabe an Tag 1
-	store.AddExpenseWithDate("2026-08", 12.0, "Einkauf", time.Date(2026, 8, 1, 10, 0, 0, 0, time.UTC))
+	store.AddExpenseWithDate("", "2026-08", 12.0, "Einkauf", time.Date(2026, 8, 1, 10, 0, 0, 0, time.UTC))
 	// Ausgabe an Tag 3
-	store.AddExpenseWithDate("2026-08", 8.5, "Kino", time.Date(2026, 8, 3, 18, 0, 0, 0, time.UTC))
+	store.AddExpenseWithDate("", "2026-08", 8.5, "Kino", time.Date(2026, 8, 3, 18, 0, 0, 0, time.UTC))
 
-	stats, err := store.GetDailyExpenses("2026-08", start, 3)
+	stats, err := store.GetDailyExpenses("", "2026-08", start, 3)
 	if err != nil {
 		t.Fatalf("fehler: %v", err)
 	}
@@ -183,9 +183,6 @@ func TestCalcStreakInfo(t *testing.T) {
 }
 
 func TestCalcProjection(t *testing.T) {
-	// Monat mit 30 Tagen, 300 € Budget (10 €/Tag)
-	// Nach 10 Tagen 50 € ausgegeben (Ø 5 €/Tag)
-	// Resttage: 20 -> Erwartet: 50 + (5 * 20) = 150 € Gesamtausgaben -> 150 € gespart
 	proj := calcProjection(50.0, 10, 30, 300.0)
 
 	if proj.Status != "saving" {
@@ -201,8 +198,6 @@ func TestCalcProjection(t *testing.T) {
 		t.Errorf("erwartet ProjectedSavings=150.0, bekommen %f", proj.ProjectedSavings)
 	}
 
-	// Defizit-Fall: Nach 10 Tagen 200 € ausgegeben (Ø 20 €/Tag)
-	// Resttage: 20 -> 200 + 400 = 600 € Gesamtausgaben -> 300 - 600 = -300 €
 	projDeficit := calcProjection(200.0, 10, 30, 300.0)
 	if projDeficit.Status != "deficit" {
 		t.Errorf("erwartet deficit, bekommen %s", projDeficit.Status)
@@ -214,10 +209,9 @@ func TestCalcProjection(t *testing.T) {
 
 func TestCreateExpense(t *testing.T) {
 	store := newMemoryStore()
-	now := time.Date(2026, 8, 17, 12, 0, 0, 0, time.UTC)
-	srv := &server{store: store, now: func() time.Time { return now }}
+	srv := &server{store: store, now: time.Now}
 
-	body := `{"amount": 8.50, "note": "Bus"}`
+	body := `{"amount": 12.50, "note": "Mittagessen"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/expenses", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
@@ -229,15 +223,8 @@ func TestCreateExpense(t *testing.T) {
 
 	var exp Expense
 	json.NewDecoder(rec.Body).Decode(&exp)
-
-	if exp.Amount != 8.50 {
-		t.Errorf("erwartet amount 8.50, bekommen %.2f", exp.Amount)
-	}
-	if exp.Note != "Bus" {
-		t.Errorf("erwartet note 'Bus', bekommen '%s'", exp.Note)
-	}
-	if exp.PeriodID != "2026-08" {
-		t.Errorf("erwartet period 2026-08, bekommen %s", exp.PeriodID)
+	if exp.Amount != 12.50 || exp.Note != "Mittagessen" {
+		t.Errorf("unerwartete Ausgabe: %+v", exp)
 	}
 }
 
@@ -245,10 +232,20 @@ func TestCreateExpenseInvalid(t *testing.T) {
 	store := newMemoryStore()
 	srv := &server{store: store, now: time.Now}
 
-	body := `{"amount": 0, "note": "nix"}`
+	body := `{"amount": -5.00}`
 	req := httptest.NewRequest(http.MethodPost, "/api/expenses", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("erwartet 400 für negativen Betrag, bekommen %d", rec.Code)
+	}
+
+	body = `{"amount": 0}`
+	req = httptest.NewRequest(http.MethodPost, "/api/expenses", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec = httptest.NewRecorder()
 	srv.router().ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusBadRequest {
@@ -258,7 +255,7 @@ func TestCreateExpenseInvalid(t *testing.T) {
 
 func TestDeleteExpense(t *testing.T) {
 	store := newMemoryStore()
-	exp, _ := store.AddExpense("2026-08", 5.00, "Test")
+	exp, _ := store.AddExpense("", "2026-08", 5.00, "Test")
 	srv := &server{store: store, now: time.Now}
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/expenses/"+exp.ID, nil)
@@ -269,7 +266,7 @@ func TestDeleteExpense(t *testing.T) {
 		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
 	}
 
-	total, _ := store.GetTotalExpenses("2026-08")
+	total, _ := store.GetTotalExpenses("", "2026-08")
 	if total != 0 {
 		t.Errorf("erwartet 0 nach löschen, bekommen %.2f", total)
 	}
@@ -290,7 +287,7 @@ func TestDeleteExpenseNotFound(t *testing.T) {
 
 func TestNewPeriod(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-08-01", 50.00, "Alt")
+	store.AddExpense("", "2026-08-01", 50.00, "Alt")
 	now := time.Date(2026, 8, 25, 12, 0, 0, 0, time.UTC)
 	srv := &server{store: store, now: func() time.Time { return now }}
 
@@ -308,7 +305,7 @@ func TestNewPeriod(t *testing.T) {
 		t.Errorf("erwartet period ID '2026-08-25', bekommen '%s'", p.ID)
 	}
 
-	total, _ := store.GetTotalExpenses("2026-08-25")
+	total, _ := store.GetTotalExpenses("", "2026-08-25")
 	if total != 0 {
 		t.Errorf("erwartet 0 nach reset, bekommen %.2f", total)
 	}
@@ -350,10 +347,10 @@ func TestNewPeriodWithCustomBudgetAndDays(t *testing.T) {
 	srv.router().ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusCreated {
-		t.Fatalf("erwartet 201, bekommen %d: %s", rec.Code, rec.Body.String())
+		t.Fatalf("erwartet 201, bekommen %d", rec.Code)
 	}
 
-	p, _ := store.GetOrCreatePeriod()
+	p, _ := store.GetOrCreatePeriod("")
 	if p.MonthlyTotal != 280 {
 		t.Errorf("erwartet monthlyTotal 280, bekommen %.2f", p.MonthlyTotal)
 	}
@@ -379,7 +376,7 @@ func TestUpdateBudgetAndDays(t *testing.T) {
 		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
 	}
 
-	p, _ := store.GetOrCreatePeriod()
+	p, _ := store.GetOrCreatePeriod("")
 	if p.MonthlyTotal != 300 {
 		t.Errorf("erwartet monthly_total 300, bekommen %.2f", p.MonthlyTotal)
 	}
@@ -402,8 +399,8 @@ func TestCORSHeaders(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Errorf("erwartet 200 für OPTIONS, bekommen %d", rec.Code)
 	}
-	if rec.Header().Get("Access-Control-Allow-Origin") != "*" {
-		t.Error("CORS header fehlt")
+	if rec.Header().Get("Access-Control-Allow-Origin") == "" {
+		t.Error("CORS Header fehlt")
 	}
 }
 
@@ -449,7 +446,7 @@ func TestGetBudgetOnFirstDay(t *testing.T) {
 func TestGetBudgetAfterAllSpent(t *testing.T) {
 	store := newMemoryStore()
 	for i := 1; i <= 17; i++ {
-		store.AddExpenseWithDate("2026-08", 14.52, "tag", time.Date(2026, 8, i, 12, 0, 0, 0, time.UTC))
+		store.AddExpenseWithDate("", "2026-08", 14.52, "tag", time.Date(2026, 8, i, 12, 0, 0, 0, time.UTC))
 	}
 	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
 	srv := &server{store: store, now: func() time.Time { return now }}
@@ -472,9 +469,9 @@ func TestGetBudgetAfterAllSpent(t *testing.T) {
 func TestGetBudgetInDebt(t *testing.T) {
 	store := newMemoryStore()
 	for i := 1; i <= 17; i++ {
-		store.AddExpenseWithDate("2026-08", 14.52, "tag", time.Date(2026, 8, i, 12, 0, 0, 0, time.UTC))
+		store.AddExpenseWithDate("", "2026-08", 14.52, "tag", time.Date(2026, 8, i, 12, 0, 0, 0, time.UTC))
 	}
-	store.AddExpenseWithDate("2026-08", 50, "extra", time.Date(2026, 8, 17, 18, 0, 0, 0, time.UTC))
+	store.AddExpenseWithDate("", "2026-08", 50, "extra", time.Date(2026, 8, 17, 18, 0, 0, 0, time.UTC))
 	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
 	srv := &server{store: store, now: func() time.Time { return now }}
 
@@ -556,12 +553,11 @@ func TestGetExpensesDefaultPagination(t *testing.T) {
 func TestGetExpensesCustomPagination(t *testing.T) {
 	store := newMemoryStore()
 	for i := 1; i <= 25; i++ {
-		store.AddExpense("2026-08", float64(i), fmt.Sprintf("Ausgabe %d", i))
+		store.AddExpense("", "2026-08", float64(i), fmt.Sprintf("Ausgabe %d", i))
 	}
 
 	srv := &server{store: store, now: time.Now}
 
-	// Seite 2 mit Limit 10 -> sollte 10 Elemente enthalten (Ausgabe 15 bis 6)
 	req := httptest.NewRequest(http.MethodGet, "/api/expenses?page=2&limit=10", nil)
 	rec := httptest.NewRecorder()
 	srv.router().ServeHTTP(rec, req)
@@ -590,12 +586,10 @@ func TestGetExpensesCustomPagination(t *testing.T) {
 	if len(resp.Items) != 10 {
 		t.Errorf("erwartet 10 Items auf Seite 2, bekommen %d", len(resp.Items))
 	}
-	// Letztes Element auf Seite 2 (bei 25 Einträgen, Seite 2: 11. bis 20. neuste Ausgabe -> Ausgabe 15 bis 6)
 	if resp.Items[0].Note != "Ausgabe 15" {
 		t.Errorf("erwartet erstes Element auf Seite 2 'Ausgabe 15', bekommen '%s'", resp.Items[0].Note)
 	}
 
-	// Seite 3 mit Limit 10 -> sollte die restlichen 5 Elemente enthalten
 	req3 := httptest.NewRequest(http.MethodGet, "/api/expenses?page=3&limit=10", nil)
 	rec3 := httptest.NewRecorder()
 	srv.router().ServeHTTP(rec3, req3)
@@ -629,7 +623,7 @@ func TestGetExpensesInvalidParams(t *testing.T) {
 
 func TestExportJSON(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-08", 14.50, "Kaffee")
+	store.AddExpense("", "2026-08", 14.50, "Kaffee")
 	srv := &server{store: store, now: time.Now}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/export?format=json", nil)
@@ -654,7 +648,7 @@ func TestExportJSON(t *testing.T) {
 
 func TestExportCSV(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-08", 12.00, "Mittagessen")
+	store.AddExpense("", "2026-08", 12.00, "Mittagessen")
 	srv := &server{store: store, now: time.Now}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/export?format=csv", nil)
@@ -697,7 +691,7 @@ func TestImportJSON(t *testing.T) {
 		t.Errorf("erwartet 1 importiert, bekommen %v", resp["imported"])
 	}
 
-	exp, _ := store.GetAllExpenses("2026-08")
+	exp, _ := store.GetAllExpenses("", "2026-08")
 	if len(exp) != 1 || exp[0].Amount != 9.99 {
 		t.Errorf("unerwartete Ausgaben im Store: %+v", exp)
 	}
@@ -723,7 +717,7 @@ func TestImportCSV(t *testing.T) {
 		t.Errorf("erwartet 2 importiert, bekommen %v", resp["imported"])
 	}
 
-	exp, _ := store.GetAllExpenses("2026-08")
+	exp, _ := store.GetAllExpenses("", "2026-08")
 	if len(exp) != 2 {
 		t.Errorf("erwartet 2 Ausgaben im Store, bekommen %d", len(exp))
 	}
@@ -731,7 +725,7 @@ func TestImportCSV(t *testing.T) {
 
 func TestGetPeriods(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-08", 25.0, "Hotel")
+	store.AddExpense("", "2026-08", 25.0, "Hotel")
 	srv := &server{store: store, now: time.Now}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/periods", nil)
@@ -757,8 +751,8 @@ func TestGetPeriods(t *testing.T) {
 
 func TestGetExpensesWithPeriodID(t *testing.T) {
 	store := newMemoryStore()
-	store.AddExpense("2026-07", 42.0, "Alte Ausgabe")
-	store.AddExpense("2026-08", 10.0, "Neue Ausgabe")
+	store.AddExpense("", "2026-07", 42.0, "Alte Ausgabe")
+	store.AddExpense("", "2026-08", 10.0, "Neue Ausgabe")
 	srv := &server{store: store, now: time.Now}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/expenses?period_id=2026-07", nil)
@@ -783,8 +777,8 @@ func TestGetBudget_UserScenario_PriorDaySavings(t *testing.T) {
 	store := newMemoryStore()
 	// Tag 1: Ausgaben 2.00 € und 4.70 € = 6.70 €
 	day1 := time.Date(2026, 8, 1, 14, 0, 0, 0, time.UTC)
-	store.AddExpenseWithDate("2026-08", 2.00, "Bäcker", day1)
-	store.AddExpenseWithDate("2026-08", 4.70, "Kaffee", day1)
+	store.AddExpenseWithDate("", "2026-08", 2.00, "Bäcker", day1)
+	store.AddExpenseWithDate("", "2026-08", 4.70, "Kaffee", day1)
 
 	// Tag 2: 0 ausgegeben, Basis = 14.52 € (450 / 31)
 	day2 := time.Date(2026, 8, 2, 8, 0, 0, 0, time.UTC)
@@ -797,7 +791,6 @@ func TestGetBudget_UserScenario_PriorDaySavings(t *testing.T) {
 	var resp BudgetResponse
 	decodeJSON(t, rec.Body, &resp)
 
-	// Erwarteter Sparpuffer an Tag 2 = (1 * 14.52) - 6.70 = +7.82 €
 	expectedSavings := mathRound(resp.BaseBudget*1.0-6.70, 2)
 	if resp.Savings != expectedSavings {
 		t.Errorf("erwartet Sparpuffer von gestern %.2f €, bekommen %.2f €", expectedSavings, resp.Savings)

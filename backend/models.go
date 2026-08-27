@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"time"
 )
 
 type Period struct {
 	ID           string    `json:"id"`
+	UserID       string    `json:"userId,omitempty"`
 	StartDate    time.Time `json:"startDate"`
 	MonthDays    int       `json:"monthDays"`
 	BaseBudget   float64   `json:"baseBudget"`
@@ -17,6 +19,7 @@ type Period struct {
 
 type PeriodSummary struct {
 	ID           string    `json:"id"`
+	UserID       string    `json:"userId,omitempty"`
 	StartDate    time.Time `json:"startDate"`
 	MonthDays    int       `json:"monthDays"`
 	BaseBudget   float64   `json:"baseBudget"`
@@ -28,10 +31,67 @@ type PeriodSummary struct {
 
 type Expense struct {
 	ID        string    `json:"id"`
+	UserID    string    `json:"userId,omitempty"`
 	PeriodID  string    `json:"periodId"`
 	Amount    float64   `json:"amount"`
 	Note      string    `json:"note"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type User struct {
+	ID                   string    `json:"id"`
+	Email                string    `json:"email"`
+	CreatedAt            time.Time `json:"createdAt"`
+	LastLoginAt          time.Time `json:"lastLoginAt"`
+	DefaultMonthlyBudget float64   `json:"defaultMonthlyBudget"`
+	DefaultPeriodDays    int       `json:"defaultPeriodDays"`
+	Theme                string    `json:"theme"`
+	IsActive             bool      `json:"isActive"`
+}
+
+type AuthSession struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	TokenHash string    `json:"-"`
+	UserAgent string    `json:"userAgent"`
+	IPAddress string    `json:"ipAddress"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type MagicLinkRequest struct {
+	Email string `json:"email"`
+}
+
+type VerifyMagicLinkRequest struct {
+	Token string `json:"token"`
+}
+
+type AuthResponse struct {
+	User        *User  `json:"user"`
+	Token       string `json:"token,omitempty"`
+	DebugLink   string `json:"debugLink,omitempty"`
+	IsNewUser   bool   `json:"isNewUser"`
+}
+
+type MigrateGuestRequest struct {
+	Expenses []Expense `json:"expenses"`
+	Periods  []Period  `json:"periods"`
+}
+
+type UpdateUserSettingsRequest struct {
+	DefaultMonthlyBudget float64 `json:"defaultMonthlyBudget,omitempty"`
+	DefaultPeriodDays    int     `json:"defaultPeriodDays,omitempty"`
+	Theme                string  `json:"theme,omitempty"`
+}
+
+type MagicLink struct {
+	ID        string     `json:"id"`
+	Email     string     `json:"email"`
+	TokenHash string     `json:"-"`
+	ExpiresAt time.Time  `json:"expiresAt"`
+	UsedAt    *time.Time `json:"usedAt,omitempty"`
+	CreatedAt time.Time  `json:"createdAt"`
 }
 
 type PaginatedExpenses struct {
@@ -265,4 +325,11 @@ func parseFloat(s string) float64 {
 	var f float64
 	fmt.Sscanf(s, "%f", &f)
 	return f
+}
+
+func envOrDefault(key, fallback string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return fallback
 }
