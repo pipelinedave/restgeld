@@ -21,7 +21,9 @@ type PeriodSummary struct {
 	ID           string    `json:"id"`
 	UserID       string    `json:"userId,omitempty"`
 	StartDate    time.Time `json:"startDate"`
+	EndDate      time.Time `json:"endDate"`
 	MonthDays    int       `json:"monthDays"`
+	ActualDays   int       `json:"actualDays"`
 	BaseBudget   float64   `json:"baseBudget"`
 	MonthlyTotal float64   `json:"monthlyTotal"`
 	TotalSpent   float64   `json:"totalSpent"`
@@ -68,10 +70,10 @@ type VerifyMagicLinkRequest struct {
 }
 
 type AuthResponse struct {
-	User        *User  `json:"user"`
-	Token       string `json:"token,omitempty"`
-	DebugLink   string `json:"debugLink,omitempty"`
-	IsNewUser   bool   `json:"isNewUser"`
+	User      *User  `json:"user"`
+	Token     string `json:"token,omitempty"`
+	DebugLink string `json:"debugLink,omitempty"`
+	IsNewUser bool   `json:"isNewUser"`
 }
 
 type MigrateGuestRequest struct {

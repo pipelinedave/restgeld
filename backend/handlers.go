@@ -500,7 +500,7 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.getUserIDFromRequest(r)
 
-	periods, err := s.store.GetAllPeriods(userID)
+	periods, err := s.store.GetAllPeriods(userID, s.now())
 	if err != nil {
 		log.Printf("fehler beim abrufen aller perioden: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim abrufen der perioden")

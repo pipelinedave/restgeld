@@ -480,7 +480,7 @@ func (s *postgresStore) GetAllExpenses(userID, periodID string) ([]Expense, erro
 	return expenses, nil
 }
 
-func (s *postgresStore) GetAllPeriods(userID string) ([]PeriodSummary, error) {
+func (s *postgresStore) GetAllPeriods(userID string, now time.Time) ([]PeriodSummary, error) {
 	var rows *sql.Rows
 	var err error
 	query := `SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
@@ -509,10 +509,34 @@ func (s *postgresStore) GetAllPeriods(userID string) ([]PeriodSummary, error) {
 		summaries = append(summaries, p)
 	}
 
+	// Tatsächliche (beobachtete) Laufzeit ermitteln: Eine Periode endet,
+	// sobald die nächst-neuere Periode startet; die aktuellste endet heute.
+	// Dadurch wird die konfigurierte Dauer (monthDays) um die reale Nutzung korrigiert.
+	for i := range summaries {
+		if i == 0 {
+			summaries[i].EndDate = now
+		} else {
+			summaries[i].EndDate = summaries[i-1].StartDate
+		}
+		summaries[i].ActualDays = calcActualDays(summaries[i].StartDate, summaries[i].EndDate)
+	}
+
 	if summaries == nil {
 		summaries = []PeriodSummary{}
 	}
 	return summaries, nil
+}
+
+// calcActualDays liefert die Anzahl der tatsächlich vergangenen Kalendertage
+// zwischen Start und Ende (inklusiv Starttag), mindestens 1.
+func calcActualDays(start, end time.Time) int {
+	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	endDay := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
+	days := int(endDay.Sub(startDay).Hours()/24) + 1
+	if days < 1 {
+		days = 1
+	}
+	return days
 }
 
 func (s *postgresStore) ImportExpenses(userID, periodID string, expenses []Expense) (int, error) {

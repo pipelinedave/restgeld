@@ -16,14 +16,14 @@ type Store interface {
 	AddExpenseWithDate(userID, periodID string, amount float64, note string, createdAt time.Time) (*Expense, error)
 	GetDailyExpenses(userID, periodID string, start time.Time, upToDay int) ([]DailyStat, error)
 	GetAllExpenses(userID, periodID string) ([]Expense, error)
-	GetAllPeriods(userID string) ([]PeriodSummary, error)
+	GetAllPeriods(userID string, now time.Time) ([]PeriodSummary, error)
 	ImportExpenses(userID, periodID string, expenses []Expense) (int, error)
 	DeleteExpense(userID, expenseID string) error
 
 	// Auth & User Management
 	CreateMagicLink(email, tokenHash string, expiresAt time.Time) error
 	ValidateAndConsumeMagicLink(tokenHash string) (string, error) // Returns email
-	GetOrCreateUserByEmail(email string) (*User, bool, error)    // Returns user, isNew, error
+	GetOrCreateUserByEmail(email string) (*User, bool, error)     // Returns user, isNew, error
 	GetUserByID(userID string) (*User, error)
 	UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme string) error
 	CreateSession(userID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) error
