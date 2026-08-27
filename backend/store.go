@@ -12,6 +12,7 @@ type Store interface {
 	GetTodayExpenses(userID, periodID string, now time.Time) (float64, error)
 	GetRecentExpenses(userID, periodID string, limit int) ([]Expense, error)
 	GetExpenses(userID, periodID string, page, limit int) (*PaginatedExpenses, error)
+	GetDayExpenses(userID, periodID string, day time.Time) ([]Expense, error)
 	AddExpense(userID, periodID string, amount float64, note string) (*Expense, error)
 	AddExpenseWithDate(userID, periodID string, amount float64, note string, createdAt time.Time) (*Expense, error)
 	GetDailyExpenses(userID, periodID string, start time.Time, upToDay int) ([]DailyStat, error)

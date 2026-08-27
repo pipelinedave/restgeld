@@ -357,6 +357,46 @@ func (s *postgresStore) GetExpenses(userID, periodID string, page, limit int) (*
 	}, nil
 }
 
+// GetDayExpenses liefert alle Buchungen eines Kalendertags (00:00 bis 23:59:59)
+// für eine Periode, tenant-scoped (Guest oder Account).
+func (s *postgresStore) GetDayExpenses(userID, periodID string, day time.Time) ([]Expense, error) {
+	start := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
+	end := start.AddDate(0, 0, 1)
+
+	var rows *sql.Rows
+	var err error
+	if userID != "" {
+		rows, err = s.db.Query(
+			"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 AND user_id = $2 AND created_at >= $3 AND created_at < $4 ORDER BY created_at ASC",
+			periodID, userID, start, end,
+		)
+	} else {
+		rows, err = s.db.Query(
+			"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 AND user_id IS NULL AND created_at >= $2 AND created_at < $3 ORDER BY created_at ASC",
+			periodID, start, end,
+		)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("tagesausgaben abrufen: %w", err)
+	}
+	defer rows.Close()
+
+	var items []Expense
+	for rows.Next() {
+		var e Expense
+		if err := rows.Scan(&e.ID, &e.PeriodID, &e.Amount, &e.Note, &e.CreatedAt); err != nil {
+			return nil, fmt.Errorf("tagesausgabe scannen: %w", err)
+		}
+		e.UserID = userID
+		items = append(items, e)
+	}
+
+	if items == nil {
+		items = []Expense{}
+	}
+	return items, nil
+}
+
 func (s *postgresStore) AddExpense(userID, periodID string, amount float64, note string) (*Expense, error) {
 	return s.AddExpenseWithDate(userID, periodID, amount, note, time.Now())
 }

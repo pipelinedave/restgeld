@@ -238,6 +238,59 @@ func TestAPI_InvalidAmount(t *testing.T) {
 	}
 }
 
+func TestAPI_GetDayExpenses(t *testing.T) {
+	srv := newIntegrationServer(t)
+	router := srv.router()
+
+	// Ausgabe buchen
+	body := `{"amount": 4.50, "note": "Snack"}`
+	rec := post(router, "/api/expenses", body)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("erwartet 201, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var expense Expense
+	json.NewDecoder(rec.Body).Decode(&expense)
+	day := expense.CreatedAt.Format("2006-01-02")
+
+	// Buchung des Tages holen
+	rec = get(router, "/api/expenses/day?date="+day)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200, bekommen %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var list []Expense
+	json.NewDecoder(rec.Body).Decode(&list)
+	if len(list) != 1 {
+		t.Fatalf("erwartet 1 tagesausgabe, bekommen %d", len(list))
+	}
+	if list[0].Amount != 4.50 {
+		t.Errorf("amount: erwartet 4.50, bekommen %.2f", list[0].Amount)
+	}
+
+	// Anderer Tag ohne Buchungen -> leere Liste
+	oldDay := time.Now().AddDate(0, 0, -10).Format("2006-01-02")
+	rec = get(router, "/api/expenses/day?date="+oldDay)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 fuer leeren tag, bekommen %d", rec.Code)
+	}
+	json.NewDecoder(rec.Body).Decode(&list)
+	if len(list) != 0 {
+		t.Errorf("erwartet 0 tagesausgaben, bekommen %d", len(list))
+	}
+
+	// Fehlerfall: ungueltiges Datum
+	rec = get(router, "/api/expenses/day?date=kaputt")
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("erwartet 400 fuer ungueltiges datum, bekommen %d", rec.Code)
+	}
+
+	// Fehlerfall: fehlendes Datum
+	rec = get(router, "/api/expenses/day")
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("erwartet 400 fuer fehlendes datum, bekommen %d", rec.Code)
+	}
+}
 func get(router http.Handler, path string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodGet, path, nil)
 	rec := httptest.NewRecorder()

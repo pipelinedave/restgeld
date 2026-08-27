@@ -236,6 +236,25 @@ func (m *memoryStore) GetExpenses(userID, periodID string, page, limit int) (*Pa
 	}, nil
 }
 
+func (m *memoryStore) GetDayExpenses(userID, periodID string, day time.Time) ([]Expense, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	start := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
+	end := start.AddDate(0, 0, 1)
+
+	var items []Expense
+	for _, e := range m.expenses[userID] {
+		if periodID != "" && e.PeriodID != periodID {
+			continue
+		}
+		if e.CreatedAt.After(start) && e.CreatedAt.Before(end) {
+			items = append(items, e)
+		}
+	}
+	return items, nil
+}
+
 func (m *memoryStore) AddExpense(userID, periodID string, amount float64, note string) (*Expense, error) {
 	return m.AddExpenseWithDate(userID, periodID, amount, note, time.Now())
 }
