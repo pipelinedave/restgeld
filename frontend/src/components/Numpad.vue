@@ -56,7 +56,7 @@
             v-model="noteInput"
             type="text"
             inputmode="text"
-            placeholder="z. B. Kaffee, Mittagessen"
+            placeholder="Notiz (z. B. Kaffee, Mittagessen)"
             maxlength="50"
             enterkeyhint="done"
             :disabled="isSaving"
