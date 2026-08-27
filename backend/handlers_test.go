@@ -422,21 +422,21 @@ func TestGetBudgetOnFirstDay(t *testing.T) {
 	if resp.Day != 1 {
 		t.Errorf("erwartet Tag 1, bekommen %d", resp.Day)
 	}
-	if resp.Savings != resp.BaseBudget {
-		t.Errorf("erwartet savings = baseBudget (%.2f) an tag 1 (0 ausgegeben), bekommen %.2f", resp.BaseBudget, resp.Savings)
+	if resp.Savings != 0 {
+		t.Errorf("erwartet savings = 0 an Tag 1 vor abgeschlossenen Vortagen, bekommen %.2f", resp.Savings)
 	}
 	if resp.CurrentBudget != resp.BaseBudget {
 		t.Errorf("erwartet current == base (%.2f) an tag 1, bekommen %.2f", resp.BaseBudget, resp.CurrentBudget)
 	}
-	if resp.Color != "green" {
-		t.Errorf("erwartet green an Tag 1 mit vollem Budget, bekommen %s", resp.Color)
+	if resp.Color != "white" {
+		t.Errorf("erwartet white an Tag 1 mit neutralem Start, bekommen %s", resp.Color)
 	}
 }
 
 func TestGetBudgetAfterAllSpent(t *testing.T) {
 	store := newMemoryStore()
-	for i := 0; i < 18; i++ {
-		store.AddExpense("2026-08", 14.52, "tag")
+	for i := 1; i <= 17; i++ {
+		store.AddExpenseWithDate("2026-08", 14.52, "tag", time.Date(2026, 8, i, 12, 0, 0, 0, time.UTC))
 	}
 	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
 	srv := &server{store: store, now: func() time.Time { return now }}
@@ -458,10 +458,10 @@ func TestGetBudgetAfterAllSpent(t *testing.T) {
 
 func TestGetBudgetInDebt(t *testing.T) {
 	store := newMemoryStore()
-	for i := 0; i < 18; i++ {
-		store.AddExpense("2026-08", 14.52, "tag")
+	for i := 1; i <= 17; i++ {
+		store.AddExpenseWithDate("2026-08", 14.52, "tag", time.Date(2026, 8, i, 12, 0, 0, 0, time.UTC))
 	}
-	store.AddExpense("2026-08", 50, "extra")
+	store.AddExpenseWithDate("2026-08", 50, "extra", time.Date(2026, 8, 17, 18, 0, 0, 0, time.UTC))
 	now := time.Date(2026, 8, 18, 12, 0, 0, 0, time.UTC)
 	srv := &server{store: store, now: func() time.Time { return now }}
 
@@ -763,6 +763,34 @@ func TestGetExpensesWithPeriodID(t *testing.T) {
 
 	if resp.Total != 1 || len(resp.Items) != 1 || resp.Items[0].Note != "Alte Ausgabe" {
 		t.Errorf("unerwartete Ausgaben für Periode 2026-07: %+v", resp)
+	}
+}
+
+func TestGetBudget_UserScenario_PriorDaySavings(t *testing.T) {
+	store := newMemoryStore()
+	// Tag 1: Ausgaben 2.00 € und 4.70 € = 6.70 €
+	day1 := time.Date(2026, 8, 1, 14, 0, 0, 0, time.UTC)
+	store.AddExpenseWithDate("2026-08", 2.00, "Bäcker", day1)
+	store.AddExpenseWithDate("2026-08", 4.70, "Kaffee", day1)
+
+	// Tag 2: 0 ausgegeben, Basis = 14.52 € (450 / 31)
+	day2 := time.Date(2026, 8, 2, 8, 0, 0, 0, time.UTC)
+	srv := &server{store: store, now: func() time.Time { return day2 }}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/budget", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	var resp BudgetResponse
+	decodeJSON(t, rec.Body, &resp)
+
+	// Erwarteter Sparpuffer an Tag 2 = (1 * 14.52) - 6.70 = +7.82 €
+	expectedSavings := mathRound(resp.BaseBudget*1.0-6.70, 2)
+	if resp.Savings != expectedSavings {
+		t.Errorf("erwartet Sparpuffer von gestern %.2f €, bekommen %.2f €", expectedSavings, resp.Savings)
+	}
+	if resp.Color != "green" {
+		t.Errorf("erwartet green bei positivem Sparpuffer, bekommen %s", resp.Color)
 	}
 }
 

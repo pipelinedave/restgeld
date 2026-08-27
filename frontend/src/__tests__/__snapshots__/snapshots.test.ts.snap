@@ -3,65 +3,75 @@
 exports[`Snapshot: AppFooter > standard 1`] = `
 "<footer data-v-6704560a="" class="app-footer">
   <div data-v-6704560a="" class="footer-divider"></div>
-  <div data-v-6704560a="" class="footer-content"><span data-v-6704560a="" class="footer-tagline">Track daily. Stay in budget.</span><span data-v-6704560a="" class="footer-version">v0.1.0</span></div>
+  <div data-v-6704560a="" class="footer-content">
+    <div data-v-6704560a="" class="footer-left"><span data-v-6704560a="" class="footer-tagline">Track daily. Stay in budget.</span><span data-v-6704560a="" class="footer-energy"> ⚡ made with high energy by <a data-v-6704560a="" href="https://lowlifehigh.tech" target="_blank" rel="noopener noreferrer" class="lowlife-link"> lowlifehigh.tech </a></span></div><span data-v-6704560a="" class="commit-badge">dev</span>
+  </div>
 </footer>"
 `;
 
 exports[`Snapshot: AppHeader > standard 1`] = `
 "<header data-v-48a13218="" class="app-header">
-  <div data-v-48a13218="" class="brand"><span data-v-48a13218="" class="brand-title">restgeld</span><span data-v-48a13218="" class="brand-dot">.</span>
-    <!--v-if-->
-  </div><button data-v-48a13218="" class="settings-btn" aria-label="Einstellungen" title="Einstellungen"><svg data-v-48a13218="" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle data-v-48a13218="" cx="12" cy="12" r="3"></circle>
-      <path data-v-48a13218="" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-    </svg></button>
+  <div data-v-48a13218="" class="brand"><span data-v-48a13218="" class="brand-title">restgeld</span><span data-v-48a13218="" class="brand-dot">.</span></div>
+  <div data-v-48a13218="" class="header-right">
+    <!-- 1. Status Badge --><button data-v-48a13218="" type="button" class="status-badge status-online" title="Online - Alle Systeme einsatzbereit. Klicke für Status-Details."><span data-v-48a13218="" class="status-dot dot-online"></span><span data-v-48a13218="" class="status-text">Online</span></button><!-- 2. Streak Badge & Button (🔥) --><button data-v-48a13218="" type="button" class="header-icon-btn streak-btn" title="Streak &amp; Spartage ansehen"><span data-v-48a13218="" class="icon-emoji">🔥</span><span data-v-48a13218="" class="btn-badge">0</span></button><!-- 3. Monatsende-Prognose Glaskugel (🔮) --><button data-v-48a13218="" type="button" class="header-icon-btn projection-btn proj-deficit" title="Monatsende-Prognose anzeigen"><span data-v-48a13218="" class="icon-emoji">🔮</span></button><!-- 4. Settings Button (⚙️) --><button data-v-48a13218="" class="settings-btn" aria-label="Einstellungen" title="Einstellungen"><svg data-v-48a13218="" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle data-v-48a13218="" cx="12" cy="12" r="3"></circle>
+        <path data-v-48a13218="" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg></button>
+  </div><!-- 1. Health & Uptime Popover -->
+  <!--v-if-->
+  <!-- 2. Streak Popover -->
+  <!--v-if-->
+  <!-- 3. Monatsende-Prognose Popover (🔮) -->
+  <!--v-if-->
 </header>"
 `;
 
 exports[`Snapshot: BudgetDisplay > gruen mit ersparnis 1`] = `
-"<section data-v-f796b773="" class="budget-display">
-  <div data-v-f796b773="" class="budget-header-label">HEUTE VERFÜGBAR</div>
-  <div data-v-f796b773="" class="budget-amount color-green">19,24 €</div>
-  <div data-v-f796b773="" class="savings-badge badge-green"><span data-v-f796b773=""> +61,36 € Monats-Puffer </span></div>
+"<section data-v-f796b773="" class="mockup-hero-card">
+  <div data-v-f796b773="" class="hero-top-row"><span data-v-f796b773="" class="hero-label">HEUTE VERFÜGBAR</span><span data-v-f796b773="" class="hero-base-tag">Basis: 14,52 €</span></div>
+  <div data-v-f796b773="" class="hero-amount-row color-green"><span data-v-f796b773="" class="current-amount">19,24 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">19,24 €</span></div>
+  <div data-v-f796b773="" class="hero-meta">
+    <div data-v-f796b773="" class="hero-badge-pill badge-green"><span data-v-f796b773=""> +61,36 € Spar-Puffer </span></div>
+  </div>
 </section>"
 `;
 
 exports[`Snapshot: BudgetDisplay > rot bei minus 1`] = `
-"<section data-v-f796b773="" class="budget-display">
-  <div data-v-f796b773="" class="budget-header-label">HEUTE VERFÜGBAR</div>
-  <div data-v-f796b773="" class="budget-amount color-red">11,55 €</div>
-  <div data-v-f796b773="" class="savings-badge badge-red"><span data-v-f796b773="">-38,64 € überzogen </span></div>
+"<section data-v-f796b773="" class="mockup-hero-card">
+  <div data-v-f796b773="" class="hero-top-row"><span data-v-f796b773="" class="hero-label">HEUTE VERFÜGBAR</span><span data-v-f796b773="" class="hero-base-tag">Basis: 14,52 €</span></div>
+  <div data-v-f796b773="" class="hero-amount-row color-red"><span data-v-f796b773="" class="current-amount">11,55 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">11,55 €</span></div>
+  <div data-v-f796b773="" class="hero-meta">
+    <div data-v-f796b773="" class="hero-badge-pill badge-red"><span data-v-f796b773="">-38,64 € überzogen </span></div>
+  </div>
 </section>"
 `;
 
 exports[`Snapshot: BudgetDisplay > weiss bei 0 ersparnis 1`] = `
-"<section data-v-f796b773="" class="budget-display">
-  <div data-v-f796b773="" class="budget-header-label">HEUTE VERFÜGBAR</div>
-  <div data-v-f796b773="" class="budget-amount color-white">14,52 €</div>
-  <div data-v-f796b773="" class="savings-badge badge-white"><span data-v-f796b773=""> Perfekt im Plan </span></div>
+"<section data-v-f796b773="" class="mockup-hero-card">
+  <div data-v-f796b773="" class="hero-top-row"><span data-v-f796b773="" class="hero-label">HEUTE VERFÜGBAR</span><span data-v-f796b773="" class="hero-base-tag">Basis: 14,52 €</span></div>
+  <div data-v-f796b773="" class="hero-amount-row color-white"><span data-v-f796b773="" class="current-amount">14,52 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">14,52 €</span></div>
+  <div data-v-f796b773="" class="hero-meta">
+    <div data-v-f796b773="" class="hero-badge-pill badge-white"><span data-v-f796b773=""> Perfekt im Plan </span></div>
+  </div>
 </section>"
 `;
 
 exports[`Snapshot: ExpensesModal > versteckt 1`] = `"<!--v-if-->"`;
 
 exports[`Snapshot: MonthProgress > tag 1/28 (februar) 1`] = `
-"<section data-v-3c333b10="" class="month-progress" aria-label="Monatsfortschritt">
-  <div data-v-3c333b10="" class="progress-row">
-    <div data-v-3c333b10="" class="progress-label">Tag 1 von 28</div>
-  </div>
-  <div data-v-3c333b10="" class="progress-bar">
-    <div data-v-3c333b10="" class="progress-fill" style="width: 4%;"></div>
+"<section data-v-3c333b10="" class="month-progress-card" aria-label="Monatsfortschritt">
+  <div data-v-3c333b10="" class="progress-info"><span data-v-3c333b10="" class="progress-title">Aktuelle Periode</span><span data-v-3c333b10="" class="progress-days">Tag 1 von 28</span></div>
+  <div data-v-3c333b10="" class="progress-bar-bg">
+    <div data-v-3c333b10="" class="progress-bar-fill" style="width: 4%;"></div>
   </div>
 </section>"
 `;
 
 exports[`Snapshot: MonthProgress > tag 17/31 1`] = `
-"<section data-v-3c333b10="" class="month-progress" aria-label="Monatsfortschritt">
-  <div data-v-3c333b10="" class="progress-row">
-    <div data-v-3c333b10="" class="progress-label">Tag 17 von 31</div>
-  </div>
-  <div data-v-3c333b10="" class="progress-bar">
-    <div data-v-3c333b10="" class="progress-fill" style="width: 55%;"></div>
+"<section data-v-3c333b10="" class="month-progress-card" aria-label="Monatsfortschritt">
+  <div data-v-3c333b10="" class="progress-info"><span data-v-3c333b10="" class="progress-title">Aktuelle Periode</span><span data-v-3c333b10="" class="progress-days">Tag 17 von 31</span></div>
+  <div data-v-3c333b10="" class="progress-bar-bg">
+    <div data-v-3c333b10="" class="progress-bar-fill" style="width: 55%;"></div>
   </div>
 </section>"
 `;
