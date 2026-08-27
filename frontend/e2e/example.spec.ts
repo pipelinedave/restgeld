@@ -15,6 +15,9 @@ test.describe('Restgeld E2E', () => {
     page.on('console', msg => console.log('BROWSER LOG:', msg.text()))
     page.on('pageerror', err => console.log('BROWSER ERROR:', err.message))
 
+    // Service Worker blockieren um Bypassing der Mocks zu verhindern
+    await page.route('**/sw.js', route => route.abort())
+
     // Reset state vor jedem Test
     expenses = []
 

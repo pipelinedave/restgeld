@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('Live E2E: oeffnet echte Ausgaben-Historie und prueft Console & Modal', async ({ page }) => {
+  test.skip(!!process.env.CI, 'Skip live integration test on CI since it requires a running backend')
   const consoleErrors: string[] = []
   page.on('console', (msg) => {
     console.log('LIVE BROWSER LOG:', msg.text())
