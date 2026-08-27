@@ -103,6 +103,7 @@ export function useApi() {
       if (periodId) query.set('period_id', periodId)
       return api<PaginatedExpenses>(`/api/expenses?${query.toString()}`)
     },
+    getDayExpenses: (date: string) => api<Expense[]>(`/api/expenses/day?date=${date}`),
     addExpense: (amount: number, note: string) =>
       api<Expense>('/api/expenses', {
         method: 'POST',

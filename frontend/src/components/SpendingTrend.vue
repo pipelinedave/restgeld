@@ -42,13 +42,22 @@
     <!-- Detail-Anzeige bei Auswahl / Tooltip -->
     <div class="detail-preview" :class="{ 'has-selection': !!selectedStat }">
       <template v-if="selectedStat">
-        <span class="detail-day">Tag {{ selectedStat.day }} ({{ formatDate(selectedStat.date) }}):</span>
-        <span
-          class="detail-spent"
-          :class="selectedStat.spent > baseBudget ? 'spent-over' : 'spent-ok'"
-        >
-          {{ getDayDetailText(selectedStat) }}
-        </span>
+        <div class="detail-top">
+          <span class="detail-day">Tag {{ selectedStat.day }} ({{ formatDate(selectedStat.date) }}):</span>
+          <span
+            class="detail-spent"
+            :class="selectedStat.spent > baseBudget ? 'spent-over' : 'spent-ok'"
+          >
+            {{ getDayDetailText(selectedStat) }}
+          </span>
+        </div>
+        <ul v-if="dayExpenses.length > 0" class="day-expenses">
+          <li v-for="exp in dayExpenses" :key="exp.id" class="day-expense">
+            <span class="exp-note">{{ exp.note || 'Ohne Notiz' }}</span>
+            <span class="exp-amount">−{{ formatAmount(exp.amount) }} €</span>
+          </li>
+        </ul>
+        <span v-else-if="loadingDay" class="detail-hint">Lade Buchungen…</span>
       </template>
       <template v-else>
         <span class="detail-hint">Tippe auf einen Tag für Details</span>
@@ -59,7 +68,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { DailyStat } from '../composables/useApi'
+import type { DailyStat, Expense } from '../composables/useApi'
+import { useApi } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
 
 const props = defineProps<{
@@ -69,7 +79,10 @@ const props = defineProps<{
 }>()
 
 const haptics = useHaptics()
+const api = useApi()
 const selectedDay = ref<number | null>(null)
+const dayExpenses = ref<Expense[]>([])
+const loadingDay = ref(false)
 
 const selectedStat = computed(() => {
   if (!props.stats || selectedDay.value === null) return null
@@ -115,8 +128,22 @@ function selectDay(stat: DailyStat) {
   haptics.tap()
   if (selectedDay.value === stat.day) {
     selectedDay.value = null
-  } else {
-    selectedDay.value = stat.day
+    dayExpenses.value = []
+    return
+  }
+  selectedDay.value = stat.day
+  loadDayExpenses(stat.date)
+}
+
+async function loadDayExpenses(date: string) {
+  loadingDay.value = true
+  dayExpenses.value = []
+  try {
+    dayExpenses.value = await api.getDayExpenses(date)
+  } catch {
+    dayExpenses.value = []
+  } finally {
+    loadingDay.value = false
   }
 }
 
@@ -282,9 +309,47 @@ function formatDate(dateStr: string) {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.75rem;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  min-height: 18px;
+}
+
+.detail-top {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 18px;
+}
+
+.day-expenses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.day-expense {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.exp-note {
+  color: var(--text, #e5e7eb);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.exp-amount {
+  color: var(--accent-red, #ef4444);
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .detail-hint {
