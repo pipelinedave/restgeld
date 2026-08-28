@@ -30,7 +30,7 @@ test('Live E2E: oeffnet echte Ausgaben-Historie und prueft Console & Modal', asy
 
   // Modal muss sichtbar sein und keine Fehler werfen
   await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).toBeVisible()
-  await expect(page.getByText('Live-Test Kaffee')).toBeVisible()
+  await expect(page.locator('.modal-card').getByText('Live-Test Kaffee').first()).toBeVisible()
 
   // Schließen
   await page.getByRole('button', { name: 'Schließen' }).click()
