@@ -112,11 +112,42 @@
             </div>
           </div>
 
+          <!-- Tages-Restgeld Slider (Bidirektional) -->
+          <div class="slider-group" style="margin-top: 14px;">
+            <div class="slider-header">
+              <label for="daily-budget-input" class="section-title">Wunsch Tages-Budget</label>
+              <div class="input-badge">
+                <input
+                  id="daily-budget-input"
+                  v-model.number="dailyInput"
+                  type="number"
+                  min="1"
+                  max="200"
+                  step="0.5"
+                  placeholder="15"
+                  class="num-input"
+                  @input="handleDailyInputChange"
+                />
+                <span class="currency-symbol">&euro;/Tag</span>
+              </div>
+            </div>
+
+            <input
+              v-model.number="dailyInput"
+              type="range"
+              min="5"
+              max="100"
+              step="0.5"
+              class="range-slider"
+              @input="handleDailyInputChange"
+            />
+          </div>
+
           <!-- Live Kalkulator Card -->
           <div class="calc-card">
             <div class="calc-left">
-              <span class="calc-label">Tages-Restgeld:</span>
-              <span class="calc-value">&empty; {{ calculatedDailyBudget }} &euro; / Tag</span>
+              <span class="calc-label">Berechnetes Monatsbudget:</span>
+              <span class="calc-value">{{ calculatedMonthlyTotal }} &euro;</span>
             </div>
             <button
               class="save-btn"
@@ -163,6 +194,24 @@
                 🎨
               </span>
             </label>
+          </div>
+        </section>
+
+        <!-- Sprache / Language -->
+        <section class="setting-section language-zone">
+          <span class="section-title">{{ i18n.t('settings.language_heading') }}</span>
+          <div class="language-chips">
+            <button
+              v-for="lang in i18n.languages"
+              :key="lang.code"
+              type="button"
+              class="lang-chip"
+              :class="{ active: i18n.currentLocale.value === lang.code }"
+              @click="i18n.setLocale(lang.code)"
+            >
+              <span class="lang-flag">{{ lang.flag }}</span>
+              <span class="lang-name">{{ lang.name }}</span>
+            </button>
           </div>
         </section>
 
@@ -244,11 +293,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, watchEffect } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
 import { useApi } from '../composables/useApi'
 import { useTheme } from '../composables/useTheme'
 import { useAuth } from '../composables/useAuth'
+import { useI18n } from '../composables/useI18n'
 
 const props = defineProps<{
   visible: boolean
@@ -270,8 +320,10 @@ const api = useApi()
 const haptics = useHaptics()
 const theme = useTheme()
 const auth = useAuth()
+const i18n = useI18n()
 const budgetInput = ref<number>(props.currentMonthlyBudget ?? 450)
-const daysInput = ref<number>(props.currentMonthDays ?? 30)
+const daysInput = ref<number>(props.currentMonthDays ?? 31)
+const dailyInput = ref<number>(Math.round(((props.currentMonthlyBudget ?? 450) / (props.currentMonthDays ?? 31)) * 100) / 100)
 const confirmReset = ref(false)
 const budgetSavedMsg = ref('')
 
@@ -281,20 +333,20 @@ const backupMsg = ref('')
 const backupMsgType = ref<'success' | 'error'>('success')
 
 watch(
-  () => props.currentMonthlyBudget,
-  (newVal) => {
-    if (newVal) {
-      budgetInput.value = newVal
+  () => props.currentMonthDays,
+  (d) => {
+    if (typeof d === 'number' && d > 0) {
+      daysInput.value = d
     }
   },
   { immediate: true }
 )
 
 watch(
-  () => props.currentMonthDays,
-  (newVal) => {
-    if (newVal) {
-      daysInput.value = newVal
+  () => props.currentMonthlyBudget,
+  (b) => {
+    if (typeof b === 'number' && b > 0) {
+      budgetInput.value = b
     }
   },
   { immediate: true }
@@ -302,13 +354,16 @@ watch(
 
 watch(
   () => props.visible,
-  (newVal) => {
-    if (newVal) {
-      if (props.currentMonthlyBudget) {
+  (isVis) => {
+    if (isVis) {
+      if (typeof props.currentMonthlyBudget === 'number' && props.currentMonthlyBudget > 0) {
         budgetInput.value = props.currentMonthlyBudget
       }
-      if (props.currentMonthDays) {
+      if (typeof props.currentMonthDays === 'number' && props.currentMonthDays > 0) {
         daysInput.value = props.currentMonthDays
+      }
+      if (budgetInput.value && daysInput.value) {
+        dailyInput.value = Math.round((budgetInput.value / daysInput.value) * 100) / 100
       }
       confirmReset.value = false
       budgetSavedMsg.value = ''
@@ -317,16 +372,30 @@ watch(
   }
 )
 
+watch(
+  () => budgetInput.value,
+  (b) => {
+    if (b && daysInput.value && daysInput.value > 0) {
+      dailyInput.value = Math.round((b / daysInput.value) * 100) / 100
+    }
+  }
+)
+
+function handleDailyInputChange() {
+  if (dailyInput.value && daysInput.value && daysInput.value > 0) {
+    budgetInput.value = Math.round(dailyInput.value * daysInput.value)
+  }
+}
+
 const isValidSettings = computed(() => {
   const b = budgetInput.value
   const d = daysInput.value
   return typeof b === 'number' && b > 0 && typeof d === 'number' && d > 0 && d <= 365
 })
 
-const calculatedDailyBudget = computed(() => {
+const calculatedMonthlyTotal = computed(() => {
   if (!isValidSettings.value) return '0,00'
-  const daily = budgetInput.value / daysInput.value
-  return daily.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return budgetInput.value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 })
 
 function setBudget(val: number) {
@@ -889,5 +958,42 @@ function handleResetPeriod() {
   border-radius: 6px;
   font-size: 0.78rem;
   cursor: pointer;
+}
+
+.language-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.lang-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text-main, #f4f4f6);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lang-chip:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.lang-chip.active {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
+}
+
+.lang-flag {
+  font-size: 1.1rem;
 }
 </style>

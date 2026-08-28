@@ -62,8 +62,10 @@ export function useAuth() {
   }
 
   function getAuthHeaders(): HeadersInit {
+    const lang = typeof window !== 'undefined' ? localStorage.getItem('restgeld_language') || 'de' : 'de'
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept-Language': lang,
     }
     if (authToken.value) {
       headers['Authorization'] = `Bearer ${authToken.value}`

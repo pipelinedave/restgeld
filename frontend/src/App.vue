@@ -124,6 +124,7 @@ import { useHaptics } from './composables/useHaptics'
 import { useOfflineSync } from './composables/useOfflineSync'
 import { useTheme } from './composables/useTheme'
 import { useAuth } from './composables/useAuth'
+import { useI18n } from './composables/useI18n'
 import AppHeader from './components/AppHeader.vue'
 import MonthProgress from './components/MonthProgress.vue'
 import BudgetDisplay from './components/BudgetDisplay.vue'
@@ -143,6 +144,7 @@ const haptics = useHaptics()
 const offlineSync = useOfflineSync()
 const theme = useTheme()
 const auth = useAuth()
+const i18n = useI18n()
 const budget = ref<BudgetData | null>(null)
 
 const spentToday = computed(() => {
@@ -357,6 +359,7 @@ let cleanupListeners: (() => void) | undefined
 
 onMounted(async () => {
   theme.initTheme()
+  i18n.initI18n()
 
   // Magic Link Token in URL abfangen
   const autoLoggedIn = await auth.checkUrlForAuthToken()

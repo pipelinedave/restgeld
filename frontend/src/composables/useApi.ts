@@ -73,8 +73,10 @@ const BASE = import.meta.env.PROD
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('restgeld_auth_token') : null
+  const lang = typeof window !== 'undefined' ? localStorage.getItem('restgeld_language') || 'de' : 'de'
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept-Language': lang,
     ...(options?.headers as Record<string, string>),
   }
   if (token) {
