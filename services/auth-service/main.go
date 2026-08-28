@@ -498,6 +498,64 @@ func sendMagicLinkEmail(toEmail, magicLinkURL string) {
 	}
 }
 
+func (s *authService) handlePasskeyRegisterOptions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "methode nicht erlaubt")
+		return
+	}
+
+	userID := s.getUserIDFromRequest(r)
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "nicht eingeloggt")
+		return
+	}
+
+	challenge, err := generateSecureToken()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "fehler beim generieren der challenge")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"challenge": challenge,
+		"rp": map[string]string{
+			"name": "Restgeld App",
+			"id":   "restgeld.stillon.top",
+		},
+		"user": map[string]string{
+			"id":          userID,
+			"name":        "user",
+			"displayName": "Restgeld User",
+		},
+		"pubKeyCredParams": []map[string]interface{}{
+			{"type": "public-key", "alg": -7},  // ES256
+			{"type": "public-key", "alg": -257}, // RS256
+		},
+		"timeout": 60000,
+	})
+}
+
+func (s *authService) handlePasskeyLoginOptions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "methode nicht erlaubt")
+		return
+	}
+
+	challenge, err := generateSecureToken()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "fehler beim generieren der challenge")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"challenge": challenge,
+		"timeout":   60000,
+		"rpId":      "restgeld.stillon.top",
+	})
+}
+
 func (s *authService) router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/auth/health", s.handleHealth)
@@ -507,6 +565,8 @@ func (s *authService) router() http.Handler {
 	mux.HandleFunc("/api/auth/settings", s.handleSettings)
 	mux.HandleFunc("/api/auth/logout", s.handleLogout)
 	mux.HandleFunc("/api/auth/migrate-guest", s.handleMigrateGuest)
+	mux.HandleFunc("/api/auth/passkey/register-options", s.handlePasskeyRegisterOptions)
+	mux.HandleFunc("/api/auth/passkey/login-options", s.handlePasskeyLoginOptions)
 	return corsMiddleware(mux)
 }
 

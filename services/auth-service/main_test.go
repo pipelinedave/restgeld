@@ -37,3 +37,24 @@ func TestAuthServiceHealth(t *testing.T) {
 	_ = rec
 	_ = json.Marshal
 }
+
+func TestPasskeyLoginOptions(t *testing.T) {
+	svc := &authService{now: time.Now}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/login-options", nil)
+	rec := httptest.NewRecorder()
+
+	svc.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 OK für passkey login options, bekommen %d", rec.Code)
+	}
+
+	var resp map[string]interface{}
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("fehler beim dekodieren des json: %v", err)
+	}
+
+	if resp["challenge"] == "" {
+		t.Fatalf("challenge sollte nicht leer sein")
+	}
+}
