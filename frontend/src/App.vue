@@ -420,8 +420,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  min-height: 0;
   padding: 4px 0;
   gap: 8px;
 }
@@ -489,6 +489,10 @@ onUnmounted(() => {
 }
 
 .history-section {
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>

@@ -44,14 +44,20 @@ function formatted(amount: number) {
 
 <style scoped>
 .recent-expenses {
-  padding: 12px 16px 16px;
+  padding: 8px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .section-title {
@@ -89,6 +95,28 @@ function formatted(amount: number) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  max-height: 145px;
+  padding-right: 4px;
+}
+
+.expense-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.expense-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.expense-list::-webkit-scrollbar-thumb {
+  background: var(--border-color, rgba(255, 255, 255, 0.15));
+  border-radius: 4px;
+}
+
+.expense-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim, #5c5c6e);
 }
 
 .expense-item {
