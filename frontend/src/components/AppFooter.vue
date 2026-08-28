@@ -39,10 +39,10 @@ const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev
 <style scoped>
 .app-footer {
   flex-shrink: 0;
-  padding: 4px 16px 6px;
+  padding: 6px 16px 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .footer-divider {
@@ -111,11 +111,5 @@ const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev
 
 .commit-icon {
   opacity: 0.6;
-}
-
-@media (max-width: 480px) {
-  .footer-energy {
-    display: none;
-  }
 }
 </style>

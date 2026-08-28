@@ -149,18 +149,18 @@ function formatDate(dateStr: string) {
 
 <style scoped>
 .spending-trend {
-  padding: 8px 12px;
+  padding: 14px 16px;
   background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 16px;
-  margin: 0 16px 6px 16px;
+  margin: 0 16px 12px 16px;
 }
 
 .trend-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 12px;
 }
 
 .trend-title {
@@ -194,9 +194,9 @@ function formatDate(dateStr: string) {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  height: 65px;
+  height: 85px;
   min-width: 100%;
-  padding-top: 4px;
+  padding-top: 8px;
 }
 
 .bar-column {

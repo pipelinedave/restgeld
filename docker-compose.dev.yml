@@ -44,6 +44,26 @@ services:
       db:
         condition: service_healthy
 
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: restgeld-auth-service
+    environment:
+      PORT: "8081"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: restgeld
+      DB_PASSWORD: restgeld
+      DB_NAME: restgeld_auth
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     image: node:22-alpine
     container_name: restgeld-frontend-dev

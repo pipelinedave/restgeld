@@ -44,14 +44,14 @@ function formatted(amount: number) {
 
 <style scoped>
 .recent-expenses {
-  padding: 6px 16px 10px;
+  padding: 12px 16px 16px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .section-title {
@@ -88,14 +88,14 @@ function formatted(amount: number) {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
 }
 
 .expense-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 10px 14px;
   background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 12px;

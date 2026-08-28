@@ -23,9 +23,9 @@ const pct = computed(() => Math.round((props.day / props.monthDays) * 100))
 
 <style scoped>
 .month-progress-card {
-  margin: 2px 16px 4px;
+  margin: 4px 16px 10px;
   background: var(--bg-card, #121216);
-  padding: 6px 12px;
+  padding: 10px 14px;
   border-radius: 14px;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
 }
@@ -34,8 +34,8 @@ const pct = computed(() => Math.round((props.day / props.monthDays) * 100))
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.72rem;
-  margin-bottom: 4px;
+  font-size: 0.75rem;
+  margin-bottom: 6px;
 }
 
 .progress-title {

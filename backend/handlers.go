@@ -96,7 +96,7 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 	}
 
 	day := period.dayOfMonth(now)
-	currentBudget, savings, color := period.calcBudget(totalSpent, todaySpent, now)
+	currentBudget, savings, color, todayBase := period.calcBudget(totalSpent, todaySpent, now)
 
 	dailyStats, err := s.store.GetDailyExpenses(userID, period.ID, period.StartDate, day)
 	if err != nil {
@@ -111,6 +111,7 @@ func (s *server) getBudget(w http.ResponseWriter, r *http.Request) {
 		Day:           day,
 		MonthDays:     period.MonthDays,
 		BaseBudget:    period.BaseBudget,
+		TodayBase:     todayBase,
 		CurrentBudget: currentBudget,
 		Savings:       savings,
 		Color:         color,

@@ -152,11 +152,6 @@ restgeld/
 - 🎨 Custom Theming, Health Popover & About Page (Epic 4): Dynamische OLED-Farbwelten mit Color-Picker (`useTheme`), interaktives Service-Health Popover in `AppHeader.vue` (API Latenz, DB-Status, Offline-Queue), About-Modal `AboutModal.vue` und Phone-Mockup Sync auf der Landing Page implementiert und mit 106 Vitest- & 31 Go-Tests abgedeckt ✅
 - 🔮 Header Popover Architecture & UX Refinements: Monatsende-Prognose (🔮) und Spar-Streak (🔥) als elegante Popover in den Header verlagert (100% Zero-Scroll freigespielt), Hero-Anzeige präzisiert auf echten Tages-Bruch (`x € / y €`), Footer mit leuchtender Commit-Badge & `lowlifehigh.tech`-Energy-Referenz verfeinert und mit 109 Vitest- & 31 Go-Tests abgesichert ✅
 - 🎨 Logo- & Favicon-Redesign: Modernes 'r.'-Logo mit dunkelgrauem Squircle-Hintergrund, off-weißem Text und smaragdgrünem Akzentpunkt als Vektorgrafik (SVG) für App-Favicon und Landing Page implementiert ✅
-- 🛠️ Android PWA UX & Zero-Scroll Optimization:
-  - Android/iOS Soft-Keyboard Fokus bei Quick Action PWA Shortcut durch globale Interaktions-Trigger & `autofocus` verbessert.
-  - Echtes maskierbares PWA Icon (`icon-maskable.svg`) eingeführt, um weisse Ränder ("Logo-in-a-Logo") auf Android Launchern zu eliminieren.
-  - HTML-Titel in App und Landing Page einheitlich auf kleingeschriebenes "restgeld." korrigiert.
-  - Layout-Kompaktierung auf der Main-Page (Paddings, Margins, Graph-Höhen, ausblendbarer Footer-Zusatz auf Mobilgeräten) für perfektes scroll-freies Dashboard-Feeling durchgeführt. ✅
 
 ---
 

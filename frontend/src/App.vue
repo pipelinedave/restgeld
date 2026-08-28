@@ -422,8 +422,8 @@ onUnmounted(() => {
   justify-content: space-between;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 2px 0;
-  gap: 4px;
+  padding: 4px 0;
+  gap: 8px;
 }
 
 .meta-section {
@@ -435,7 +435,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   padding: 4px 16px;
 }
 

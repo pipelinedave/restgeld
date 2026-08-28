@@ -126,6 +126,7 @@ type BudgetResponse struct {
 	Day           int            `json:"day"`
 	MonthDays     int            `json:"monthDays"`
 	BaseBudget    float64        `json:"baseBudget"`
+	TodayBase     float64        `json:"todayBase"`
 	CurrentBudget float64        `json:"currentBudget"`
 	Savings       float64        `json:"savings"`
 	Color         string         `json:"color"`
@@ -248,7 +249,7 @@ func (p Period) dayOfMonth(now time.Time) int {
 	return day
 }
 
-func (p Period) calcBudget(totalSpent, todaySpent float64, now time.Time) (currentBudget float64, savings float64, color string) {
+func (p Period) calcBudget(totalSpent, todaySpent float64, now time.Time) (currentBudget float64, savings float64, color string, todayBase float64) {
 	day := p.dayOfMonth(now)
 	remainingDays := p.MonthDays - day + 1 // inklusive heute
 
@@ -275,6 +276,7 @@ func (p Period) calcBudget(totalSpent, todaySpent float64, now time.Time) (curre
 	if startOfTodayDaily < 0 {
 		startOfTodayDaily = 0
 	}
+	todayBase = startOfTodayDaily
 
 	// Heutiges Restbudget nach Abzug der heutigen Ausgaben
 	todayRemaining := mathRound(startOfTodayDaily-todaySpent, 2)

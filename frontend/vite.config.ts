@@ -20,7 +20,14 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     proxy: {
-      '/api': process.env.VITE_API_PROXY || 'http://localhost:8080'
+      '/api/auth': {
+        target: process.env.VITE_AUTH_PROXY || 'http://localhost:8081',
+        changeOrigin: true,
+      },
+      '/api': {
+        target: process.env.VITE_API_PROXY || 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
     watch: {
       usePolling: true

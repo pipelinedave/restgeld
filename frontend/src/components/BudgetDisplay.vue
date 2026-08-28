@@ -86,15 +86,15 @@ const baseBudgetFormatted = computed(() =>
   width: 100%;
   max-width: 380px;
   background: radial-gradient(circle at top, #1c1c24 0%, #121216 100%);
-  padding: 10px 14px;
-  border-radius: 16px;
+  padding: 18px 16px;
+  border-radius: 20px;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   text-align: center;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
 .hero-top-row {
@@ -131,19 +131,19 @@ const baseBudgetFormatted = computed(() =>
 }
 
 .current-amount {
-  font-size: 2.1rem;
+  font-size: 2.35rem;
   font-weight: 800;
   letter-spacing: -1px;
 }
 
 .fraction-slash {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   color: var(--text-dim, #5c5c6e);
   font-weight: 400;
 }
 
 .start-amount {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   color: var(--text-muted, #8e8e9c);
   font-weight: 600;
 }

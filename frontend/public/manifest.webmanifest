@@ -1,6 +1,6 @@
 {
-  "name": "restgeld.",
-  "short_name": "restgeld.",
+  "name": "Restgeld",
+  "short_name": "Restgeld",
   "description": "Daily Allowance Tracker",
   "theme_color": "#1a1a2e",
   "background_color": "#1a1a2e",
@@ -8,8 +8,7 @@
   "orientation": "portrait",
   "start_url": "/",
   "icons": [
-    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
   ],
   "shortcuts": [
     {
