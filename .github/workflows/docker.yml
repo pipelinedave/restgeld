@@ -3,10 +3,10 @@ name: Docker
 on:
   push:
     branches: [main, develop]
-    paths: ['backend/**', 'frontend/**']
+    paths: ['backend/**', 'frontend/**', 'services/auth-service/**']
   pull_request:
     branches: [main, develop]
-    paths: ['backend/**', 'frontend/**']
+    paths: ['backend/**', 'frontend/**', 'services/auth-service/**']
 
 jobs:
   build:
@@ -15,5 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Backend
         run: docker build -t restgeld-backend:ci backend/
+      - name: Build Auth Service
+        run: docker build -t restgeld-auth-service:ci services/auth-service/
       - name: Build Frontend
         run: docker build -t restgeld-frontend:ci frontend/

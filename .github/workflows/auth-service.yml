@@ -1,0 +1,36 @@
+name: Auth Service
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['services/auth-service/**']
+  pull_request:
+    branches: [main, develop]
+    paths: ['services/auth-service/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Dependencies
+        run: go mod download
+        working-directory: services/auth-service
+      - name: Vet
+        run: go vet ./...
+        working-directory: services/auth-service
+      - name: Unit Tests
+        run: go test -short ./... -v -count=1 -coverprofile=coverage.out
+        working-directory: services/auth-service
+      - name: Build
+        run: go build -o /dev/null .
+        working-directory: services/auth-service
+      - uses: codecov/codecov-action@v5
+        if: success()
+        with:
+          files: services/auth-service/coverage.out
+          flags: auth-service
+          fail_ci_if_error: false
