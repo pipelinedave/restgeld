@@ -64,6 +64,24 @@ services:
       db:
         condition: service_healthy
 
+  billing-service:
+    build:
+      context: ./services/billing-service
+      dockerfile: Dockerfile
+    container_name: restgeld-billing-service
+    environment:
+      PORT: "8082"
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: restgeld
+      DB_PASSWORD: restgeld
+      DB_NAME: restgeld_auth
+    ports:
+      - "8082:8082"
+    depends_on:
+      db:
+        condition: service_healthy
+
   frontend:
     image: node:22-alpine
     container_name: restgeld-frontend-dev

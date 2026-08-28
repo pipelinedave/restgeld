@@ -8,6 +8,8 @@ resources:
   - backend-service.yaml
   - auth-service-deployment.yaml
   - auth-service-service.yaml
+  - billing-service-deployment.yaml
+  - billing-service-service.yaml
   - frontend-deployment.yaml
   - frontend-service.yaml
   - ingress.yaml

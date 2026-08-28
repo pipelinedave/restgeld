@@ -20,6 +20,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     proxy: {
+      '/api/billing': {
+        target: process.env.VITE_BILLING_PROXY || 'http://localhost:8082',
+        changeOrigin: true,
+      },
       '/api/auth': {
         target: process.env.VITE_AUTH_PROXY || 'http://localhost:8081',
         changeOrigin: true,

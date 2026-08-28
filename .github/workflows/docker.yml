@@ -3,10 +3,10 @@ name: Docker
 on:
   push:
     branches: [main, develop]
-    paths: ['backend/**', 'frontend/**', 'services/auth-service/**']
+    paths: ['backend/**', 'frontend/**', 'services/auth-service/**', 'services/billing-service/**']
   pull_request:
     branches: [main, develop]
-    paths: ['backend/**', 'frontend/**', 'services/auth-service/**']
+    paths: ['backend/**', 'frontend/**', 'services/auth-service/**', 'services/billing-service/**']
 
 jobs:
   build:
@@ -17,5 +17,7 @@ jobs:
         run: docker build -t restgeld-backend:ci backend/
       - name: Build Auth Service
         run: docker build -t restgeld-auth-service:ci services/auth-service/
+      - name: Build Billing Service
+        run: docker build -t restgeld-billing-service:ci services/billing-service/
       - name: Build Frontend
         run: docker build -t restgeld-frontend:ci frontend/
