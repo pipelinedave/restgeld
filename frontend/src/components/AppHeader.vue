@@ -74,6 +74,20 @@
           </div>
 
           <div class="status-row">
+            <span class="status-row-label">Auth Service Health</span>
+            <span class="status-row-val" :class="authHealthy ? 'val-ok' : 'val-warn'">
+              {{ authHealthy ? 'OK (Port 8081)' : 'Standby / Offline' }}
+            </span>
+          </div>
+
+          <div class="status-row">
+            <span class="status-row-label">Billing Service Health</span>
+            <span class="status-row-val" :class="billingHealthy ? 'val-ok' : 'val-warn'">
+              {{ billingHealthy ? 'OK (Port 8082)' : 'Standby / Offline' }}
+            </span>
+          </div>
+
+          <div class="status-row">
             <span class="status-row-label">PostgreSQL Datenbank</span>
             <span class="status-row-val" :class="isDbConnected ? 'val-ok' : 'val-warn'">
               {{ isDbConnected ? 'Verbunden & bereit' : (dbStatus === 'offline' ? 'Offline' : 'Nicht erreichbar') }}
@@ -196,6 +210,8 @@ defineEmits<{
 const haptics = useHaptics()
 const activePopover = ref<'status' | 'streak' | 'projection' | null>(null)
 const apiHealthy = ref(true)
+const authHealthy = ref(true)
+const billingHealthy = ref(true)
 const dbStatus = ref('connected')
 const latencyMs = ref(12)
 
@@ -272,6 +288,8 @@ const BASE = typeof window !== 'undefined' && import.meta.env.PROD ? window.loca
 async function checkHealth() {
   if (typeof window === 'undefined' || (import.meta as any).env?.MODE === 'test') {
     apiHealthy.value = true
+    authHealthy.value = true
+    billingHealthy.value = true
     dbStatus.value = 'connected'
     latencyMs.value = 8
     return
@@ -298,6 +316,21 @@ async function checkHealth() {
       apiHealthy.value = false
       dbStatus.value = 'disconnected'
     }
+  }
+
+  // Microservices Health Checks
+  try {
+    const authRes = await fetch(`${BASE}/api/auth/health`)
+    authHealthy.value = authRes.ok
+  } catch {
+    authHealthy.value = false
+  }
+
+  try {
+    const billingRes = await fetch(`${BASE}/api/billing/health`)
+    billingHealthy.value = billingRes.ok
+  } catch {
+    billingHealthy.value = false
   }
 }
 
