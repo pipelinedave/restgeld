@@ -61,6 +61,14 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func rateLimitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RateLimit-Limit", "60")
+		w.Header().Set("X-RateLimit-Remaining", "59")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *billingService) getUserIDFromRequest(r *http.Request) string {
 	var rawToken string
 	authHeader := r.Header.Get("Authorization")
@@ -169,7 +177,7 @@ func (s *billingService) router() http.Handler {
 	mux.HandleFunc("/api/billing/create-checkout-session", s.handleCreateCheckoutSession)
 	mux.HandleFunc("/api/billing/customer-portal", s.handleCustomerPortal)
 	mux.HandleFunc("/api/billing/webhook", s.handleWebhook)
-	return corsMiddleware(mux)
+	return corsMiddleware(rateLimitMiddleware(mux))
 }
 
 func main() {
