@@ -2,8 +2,9 @@
 
 Daily Allowance Tracker – Mobile-first PWA
 
-[![Go](https://github.com/pipelinedave/restgeld/actions/workflows/backend.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/backend.yml)
-[![Vue](https://github.com/pipelinedave/restgeld/actions/workflows/frontend.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/frontend.yml)
+[![Go Core](https://github.com/pipelinedave/restgeld/actions/workflows/backend.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/backend.yml)
+[![Auth Service](https://github.com/pipelinedave/restgeld/actions/workflows/auth-service.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/auth-service.yml)
+[![Vue Frontend](https://github.com/pipelinedave/restgeld/actions/workflows/frontend.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/frontend.yml)
 [![Docker](https://github.com/pipelinedave/restgeld/actions/workflows/docker.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/docker.yml)
 [![GitHub Pages](https://github.com/pipelinedave/restgeld/actions/workflows/pages.yml/badge.svg)](https://github.com/pipelinedave/restgeld/actions/workflows/pages.yml)
 [![codecov](https://codecov.io/gh/pipelinedave/restgeld/branch/main/graph/badge.svg)](https://codecov.io/gh/pipelinedave/restgeld)
@@ -19,6 +20,7 @@ Daily Allowance Tracker – Mobile-first PWA
 - Mobile-first PWA mit Schnell-Erfassung (Numpad, Quick Note Chips & Haptik)
 - Offline-Outbox mit automatischer Hintergrund-Synchronisation
 - Datenhoheit: CSV & JSON Export / Import
+- Passkeys & Magic-Link Multi-Tenant Authentifizierung
 - Ausgaben-Historie mit Filter- & Löschfunktion
 
 ## Tech Stack
@@ -26,8 +28,10 @@ Daily Allowance Tracker – Mobile-first PWA
 | Layer | Technologie |
 |---|---|
 | Frontend | Vue 3 + Vite + TypeScript + PWA |
-| Backend | Go 1.22 (net/http + lib/pq) |
-| Database | PostgreSQL 16 |
+| Core Backend | Go 1.22 (REST API, net/http + lib/pq) |
+| Auth Service | Standalone Go Microservice (Magic Links, Passkeys / WebAuthn, Sessions) |
+| Database | PostgreSQL 16 (Multi-Tenant, Multi-DB `restgeld_core` & `restgeld_auth`) |
+| Dev SMTP | Mailpit (In-Memory Mailer) |
 | Deployment | Vercel (Preview & Production), Docker, Kubernetes (k3s), Flux |
 
 ## Umgebungen & Branching-Modell
