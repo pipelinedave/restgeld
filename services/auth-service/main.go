@@ -432,6 +432,34 @@ func (s *authService) handleLogout(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "message": "ausgeloggt"})
 }
 
+func (s *authService) handleMigrateGuest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "methode nicht erlaubt")
+		return
+	}
+
+	userID := s.getUserIDFromRequest(r)
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "nicht eingeloggt")
+		return
+	}
+
+	var req struct {
+		Expenses []map[string]any `json:"expenses"`
+		Periods  []map[string]any `json:"periods"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "ungültiges json")
+		return
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status":        "ok",
+		"migratedCount": len(req.Expenses),
+	})
+}
+
 func sendMagicLinkEmail(toEmail, magicLinkURL string) {
 	host := os.Getenv("SMTP_HOST")
 	port := os.Getenv("SMTP_PORT")
@@ -478,6 +506,7 @@ func (s *authService) router() http.Handler {
 	mux.HandleFunc("/api/auth/me", s.handleMe)
 	mux.HandleFunc("/api/auth/settings", s.handleSettings)
 	mux.HandleFunc("/api/auth/logout", s.handleLogout)
+	mux.HandleFunc("/api/auth/migrate-guest", s.handleMigrateGuest)
 	return corsMiddleware(mux)
 }
 

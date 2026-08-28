@@ -40,6 +40,17 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func (s *server) getUserIDFromRequest(r *http.Request) string {
+	authHeader := r.Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		return strings.TrimPrefix(authHeader, "Bearer ")
+	}
+	if cookie, err := r.Cookie("restgeld_session"); err == nil && cookie.Value != "" {
+		return cookie.Value
+	}
+	return ""
+}
+
 func jsonHeader(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 }
@@ -512,17 +523,6 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, periods)
 }
 
-func (s *server) handleAuthMe(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		s.getMeHandler(w, r)
-	case http.MethodDelete:
-		s.deleteAccountHandler(w, r)
-	default:
-		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-	}
-}
-
 func (s *server) router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", s.handleHealth)
@@ -533,14 +533,6 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/periods", s.handleGetPeriods)
 	mux.HandleFunc("/api/export", s.handleExport)
 	mux.HandleFunc("/api/import", s.handleImport)
-
-	// Auth & SaaS Endpoints
-	mux.HandleFunc("/api/auth/magic-link", s.requestMagicLinkHandler)
-	mux.HandleFunc("/api/auth/verify", s.verifyMagicLinkHandler)
-	mux.HandleFunc("/api/auth/me", s.handleAuthMe)
-	mux.HandleFunc("/api/auth/settings", s.updateUserSettingsHandler)
-	mux.HandleFunc("/api/auth/logout", s.logoutHandler)
-	mux.HandleFunc("/api/auth/migrate-guest", s.migrateGuestHandler)
 
 	return corsMiddleware(mux)
 }
