@@ -105,6 +105,13 @@
           </div>
 
           <div class="auth-actions">
+            <div class="passkey-section">
+              <span class="passkey-label">Biometrie & Schnell-Login</span>
+              <button class="passkey-btn" @click="handleRegisterPasskey">
+                🔑 Passkey / FaceID aktivieren
+              </button>
+            </div>
+
             <button class="auth-logout-btn" @click="handleLogout">
               Abmelden
             </button>
@@ -178,6 +185,29 @@ async function handleDevDirectLogin() {
       haptics.success()
       emit('login-success')
     }
+  }
+}
+
+async function handleRegisterPasskey() {
+  haptics.tap()
+  if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+    alert('Passkeys werden von diesem Browser oder Gerät nicht unterstützt.')
+    return
+  }
+
+  try {
+    const res = await fetch('/api/auth/passkey/register-options', {
+      method: 'POST',
+      headers: auth.getAuthHeaders(),
+    })
+    if (!res.ok) {
+      alert('Fehler beim Abrufen der Passkey-Optionen')
+      return
+    }
+    haptics.success()
+    alert('Passkey-Vorbereitung aktiviert.')
+  } catch {
+    alert('Fehler bei der Passkey-Registrierung')
   }
 }
 
