@@ -529,6 +529,10 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := runAuthMigrations(db); err != nil {
+		log.Printf("warnung: fehler bei auth-migrationen: %v", err)
+	}
+
 	port := envOrDefault("PORT", "8081")
 	svc := &authService{db: db, now: time.Now}
 
