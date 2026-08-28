@@ -75,8 +75,29 @@
             </div>
             <div class="user-info">
               <span class="user-email">{{ auth.user.value?.email }}</span>
-              <span class="user-status-pill">🟢 Cloud-Sync aktiv</span>
+              <div class="user-badges">
+                <span class="user-status-pill">🟢 Cloud-Sync aktiv</span>
+                <span v-if="billing.isPro.value" class="user-pro-pill">⭐ PRO Member</span>
+                <span v-else class="user-free-pill">FREE Tier</span>
+              </div>
             </div>
+          </div>
+
+          <!-- Pro Upgrade Banner -->
+          <div v-if="!billing.isPro.value" class="pro-upgrade-card">
+            <div class="pro-card-content">
+              <span class="pro-card-title">⭐⭐⭐ Restgeld PRO ⭐⭐⭐</span>
+              <p class="pro-card-desc">Schalte unbegrenztes Cloud-Backup, Multi-Geräte Sync und erweiterte CSV-Exporte frei.</p>
+              <button class="pro-checkout-btn" :disabled="billing.isLoading.value" @click="handleUpgradePro">
+                {{ billing.isLoading.value ? 'Lädt...' : 'Auf PRO upgraden ⭐' }}
+              </button>
+            </div>
+          </div>
+          <div v-else class="pro-active-card">
+            <span>Dein Restgeld PRO Paket ist aktiv!</span>
+            <button class="pro-portal-btn" :disabled="billing.isLoading.value" @click="handleOpenPortal">
+              Abo verwalten & Kündigen
+            </button>
           </div>
 
           <div class="account-details-list">
@@ -128,6 +149,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
+import { useBilling } from '../composables/useBilling'
 import { useHaptics } from '../composables/useHaptics'
 import type { Expense, Period } from '../composables/useApi'
 
@@ -145,7 +167,22 @@ const emit = defineEmits<{
 }>()
 
 const auth = useAuth()
+const billing = useBilling()
 const haptics = useHaptics()
+
+async function handleUpgradePro() {
+  const res = await billing.createCheckoutSession()
+  if (res.checkoutUrl) {
+    window.location.href = res.checkoutUrl
+  }
+}
+
+async function handleOpenPortal() {
+  const res = await billing.openCustomerPortal()
+  if (res.portalUrl) {
+    window.location.href = res.portalUrl
+  }
+}
 
 const email = ref('')
 const magicLinkSent = ref(false)

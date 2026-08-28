@@ -10,6 +10,7 @@ export interface User {
   defaultPeriodDays: number
   theme: string
   isActive: boolean
+  plan?: 'free' | 'pro'
 }
 
 const STORAGE_KEY_TOKEN = 'restgeld_auth_token'
