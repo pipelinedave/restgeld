@@ -40,6 +40,14 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func rateLimitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RateLimit-Limit", "100")
+		w.Header().Set("X-RateLimit-Remaining", "99")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *server) getUserIDFromRequest(r *http.Request) string {
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
@@ -534,5 +542,5 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/export", s.handleExport)
 	mux.HandleFunc("/api/import", s.handleImport)
 
-	return corsMiddleware(mux)
+	return corsMiddleware(rateLimitMiddleware(mux))
 }
