@@ -157,6 +157,9 @@ restgeld/
 - 🐛 Bugfix: Perioder-Archiv lieferte 500 (vorbestehender UUID-Leerstring-Fehler in `GetAllPeriods` Guest-Pfad: `p.user_id = ''` gegen UUID-Feld geparst); gefixt durch Go-Verzweigung zwischen `IS NULL` (Guest) und `= $1` (Account) inkl. Integration-Test-Buildfix + Regressionstest `TestIntegrationGetAllPeriodsGuest` ✅
 - ✨ Feature: Tages-Detail-Drilldown im Tages-Verlauf — Tap auf einen Tag lädt die konkreten Buchungen des Tages über neuen Endpoint `GET /api/expenses/day?date=YYYY-MM-DD` (tenant-scoped, inkl. Store + Integrationstest) und zeigt sie kompakt an ✅
 - ✨ Feature: Bidirektionale Tages-Restgeld-Kopplung in den Einstellungen — Tages-Restgeld ist editierbar (Slider/Nummer) und treibt beim Ändern das Monatsbudget (Tag × Tage), während das Monatsbudget es umgekehrt live neu berechnet (+ Tests) ✅
+- 🐛 Bugfix: PWA-Cache-Strategie — nach jedem Deployment musste man Browser-Daten löschen, sonst lud die Seite nicht mehr (veralteter `sw.js` cachete HTML). Neu: NETWORK-FIRST für HTML/Navigation, CACHE-FIRST für gehashte Assets, Cache-Purge beim Aktivieren, per Build versionierter `sw.js` (Commit-Hash + Timestamp) und Auto-Reload einer frischen Version. Verifiziert per E2E (`e2e/service-worker.spec.ts`) gegen den Produktions-Build (SW registriert + Offline-Load aus Cache) ✅
+- ✨ Feature: Professioneller Splash-Screen — statischer Lade-Bildschirm in `index.html` (Brand + pulsierender Ladebalken) erscheint sofort vor dem Vue-Mount und wird erst ausgeblendet, wenn die App startklar ist (kein "Lade Budget"-Flicker mehr) (+ 4 Unit-Tests) ✅
+- 🧰 Dev-Setup: Vollständig nativer WSL-Dev-Loop etabliert (kein Docker nötig): lokale Postgres 16 (`restgeld`-DB), Go-Backend (`:8080`), Vite-Dev-Server (`:5173` mit HMR + `/api`-Proxy) und `vite preview` (`:4173`, Produktions-Build für PWA-E2E) via tmux-Sessions `rg-backend`/`rg-front`/`rg-preview`. Behebt die frühere Divergenz des Docker-Mounts (Windows-Pfad) ✅
 
 ---
 
