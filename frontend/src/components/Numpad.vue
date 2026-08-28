@@ -179,7 +179,7 @@ const liveImpact = computed(() => {
     return {
       type: 'impact-warning',
       icon: '⚠️',
-      text: `Heute verfügbar: ${currentFormatted} € ➔ Überzieht um ${diffFormatted} €`,
+      text: `Heute verfügbar: ${currentFormatted} € ➔ Überzieht Tagesbudget um ${diffFormatted} €`,
     }
   }
 })
