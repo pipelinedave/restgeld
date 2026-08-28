@@ -32,6 +32,7 @@ type User struct {
 	DefaultMonthlyBudget float64   `json:"defaultMonthlyBudget"`
 	DefaultPeriodDays    int       `json:"defaultPeriodDays"`
 	Theme                string    `json:"theme"`
+	Language             string    `json:"language"`
 	IsActive             bool      `json:"isActive"`
 }
 
@@ -54,6 +55,7 @@ type UpdateUserSettingsRequest struct {
 	DefaultMonthlyBudget float64 `json:"defaultMonthlyBudget,omitempty"`
 	DefaultPeriodDays    int     `json:"defaultPeriodDays,omitempty"`
 	Theme                string  `json:"theme,omitempty"`
+	Language             string  `json:"language,omitempty"`
 }
 
 type authService struct {
@@ -210,8 +212,9 @@ func (s *authService) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 	magicLinkURL := fmt.Sprintf("%s/?auth_token=%s", appBaseURL, token)
 
 	smtpHost := os.Getenv("SMTP_HOST")
+	lang := r.Header.Get("Accept-Language")
 	if smtpHost != "" {
-		go sendMagicLinkEmail(email, magicLinkURL)
+		go sendMagicLinkEmail(email, magicLinkURL, lang)
 	} else {
 		log.Printf("[DEV AUTH-SVC] Magic Link für %s: %s", email, magicLinkURL)
 	}
@@ -265,19 +268,19 @@ func (s *authService) handleVerifyMagicLink(w http.ResponseWriter, r *http.Reque
 	var u User
 	isNew := false
 	err = s.db.QueryRow(
-		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active 
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active 
 		 FROM users WHERE email = $1`,
 		email,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
 
 	if err == sql.ErrNoRows {
 		isNew = true
 		err = s.db.QueryRow(
-			`INSERT INTO users (email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active) 
-			 VALUES ($1, $2, $2, 450.00, 30, 'emerald', TRUE) 
-			 RETURNING id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active`,
+			`INSERT INTO users (email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, language, is_active) 
+			 VALUES ($1, $2, $2, 450.00, 30, 'emerald', 'de', TRUE) 
+			 RETURNING id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active`,
 			email, now,
-		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
 	} else if err == nil {
 		_, _ = s.db.Exec("UPDATE users SET last_login_at = $1 WHERE id = $2", now, u.ID)
 	}
@@ -333,10 +336,10 @@ func (s *authService) handleMe(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		var u User
 		err := s.db.QueryRow(
-			`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active 
+			`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active 
 			 FROM users WHERE id = $1`,
 			userID,
-		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
 		if err != nil {
 			writeError(w, http.StatusNotFound, "benutzer nicht gefunden")
 			return
@@ -387,9 +390,10 @@ func (s *authService) handleSettings(w http.ResponseWriter, r *http.Request) {
 		`UPDATE users SET 
 		 default_monthly_budget = CASE WHEN $2 > 0 THEN $2 ELSE default_monthly_budget END,
 		 default_period_days = CASE WHEN $3 > 0 THEN $3 ELSE default_period_days END,
-		 theme = CASE WHEN $4 <> '' THEN $4 ELSE theme END
+		 theme = CASE WHEN $4 <> '' THEN $4 ELSE theme END,
+		 language = CASE WHEN $5 <> '' THEN $5 ELSE language END
 		 WHERE id = $1`,
-		userID, req.DefaultMonthlyBudget, req.DefaultPeriodDays, req.Theme,
+		userID, req.DefaultMonthlyBudget, req.DefaultPeriodDays, req.Theme, req.Language,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "fehler beim speichern der einstellungen")
@@ -398,10 +402,10 @@ func (s *authService) handleSettings(w http.ResponseWriter, r *http.Request) {
 
 	var u User
 	_ = s.db.QueryRow(
-		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active 
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active 
 		 FROM users WHERE id = $1`,
 		userID,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
 
 	jsonHeader(w)
 	writeJSON(w, http.StatusOK, u)
@@ -468,7 +472,7 @@ func (s *authService) handleMigrateGuest(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-func sendMagicLinkEmail(toEmail, magicLinkURL string) {
+func sendMagicLinkEmail(toEmail, magicLinkURL, lang string) {
 	host := os.Getenv("SMTP_HOST")
 	port := os.Getenv("SMTP_PORT")
 	if port == "" {
@@ -486,18 +490,36 @@ func sendMagicLinkEmail(toEmail, magicLinkURL string) {
 		auth = smtp.PlainAuth("", user, pass, host)
 	}
 
+	lang = strings.ToLower(lang)
 	subject := "Subject: Dein Login-Link für Restgeld\r\n"
+	textMsg := "Klicke auf den Button unten, um dich einzuloggen:"
+	btnMsg := "In Restgeld einloggen &rarr;"
+
+	if strings.HasPrefix(lang, "en") {
+		subject = "Subject: Your Magic Login Link for Restgeld\r\n"
+		textMsg = "Click the button below to sign in:"
+		btnMsg = "Sign in to Restgeld &rarr;"
+	} else if strings.HasPrefix(lang, "es") {
+		subject = "Subject: Tu enlace de acceso para Restgeld\r\n"
+		textMsg = "Haz clic en el botón de abajo para iniciar sesión:"
+		btnMsg = "Iniciar sesión en Restgeld &rarr;"
+	} else if strings.HasPrefix(lang, "fr") {
+		subject = "Subject: Votre lien de connexion Restgeld\r\n"
+		textMsg = "Cliquez sur le bouton ci-dessous pour vous connecter:"
+		btnMsg = "Se connecter à Restgeld &rarr;"
+	}
+
 	mime := "MIME-version: 1.0;\r\nContent-Type: text/html; charset=\"UTF-8\";\r\n\r\n"
 	body := fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <body style="font-family: system-ui, sans-serif; background: #0a0a0c; color: #f4f4f6; padding: 24px;">
   <div style="max-width: 480px; margin: 0 auto; background: #121216; border: 1px solid #222; border-radius: 16px; padding: 24px; text-align: center;">
     <h1 style="color: #22c55e; margin: 0 0 12px;">restgeld.</h1>
-    <p style="color: #8e8e9c; font-size: 15px; margin-bottom: 24px;">Klicke auf den Button unten, um dich einzuloggen:</p>
-    <a href="%s" style="display: inline-block; background: #22c55e; color: #000; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-size: 15px;">In Restgeld einloggen &rarr;</a>
+    <p style="color: #8e8e9c; font-size: 15px; margin-bottom: 24px;">%s</p>
+    <a href="%s" style="display: inline-block; background: #22c55e; color: #000; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-size: 15px;">%s</a>
   </div>
 </body>
-</html>`, magicLinkURL)
+</html>`, textMsg, magicLinkURL, btnMsg)
 
 	msg := []byte("From: " + from + "\r\n" + "To: " + toEmail + "\r\n" + subject + mime + body)
 	addr := fmt.Sprintf("%s:%s", host, port)
