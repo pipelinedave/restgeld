@@ -202,27 +202,24 @@ Strukturierte Erfassung der Praxistest-Erkenntnisse und Feature-Wünsche für ko
 4. **Landing Page Sync**:
    - Ziel: Aktualisierung des interaktiven Mockups in `docs/index.html` auf das exakte Layout der PWA.
 
-### Epic 5: SaaS Architecture, Multi-Tenancy & Magic Link Auth (✅ Umgesetzt)
+### Epic 5: SaaS Architecture, Microservices & Subscriptions (✅ Umgesetzt)
 1. **User Accounts & Tenant Isolation**:
-   - Multi-Tenant DB Schema mit Tabellen `users`, `magic_links`, `auth_sessions` und `user_id` Foreign Keys auf `periods` & `expenses`.
-   - Vollständige Tenant-Isolation auf DB- und Store-Ebene (`(user_id = $userID OR ($userID = '' AND user_id IS NULL))`).
-2. **Magic Link Authentifizierung**:
-   - Endpoints: `POST /api/auth/magic-link`, `POST /api/auth/verify`, `GET /api/auth/me`, `PATCH /api/auth/settings`, `POST /api/auth/logout`, `DELETE /api/auth/me` (DSGVO-konforme Kontolöschung).
-   - Sichere SHA-256 gehashte Einmal-Tokens, HttpOnly Session-Cookies und Bearer-Token Fallback.
-   - Dev/Preview Debug-Token Link für instant zero-setup Testing ohne SMTP-Zwang.
-3. **Frontend Integration**:
-   - `useAuth.ts` Composable für reaktiven State, automatische URL-Token-Verifikation (`?auth_token=...`).
-   - `AuthModal.vue` für Magic-Link-Anfrage, Profil-Übersicht und DSGVO-Löschung.
-   - Gast-Daten-Migration: Vorhandene lokale Ausgaben & Perioden können nahtlos in einen neuen Account übertragen werden (`/api/auth/migrate-guest`).
-   - `SettingsModal.vue` Account-Sektion mit Schnellzugriff.
+   - Multi-Tenant DB Schema mit Tabellen `users`, `magic_links`, `auth_sessions`, `webauthn_credentials` und `user_id` Foreign Keys.
+   - Vollständige Tenant-Isolation auf DB- und Store-Ebene.
+2. **Microservice Isolation**:
+   - `services/auth-service` (Port 8081): Standalone Auth Microservice (Magic Link & WebAuthn Passkey Vorbereitung).
+   - `services/billing-service` (Port 8082): Standalone Billing Microservice (Stripe Checkout & Customer Portal).
+3. **Flächendeckendes Rate Limiting & Abuse Protection**:
+   - `rateLimitMiddleware` über alle Microservices hinweg (`backend/`, `auth-service`, `billing-service`).
+4. **Frontend Billing & Health UI Integration**:
+   - `useBilling.ts` Composable & Stripe Checkout / Portal Buttons in `AuthModal.vue`.
+   - Microservice Health-Checks (`auth-service` & `billing-service`) im Header Popover.
 
 ---
 
 ### 🔄 Nächste Schritte
-1. **Passkeys / WebAuthn**: Nachgelagerte Erweiterung für biometrisches Einloggen (FaceID / Fingerprint).
-2. **Deployment auf k3s**:
-   - `kubectl create namespace restgeld`
-   - SealedSecret für Postgres-Passwort erstellen
-   - Flux Kustomization in k3s-config repo übernehmen
-3. **Domain verifizieren** (restgeld.stillon.top)
+1. **Deployment auf k3s**:
+   - SealedSecret für Postgres-Passwort in Produktion verifizieren.
+   - Flux Kustomization Sync in k3s Cluster ausführen.
+2. **Domain verifizieren** (`restgeld.stillon.top`)
 
