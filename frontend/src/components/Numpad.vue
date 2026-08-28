@@ -156,27 +156,30 @@ const isValidAmount = computed(() => parsedAmount.value > 0)
 const liveImpact = computed(() => {
   if (props.currentBudget === undefined) return null
 
+  const currentFormatted = props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
   if (!isValidAmount.value) {
     return {
       type: 'impact-neutral',
       icon: '💶',
-      text: `Heute verfügbar: ${props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+      text: `Heute verfügbar: ${currentFormatted} €`,
     }
   }
 
   const diff = props.currentBudget - parsedAmount.value
+  const diffFormatted = Math.abs(diff).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
   if (diff >= 0) {
     return {
       type: 'impact-ok',
       icon: '✓',
-      text: `Verbleibt danach: ${diff.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+      text: `Heute verfügbar: ${currentFormatted} € ➔ Verbleibt danach: ${diffFormatted} €`,
     }
   } else {
-    const over = Math.abs(diff)
     return {
       type: 'impact-warning',
       icon: '⚠️',
-      text: `Überzieht Tagesbudget um ${over.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+      text: `Heute verfügbar: ${currentFormatted} € ➔ Überzieht um ${diffFormatted} €`,
     }
   }
 })
