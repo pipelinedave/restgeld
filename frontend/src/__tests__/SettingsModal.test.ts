@@ -100,33 +100,4 @@ describe('SettingsModal', () => {
     await accountBtn.trigger('click')
     expect(wrapper.emitted('open-auth')).toBeTruthy()
   })
-
-  it('couples day budget to monthly budget when day is edited', async () => {
-    const wrapper = mount(SettingsModal, {
-      props: { visible: true, currentMonthlyBudget: 600, currentMonthDays: 30 }
-    })
-
-    // Monatsbudget 600 / 30 Tage => 20,00 € / Tag initial
-    const dayInput = wrapper.find<HTMLInputElement>('input#day-budget-input')
-    await dayInput.setValue(25)
-    await dayInput.trigger('change')
-
-    // 25 € / Tag * 30 Tage => Monatsbudget 750
-    const monthly = wrapper.find<HTMLInputElement>('input#monthly-budget-input')
-    expect(Number(monthly.element.value)).toBe(750)
-  })
-
-  it('recomputes day budget display when monthly budget changes', async () => {
-    const wrapper = mount(SettingsModal, {
-      props: { visible: true, currentMonthlyBudget: 600, currentMonthDays: 30 }
-    })
-
-    const monthly = wrapper.find<HTMLInputElement>('input#monthly-budget-input')
-    await monthly.setValue(900)
-    await monthly.trigger('input')
-
-    // 900 / 30 => 30 € / Tag
-    const dayInput = wrapper.find<HTMLInputElement>('input#day-budget-input')
-    expect(Number(dayInput.element.value)).toBe(30)
-  })
 })

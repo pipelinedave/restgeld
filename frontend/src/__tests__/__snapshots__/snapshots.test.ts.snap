@@ -84,7 +84,7 @@ exports[`Snapshot: Numpad > sichtbar 1`] = `
     </div>
     <form data-v-0450a0c5="" class="modal-body">
       <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-amount-input" class="form-label">Betrag (€)</label>
-        <div data-v-0450a0c5="" class="amount-input-wrap"><input data-v-0450a0c5="" id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input"><span data-v-0450a0c5="" class="currency-symbol">€</span></div><!-- Live Budget Impact Vorschau -->
+        <div data-v-0450a0c5="" class="amount-input-wrap"><input data-v-0450a0c5="" id="expense-amount-input" type="text" inputmode="decimal" placeholder="0,00" enterkeyhint="next" autocomplete="off" class="amount-input" autofocus=""><span data-v-0450a0c5="" class="currency-symbol">€</span></div><!-- Live Budget Impact Vorschau -->
         <!--v-if-->
       </div>
       <div data-v-0450a0c5="" class="form-group"><label data-v-0450a0c5="" for="expense-note-input" class="form-label">Notiz (optional)</label><!-- Quick Note Chips -->

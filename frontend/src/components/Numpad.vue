@@ -6,7 +6,7 @@
         <button class="close-btn" aria-label="Schließen" :disabled="isSaving" @click="cancel">&times;</button>
       </div>
 
-      <form class="modal-body" @submit.prevent="confirmAll">
+      <form class="modal-body" @submit.prevent="confirmAll" @click="handleBodyClick">
         <div class="form-group">
           <label for="expense-amount-input" class="form-label">Betrag (€)</label>
           <div class="amount-input-wrap">
@@ -22,6 +22,7 @@
               :disabled="isSaving"
               class="amount-input"
               @keydown="handleAmountKeydown"
+              autofocus
             />
             <span class="currency-symbol">&euro;</span>
           </div>
@@ -181,44 +182,59 @@ const liveImpact = computed(() => {
   }
 })
 
-// Versucht die virtuelle Tastatur programmatisch zu öffnen.
-// Mobile Browser blockieren Autofocus ohne User-Gesture; die VirtualKeyboard-API
-// (Chrome/Android) hebt diese Einschränkung in standalone-PWAs oft auf.
-function requestSoftKeyboard() {
-  const navigatorAny = navigator as Navigator & {
-    virtualKeyboard?: { show: () => void }
-    keyboard?: { show: () => Promise<void> }
-  }
-  if (navigatorAny.virtualKeyboard?.show) {
-    try {
-      navigatorAny.virtualKeyboard.show()
-      return
-    } catch {
-      // Fallback unten
-    }
-  }
-  if (navigatorAny.keyboard?.show) {
-    navigatorAny.keyboard.show().catch(() => {})
-  }
-}
-
 function triggerFocus() {
   nextTick(() => {
     if (amountInputRef.value) {
-      amountInputRef.value.focus({ preventScroll: false })
-      requestSoftKeyboard()
+      amountInputRef.value.focus()
       // Android / mobile virtual keyboard trigger
       amountInputRef.value.click()
     }
   })
 }
 
-// Wiederholte Versuche, damit die Tastatur auch beim Cold-Start
-// (PWA-Shortcut ohne User-Gesture + Service-Worker-Rendering) zuverlässig aufgeht.
-function scheduleFocusRetries(totalAttempts = 8, delayMs = 150) {
-  for (let i = 0; i < totalAttempts; i++) {
-    setTimeout(triggerFocus, i * delayMs)
+function handleBodyClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (
+    target &&
+    target.tagName !== 'BUTTON' &&
+    target.tagName !== 'INPUT' &&
+    !target.closest('button') &&
+    !target.closest('.quick-chip')
+  ) {
+    triggerFocus()
   }
+}
+
+let globalTouchListener: ((e: TouchEvent | MouseEvent) => void) | null = null
+
+function registerGlobalFocusTrigger() {
+  if (typeof document === 'undefined') return
+  
+  if (globalTouchListener) {
+    document.removeEventListener('click', globalTouchListener)
+    document.removeEventListener('touchstart', globalTouchListener)
+  }
+
+  globalTouchListener = (e: TouchEvent | MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (
+      target &&
+      target.tagName !== 'BUTTON' &&
+      target.tagName !== 'INPUT' &&
+      !target.closest('button') &&
+      !target.closest('.quick-chip')
+    ) {
+      triggerFocus()
+      if (globalTouchListener) {
+        document.removeEventListener('click', globalTouchListener)
+        document.removeEventListener('touchstart', globalTouchListener)
+        globalTouchListener = null
+      }
+    }
+  }
+
+  document.addEventListener('click', globalTouchListener)
+  document.addEventListener('touchstart', globalTouchListener)
 }
 
 watch(
@@ -231,8 +247,13 @@ watch(
       triggerFocus()
       // Fallback delay for Android WebView PWA shortcut rendering
       setTimeout(triggerFocus, 100)
-      // Mehrere spätere Versuche gegen das ohne-Gesture-Öffnungslimit
-      scheduleFocusRetries()
+      registerGlobalFocusTrigger()
+    } else {
+      if (globalTouchListener && typeof document !== 'undefined') {
+        document.removeEventListener('click', globalTouchListener)
+        document.removeEventListener('touchstart', globalTouchListener)
+        globalTouchListener = null
+      }
     }
   },
   { immediate: true }
@@ -538,5 +559,72 @@ onMounted(loadStoredNotes)
   border-color: var(--accent-green, #22c55e);
   color: var(--accent-green, #22c55e);
   background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
+}
+
+@media (max-height: 600px) {
+  .modal-overlay {
+    padding: 4px;
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+  .modal-content {
+    border-radius: 12px;
+    max-height: 96dvh;
+  }
+  .modal-header {
+    padding: 8px 12px;
+  }
+  .modal-header h2 {
+    font-size: 1rem;
+  }
+  .close-btn {
+    padding: 2px 6px;
+    font-size: 1.1rem;
+  }
+  .modal-body {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .form-group {
+    gap: 4px;
+  }
+  .form-label {
+    font-size: 0.72rem;
+  }
+  .amount-input {
+    padding: 8px 40px 8px 12px;
+    font-size: 1.15rem;
+    border-radius: 8px;
+  }
+  .currency-symbol {
+    font-size: 1rem;
+    right: 12px;
+  }
+  .note-input {
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    border-radius: 8px;
+  }
+  .quick-chips {
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+  .quick-chip {
+    padding: 4px 8px;
+    font-size: 0.68rem;
+    border-radius: 6px;
+  }
+  .impact-preview {
+    margin-top: 4px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+  .form-actions {
+    margin-top: 2px;
+  }
+  .btn {
+    padding: 8px 12px;
+    font-size: 0.88rem;
+  }
 }
 </style>

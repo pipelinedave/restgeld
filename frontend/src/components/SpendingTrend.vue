@@ -42,22 +42,13 @@
     <!-- Detail-Anzeige bei Auswahl / Tooltip -->
     <div class="detail-preview" :class="{ 'has-selection': !!selectedStat }">
       <template v-if="selectedStat">
-        <div class="detail-top">
-          <span class="detail-day">Tag {{ selectedStat.day }} ({{ formatDate(selectedStat.date) }}):</span>
-          <span
-            class="detail-spent"
-            :class="selectedStat.spent > baseBudget ? 'spent-over' : 'spent-ok'"
-          >
-            {{ getDayDetailText(selectedStat) }}
-          </span>
-        </div>
-        <ul v-if="dayExpenses.length > 0" class="day-expenses">
-          <li v-for="exp in dayExpenses" :key="exp.id" class="day-expense">
-            <span class="exp-note">{{ exp.note || 'Ohne Notiz' }}</span>
-            <span class="exp-amount">−{{ formatAmount(exp.amount) }} €</span>
-          </li>
-        </ul>
-        <span v-else-if="loadingDay" class="detail-hint">Lade Buchungen…</span>
+        <span class="detail-day">Tag {{ selectedStat.day }} ({{ formatDate(selectedStat.date) }}):</span>
+        <span
+          class="detail-spent"
+          :class="selectedStat.spent > baseBudget ? 'spent-over' : 'spent-ok'"
+        >
+          {{ getDayDetailText(selectedStat) }}
+        </span>
       </template>
       <template v-else>
         <span class="detail-hint">Tippe auf einen Tag für Details</span>
@@ -68,8 +59,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { DailyStat, Expense } from '../composables/useApi'
-import { useApi } from '../composables/useApi'
+import type { DailyStat } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
 
 const props = defineProps<{
@@ -79,10 +69,7 @@ const props = defineProps<{
 }>()
 
 const haptics = useHaptics()
-const api = useApi()
 const selectedDay = ref<number | null>(null)
-const dayExpenses = ref<Expense[]>([])
-const loadingDay = ref(false)
 
 const selectedStat = computed(() => {
   if (!props.stats || selectedDay.value === null) return null
@@ -128,22 +115,8 @@ function selectDay(stat: DailyStat) {
   haptics.tap()
   if (selectedDay.value === stat.day) {
     selectedDay.value = null
-    dayExpenses.value = []
-    return
-  }
-  selectedDay.value = stat.day
-  loadDayExpenses(stat.date)
-}
-
-async function loadDayExpenses(date: string) {
-  loadingDay.value = true
-  dayExpenses.value = []
-  try {
-    dayExpenses.value = await api.getDayExpenses(date)
-  } catch {
-    dayExpenses.value = []
-  } finally {
-    loadingDay.value = false
+  } else {
+    selectedDay.value = stat.day
   }
 }
 
@@ -176,11 +149,11 @@ function formatDate(dateStr: string) {
 
 <style scoped>
 .spending-trend {
-  padding: 10px 16px 8px;
+  padding: 8px 12px;
   background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 16px;
-  margin: 0 16px 12px 16px;
+  margin: 0 16px 6px 16px;
 }
 
 .trend-header {
@@ -221,7 +194,7 @@ function formatDate(dateStr: string) {
   display: flex;
   align-items: flex-end;
   gap: 6px;
-  height: 48px;
+  height: 65px;
   min-width: 100%;
   padding-top: 4px;
 }
@@ -287,10 +260,10 @@ function formatDate(dateStr: string) {
 }
 
 .bar-label {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   color: var(--text-dim, #5c5c6e);
   font-family: var(--font-mono, monospace);
-  margin-top: 2px;
+  margin-top: 4px;
   line-height: 1;
 }
 
@@ -304,52 +277,14 @@ function formatDate(dateStr: string) {
 }
 
 .detail-preview {
-  margin-top: 4px;
-  padding-top: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 3px;
-  min-height: 18px;
-}
-
-.detail-top {
+  font-size: 0.78rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.day-expenses {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.day-expense {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 2px 0;
-}
-
-.exp-note {
-  color: var(--text, #e5e7eb);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 70%;
-}
-
-.exp-amount {
-  color: var(--accent-red, #ef4444);
-  font-family: var(--font-mono, monospace);
-  font-weight: 600;
-  flex-shrink: 0;
+  min-height: 24px;
 }
 
 .detail-hint {

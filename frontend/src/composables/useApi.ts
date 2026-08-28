@@ -59,9 +59,7 @@ export interface Period {
 export interface PeriodSummary {
   id: string
   startDate: string
-  endDate: string
   monthDays: number
-  actualDays: number
   baseBudget: number
   monthlyTotal: number
   totalSpent: number
@@ -103,7 +101,6 @@ export function useApi() {
       if (periodId) query.set('period_id', periodId)
       return api<PaginatedExpenses>(`/api/expenses?${query.toString()}`)
     },
-    getDayExpenses: (date: string) => api<Expense[]>(`/api/expenses/day?date=${date}`),
     addExpense: (amount: number, note: string) =>
       api<Expense>('/api/expenses', {
         method: 'POST',

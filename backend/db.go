@@ -357,46 +357,6 @@ func (s *postgresStore) GetExpenses(userID, periodID string, page, limit int) (*
 	}, nil
 }
 
-// GetDayExpenses liefert alle Buchungen eines Kalendertags (00:00 bis 23:59:59)
-// für eine Periode, tenant-scoped (Guest oder Account).
-func (s *postgresStore) GetDayExpenses(userID, periodID string, day time.Time) ([]Expense, error) {
-	start := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
-	end := start.AddDate(0, 0, 1)
-
-	var rows *sql.Rows
-	var err error
-	if userID != "" {
-		rows, err = s.db.Query(
-			"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 AND user_id = $2 AND created_at >= $3 AND created_at < $4 ORDER BY created_at ASC",
-			periodID, userID, start, end,
-		)
-	} else {
-		rows, err = s.db.Query(
-			"SELECT id, period_id, amount, note, created_at FROM expenses WHERE period_id = $1 AND user_id IS NULL AND created_at >= $2 AND created_at < $3 ORDER BY created_at ASC",
-			periodID, start, end,
-		)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("tagesausgaben abrufen: %w", err)
-	}
-	defer rows.Close()
-
-	var items []Expense
-	for rows.Next() {
-		var e Expense
-		if err := rows.Scan(&e.ID, &e.PeriodID, &e.Amount, &e.Note, &e.CreatedAt); err != nil {
-			return nil, fmt.Errorf("tagesausgabe scannen: %w", err)
-		}
-		e.UserID = userID
-		items = append(items, e)
-	}
-
-	if items == nil {
-		items = []Expense{}
-	}
-	return items, nil
-}
-
 func (s *postgresStore) AddExpense(userID, periodID string, amount float64, note string) (*Expense, error) {
 	return s.AddExpenseWithDate(userID, periodID, amount, note, time.Now())
 }
@@ -520,32 +480,19 @@ func (s *postgresStore) GetAllExpenses(userID, periodID string) ([]Expense, erro
 	return expenses, nil
 }
 
-func (s *postgresStore) GetAllPeriods(userID string, now time.Time) ([]PeriodSummary, error) {
+func (s *postgresStore) GetAllPeriods(userID string) ([]PeriodSummary, error) {
 	var rows *sql.Rows
 	var err error
-
-	// Vorbestehenden Bug vermeiden: leerer String darf nie gegen das UUID-Feld
-	// geparst werden (pq: invalid input syntax for type uuid). Wie im Rest des
-	// Codes wird deshalb in Go zwischen Guest (IS NULL) und Account (Rückweg) verzweigt.
-	where := "p.user_id = $1"
-	if userID == "" {
-		where = "p.user_id IS NULL"
-	}
-
-	query := fmt.Sprintf(`SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
+	query := `SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
 	                 COALESCE(SUM(e.amount), 0) as total_spent,
 	                 COUNT(e.id) as expense_count
 	          FROM periods p
 	          LEFT JOIN expenses e ON p.id = e.period_id
-	          WHERE %s
+	          WHERE (p.user_id = $1 OR ($1 = '' AND p.user_id IS NULL))
 	          GROUP BY p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total
-	          ORDER BY p.start_date DESC`, where)
+	          ORDER BY p.start_date DESC`
 
-	if userID == "" {
-		rows, err = s.db.Query(query)
-	} else {
-		rows, err = s.db.Query(query, userID)
-	}
+	rows, err = s.db.Query(query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("perioden abfragen: %w", err)
 	}
@@ -562,34 +509,10 @@ func (s *postgresStore) GetAllPeriods(userID string, now time.Time) ([]PeriodSum
 		summaries = append(summaries, p)
 	}
 
-	// Tatsächliche (beobachtete) Laufzeit ermitteln: Eine Periode endet,
-	// sobald die nächst-neuere Periode startet; die aktuellste endet heute.
-	// Dadurch wird die konfigurierte Dauer (monthDays) um die reale Nutzung korrigiert.
-	for i := range summaries {
-		if i == 0 {
-			summaries[i].EndDate = now
-		} else {
-			summaries[i].EndDate = summaries[i-1].StartDate
-		}
-		summaries[i].ActualDays = calcActualDays(summaries[i].StartDate, summaries[i].EndDate)
-	}
-
 	if summaries == nil {
 		summaries = []PeriodSummary{}
 	}
 	return summaries, nil
-}
-
-// calcActualDays liefert die Anzahl der tatsächlich vergangenen Kalendertage
-// zwischen Start und Ende (inklusiv Starttag), mindestens 1.
-func calcActualDays(start, end time.Time) int {
-	startDay := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	endDay := time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, end.Location())
-	days := int(endDay.Sub(startDay).Hours()/24) + 1
-	if days < 1 {
-		days = 1
-	}
-	return days
 }
 
 func (s *postgresStore) ImportExpenses(userID, periodID string, expenses []Expense) (int, error) {

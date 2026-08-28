@@ -236,25 +236,6 @@ func (m *memoryStore) GetExpenses(userID, periodID string, page, limit int) (*Pa
 	}, nil
 }
 
-func (m *memoryStore) GetDayExpenses(userID, periodID string, day time.Time) ([]Expense, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	start := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, day.Location())
-	end := start.AddDate(0, 0, 1)
-
-	var items []Expense
-	for _, e := range m.expenses[userID] {
-		if periodID != "" && e.PeriodID != periodID {
-			continue
-		}
-		if e.CreatedAt.After(start) && e.CreatedAt.Before(end) {
-			items = append(items, e)
-		}
-	}
-	return items, nil
-}
-
 func (m *memoryStore) AddExpense(userID, periodID string, amount float64, note string) (*Expense, error) {
 	return m.AddExpenseWithDate(userID, periodID, amount, note, time.Now())
 }
@@ -316,7 +297,7 @@ func (m *memoryStore) GetAllExpenses(userID, periodID string) ([]Expense, error)
 	return res, nil
 }
 
-func (m *memoryStore) GetAllPeriods(userID string, now time.Time) ([]PeriodSummary, error) {
+func (m *memoryStore) GetAllPeriods(userID string) ([]PeriodSummary, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -330,20 +311,19 @@ func (m *memoryStore) GetAllPeriods(userID string, now time.Time) ([]PeriodSumma
 		totalSpent += e.Amount
 	}
 
-	summary := PeriodSummary{
-		ID:           p.ID,
-		UserID:       userID,
-		StartDate:    p.StartDate,
-		EndDate:      now,
-		MonthDays:    p.MonthDays,
-		ActualDays:   calcActualDays(p.StartDate, now),
-		BaseBudget:   p.BaseBudget,
-		MonthlyTotal: p.MonthlyTotal,
-		TotalSpent:   totalSpent,
-		Savings:      mathRound(p.MonthlyTotal-totalSpent, 2),
-		ExpenseCount: len(m.expenses[userID]),
-	}
-	return []PeriodSummary{summary}, nil
+	return []PeriodSummary{
+		{
+			ID:           p.ID,
+			UserID:       userID,
+			StartDate:    p.StartDate,
+			MonthDays:    p.MonthDays,
+			BaseBudget:   p.BaseBudget,
+			MonthlyTotal: p.MonthlyTotal,
+			TotalSpent:   totalSpent,
+			Savings:      mathRound(p.MonthlyTotal-totalSpent, 2),
+			ExpenseCount: len(m.expenses[userID]),
+		},
+	}, nil
 }
 
 func (m *memoryStore) ImportExpenses(userID, periodID string, expenses []Expense) (int, error) {

@@ -26,9 +26,7 @@ describe('PeriodsArchiveModal', () => {
       {
         id: '2026-08',
         startDate: '2026-08-01T00:00:00Z',
-        endDate: '2026-08-31T00:00:00Z',
         monthDays: 31,
-        actualDays: 31,
         baseBudget: 15.0,
         monthlyTotal: 465.0,
         totalSpent: 400.0,
@@ -53,9 +51,7 @@ describe('PeriodsArchiveModal', () => {
       {
         id: '2026-08',
         startDate: '2026-08-01T00:00:00Z',
-        endDate: '2026-08-31T00:00:00Z',
         monthDays: 31,
-        actualDays: 31,
         baseBudget: 15.0,
         monthlyTotal: 465.0,
         totalSpent: 12.5,

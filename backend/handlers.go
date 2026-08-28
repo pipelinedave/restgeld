@@ -227,42 +227,6 @@ func (s *server) getExpenses(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, expenses)
 }
 
-func (s *server) getDayExpenses(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-		return
-	}
-
-	userID := s.getUserIDFromRequest(r)
-	dateStr := r.URL.Query().Get("date")
-	if dateStr == "" {
-		writeError(w, http.StatusBadRequest, "tag (date=YYYY-MM-DD) erforderlich")
-		return
-	}
-	day, err := time.Parse("2006-01-02", dateStr)
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "ungültiges datum, erwartet YYYY-MM-DD")
-		return
-	}
-
-	period, err := s.store.GetOrCreatePeriod(userID)
-	if err != nil {
-		log.Printf("fehler beim laden der periode: %v", err)
-		writeError(w, http.StatusInternalServerError, "fehler beim laden der periode")
-		return
-	}
-
-	expenses, err := s.store.GetDayExpenses(userID, period.ID, day)
-	if err != nil {
-		log.Printf("fehler beim laden der tagesausgaben: %v", err)
-		writeError(w, http.StatusInternalServerError, "fehler beim laden der tagesausgaben")
-		return
-	}
-
-	jsonHeader(w)
-	writeJSON(w, http.StatusOK, expenses)
-}
-
 func (s *server) handleDeleteExpense(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
@@ -536,7 +500,7 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 
 	userID := s.getUserIDFromRequest(r)
 
-	periods, err := s.store.GetAllPeriods(userID, s.now())
+	periods, err := s.store.GetAllPeriods(userID)
 	if err != nil {
 		log.Printf("fehler beim abrufen aller perioden: %v", err)
 		writeError(w, http.StatusInternalServerError, "fehler beim abrufen der perioden")
@@ -563,7 +527,6 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/health", s.handleHealth)
 	mux.HandleFunc("/api/budget", s.handleBudget)
 	mux.HandleFunc("/api/expenses", s.handleExpenses)
-	mux.HandleFunc("/api/expenses/day", s.getDayExpenses)
 	mux.HandleFunc("/api/expenses/", s.handleDeleteExpense)
 	mux.HandleFunc("/api/period", s.handleNewPeriod)
 	mux.HandleFunc("/api/periods", s.handleGetPeriods)
