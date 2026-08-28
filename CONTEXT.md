@@ -152,6 +152,7 @@ restgeld/
 - 🎨 Custom Theming, Health Popover & About Page (Epic 4): Dynamische OLED-Farbwelten mit Color-Picker (`useTheme`), interaktives Service-Health Popover in `AppHeader.vue` (API Latenz, DB-Status, Offline-Queue), About-Modal `AboutModal.vue` und Phone-Mockup Sync auf der Landing Page implementiert und mit 106 Vitest- & 31 Go-Tests abgedeckt ✅
 - 🔮 Header Popover Architecture & UX Refinements: Monatsende-Prognose (🔮) und Spar-Streak (🔥) als elegante Popover in den Header verlagert (100% Zero-Scroll freigespielt), Hero-Anzeige präzisiert auf echten Tages-Bruch (`x € / y €`), Footer mit leuchtender Commit-Badge & `lowlifehigh.tech`-Energy-Referenz verfeinert und mit 109 Vitest- & 31 Go-Tests abgesichert ✅
 - 🎨 Logo- & Favicon-Redesign: Modernes 'r.'-Logo mit dunkelgrauem Squircle-Hintergrund, off-weißem Text und smaragdgrünem Akzentpunkt als Vektorgrafik (SVG) für App-Favicon und Landing Page implementiert ✅
+- ⚡ SaaS Microservice Architecture & Auth Decoupling (Phase 1-3): Dedizierter Standalone-Microservice `services/auth-service` (Port 8081) mit eigener Postgres-DB (`restgeld_auth`), Mailpit SMTP-Versand, K8s Ingress-Routing & Vite Proxy-Regeln extrahiert. Legacy Auth-Handler im Monolyt-Core vollständig bereinigt und mit 123 Vitest- & 42 Go-Tests sowie Vercel Preview Verifikation abgesichert ✅
 
 ---
 
