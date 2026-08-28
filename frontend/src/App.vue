@@ -137,6 +137,7 @@ import AboutModal from './components/AboutModal.vue'
 import AuthModal from './components/AuthModal.vue'
 import AppFooter from './components/AppFooter.vue'
 import ToastNotification from './components/ToastNotification.vue'
+import hideSplash from './splash'
 
 const api = useApi()
 const haptics = useHaptics()
@@ -368,7 +369,6 @@ onMounted(async () => {
 
   await loadBudget()
   cleanupListeners = offlineSync.initListeners(handleAutoSync)
-
   // Try auto sync on load if pending
   if (offlineSync.pendingCount.value > 0 && offlineSync.isOnline.value) {
     handleAutoSync()
@@ -382,6 +382,9 @@ onMounted(async () => {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }
+
+  // Splash-Screen ausblenden, sobald die App startklar ist (Budget geladen).
+  hideSplash()
 })
 
 onUnmounted(() => {
