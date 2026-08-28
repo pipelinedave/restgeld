@@ -35,7 +35,9 @@ spec:
                   name: restgeld-secrets
                   key: postgres-password
             - name: POSTGRES_DB
-              value: restgeld
+              value: restgeld_core
+            - name: POSTGRES_MULTIPLE_DATABASES
+              value: "restgeld_core,restgeld_auth"
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
@@ -45,6 +47,8 @@ spec:
                 - pg_isready
                 - -U
                 - restgeld
+                - -d
+                - restgeld_core
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
@@ -53,6 +57,8 @@ spec:
                 - pg_isready
                 - -U
                 - restgeld
+                - -d
+                - restgeld_core
             initialDelaySeconds: 5
             periodSeconds: 5
       volumes:
