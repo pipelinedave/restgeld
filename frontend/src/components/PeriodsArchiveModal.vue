@@ -67,6 +67,15 @@
             <div v-if="selectedPeriodId === period.id" class="report-section" @click.stop>
               <div class="report-header">
                 <span class="report-title">📊 {{ i18n.t('archive.report_details') }}</span>
+                <button
+                  v-if="periodExpenses.length > 0"
+                  type="button"
+                  class="export-period-btn"
+                  title="CSV dieser Periode exportieren"
+                  @click.stop="exportPeriodToCsv(period)"
+                >
+                  📥 CSV
+                </button>
               </div>
 
               <!-- Lade-Status für Buchungen -->
@@ -125,7 +134,7 @@
 import { ref, computed, watch } from 'vue'
 import { useApi, type PeriodSummary, type Expense } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
-import { useI18n, detectCategoryIcon } from '../composables/useI18n'
+import { useI18n, detectCategoryIcon, detectCategoryKey } from '../composables/useI18n'
 
 const props = defineProps<{
   visible: boolean
@@ -149,6 +158,30 @@ const loadingExpenses = ref(false)
 const categoryStats = computed(() => {
   return i18n.calculateCategoryBreakdown(periodExpenses.value)
 })
+
+function exportPeriodToCsv(period: PeriodSummary) {
+  if (periodExpenses.value.length === 0) return
+  haptics.success()
+
+  const headers = ['ID', 'Datum', 'Betrag', 'Waehrung', 'Kategorie', 'Notiz']
+  const rows = periodExpenses.value.map((e) => {
+    const cat = detectCategoryKey(e.note).key
+    const dateStr = new Date(e.createdAt).toISOString()
+    const cleanNote = (e.note || '').replace(/"/g, '""')
+    return `"${e.id}","${dateStr}","${e.amount}","${i18n.currentCurrency.value}","${cat}","${cleanNote}"`
+  })
+
+  const csvContent = [headers.join(','), ...rows].join('\n')
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `restgeld-periode-${period.startDate.slice(0, 10)}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 
 async function loadPeriods() {
   loading.value = true
@@ -473,6 +506,24 @@ function calcAvgDaily(totalSpent: number, days: number): number {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.export-period-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #8e8e9c);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.export-period-btn:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
 }
 
 .report-title {

@@ -366,9 +366,73 @@ async function handleDataImported(count: number) {
 
 let cleanupListeners: (() => void) | undefined
 
+function handleGlobalKeydown(e: KeyboardEvent) {
+  const target = e.target as HTMLElement | null
+  const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)
+
+  // Escape closes all open modals regardless of focus
+  if (e.key === 'Escape') {
+    if (showNumpad.value || showSettings.value || showExpensesModal.value || showArchiveModal.value || showAboutModal.value || showAuthModal.value || showStatusModal.value) {
+      e.preventDefault()
+      showNumpad.value = false
+      showSettings.value = false
+      showExpensesModal.value = false
+      showArchiveModal.value = false
+      showAboutModal.value = false
+      showAuthModal.value = false
+      showStatusModal.value = false
+      haptics.tap()
+    }
+    return
+  }
+
+  // If typing in an input field, do not trigger single-key navigation shortcuts
+  if (isInput) return
+
+  // Space, Plus, or 'n' -> Open Numpad
+  if (e.key === ' ' || e.key === '+' || e.key === 'n' || e.key === 'N') {
+    e.preventDefault()
+    openNumpad()
+    return
+  }
+
+  // 's' or 'S' -> Open Settings
+  if (e.key === 's' || e.key === 'S') {
+    e.preventDefault()
+    openSettings()
+    return
+  }
+
+  // 'a' or 'A' -> Open Archive
+  if (e.key === 'a' || e.key === 'A') {
+    e.preventDefault()
+    openArchiveModal()
+    return
+  }
+
+  // 'm' or 'M' -> Open System Status / Monitoring
+  if (e.key === 'm' || e.key === 'M') {
+    e.preventDefault()
+    haptics.tap()
+    showStatusModal.value = true
+    return
+  }
+
+  // '?' -> Open About
+  if (e.key === '?') {
+    e.preventDefault()
+    openAboutModal()
+    return
+  }
+}
+
 onMounted(async () => {
   theme.initTheme()
   i18n.initI18n()
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleGlobalKeydown)
+  }
 
   // Magic Link Token in URL abfangen
   const autoLoggedIn = await auth.checkUrlForAuthToken()
@@ -386,11 +450,24 @@ onMounted(async () => {
     handleAutoSync()
   }
 
-  // PWA Shortcut Check: ?action=add-expense
+  // PWA Shortcut Actions: ?action=...
   if (typeof window !== 'undefined') {
     const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('action') === 'add-expense' || window.location.hash === '#add-expense') {
+    const action = urlParams.get('action') || (window.location.hash.startsWith('#') ? window.location.hash.slice(1) : null)
+    
+    if (action === 'add-expense') {
       showNumpad.value = true
+    } else if (action === 'status') {
+      showStatusModal.value = true
+    } else if (action === 'archive') {
+      showArchiveModal.value = true
+    } else if (action === 'settings') {
+      showSettings.value = true
+    } else if (action === 'about') {
+      showAboutModal.value = true
+    }
+
+    if (action) {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }
@@ -398,6 +475,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   cleanupListeners?.()
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handleGlobalKeydown)
+  }
 })
 </script>
 

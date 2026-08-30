@@ -1,9 +1,9 @@
 {
-  "name": "Restgeld",
-  "short_name": "Restgeld",
-  "description": "Daily Allowance Tracker",
-  "theme_color": "#1a1a2e",
-  "background_color": "#1a1a2e",
+  "name": "restgeld.",
+  "short_name": "restgeld.",
+  "description": "Minimalistischer Daily Allowance Tracker",
+  "theme_color": "#0a0a0c",
+  "background_color": "#0a0a0c",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "/",
@@ -16,6 +16,20 @@
       "short_name": "Buchen",
       "description": "Direkt eine neue Ausgabe erfassen",
       "url": "/?action=add-expense",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Observability Status",
+      "short_name": "Status",
+      "description": "System- und Sync-Status einsehen",
+      "url": "/?action=status",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Monatsarchiv",
+      "short_name": "Archiv",
+      "description": "Vergangene Periodenberichte ansehen",
+      "url": "/?action=archive",
       "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
     }
   ]

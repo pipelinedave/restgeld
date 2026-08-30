@@ -165,4 +165,29 @@ describe('App', () => {
     expect(consoleSpy).toHaveBeenCalled()
     consoleSpy.mockRestore()
   })
+
+  it('oeffnet modals per tastatur-shortcuts', async () => {
+    const wrapper = mount(App)
+    await flushPromises()
+
+    // 'n' -> Numpad
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' }))
+    await flushPromises()
+    expect(wrapper.find('.modal-content h2').text()).toContain('Ausgabe buchen')
+
+    // 'Escape' -> Close
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+
+    // 'm' -> Observability Dashboard
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }))
+    await flushPromises()
+    expect(wrapper.find('.modal-content h2').text()).toContain('System Observability & Monitoring')
+
+    // 'Escape' -> Close
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+  })
 })

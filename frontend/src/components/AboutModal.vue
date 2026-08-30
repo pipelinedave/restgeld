@@ -35,6 +35,32 @@
           </ul>
         </section>
 
+        <section class="about-section">
+          <h3 class="section-heading">⌨️ Tastatur-Shortcuts</h3>
+          <div class="shortcuts-list">
+            <div class="shortcut-row">
+              <span class="keys-wrap"><kbd>Space</kbd> / <kbd>+</kbd> / <kbd>N</kbd></span>
+              <span class="shortcut-desc">Ausgabe buchen</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="keys-wrap"><kbd>M</kbd></span>
+              <span class="shortcut-desc">Observability Dashboard</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="keys-wrap"><kbd>S</kbd></span>
+              <span class="shortcut-desc">Einstellungen</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="keys-wrap"><kbd>A</kbd></span>
+              <span class="shortcut-desc">Monatsarchiv</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="keys-wrap"><kbd>ESC</kbd></span>
+              <span class="shortcut-desc">Schließen</span>
+            </div>
+          </div>
+        </section>
+
         <section class="about-section meta-section">
           <div class="meta-row">
             <span class="meta-label">Version</span>
@@ -226,6 +252,43 @@ const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev'
   flex-direction: column;
   gap: 4px;
   line-height: 1.35;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shortcut-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+}
+
+.keys-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-dim, #5c5c6e);
+  font-size: 0.7rem;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  color: var(--text-main, #f4f4f6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.shortcut-desc {
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 500;
 }
 
 .meta-section {
