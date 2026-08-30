@@ -197,6 +197,22 @@
           </div>
         </section>
 
+        <!-- Sound & Haptik-Feedback -->
+        <section class="setting-section sound-section">
+          <span class="section-title">{{ i18n.t('settings.sound_heading') }}</span>
+          <p class="description">
+            {{ i18n.t('settings.sound_desc') }}
+          </p>
+          <label class="toggle-control-label">
+            <input
+              type="checkbox"
+              :checked="haptics.soundEnabled.value"
+              @change="haptics.setSoundEnabled(($event.target as HTMLInputElement).checked)"
+            />
+            <span>{{ i18n.t('settings.sound_toggle') }}</span>
+          </label>
+        </section>
+
         <!-- Sprache / Language -->
         <section class="setting-section language-zone">
           <span class="section-title">{{ i18n.t('settings.language_heading') }}</span>
@@ -791,6 +807,28 @@ function handleResetPeriod() {
   font-size: 0.75rem;
   margin: 4px 0 10px;
   line-height: 1.35;
+}
+
+.toggle-control-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: var(--text-main, #f4f4f6);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+
+.toggle-control-label input[type="checkbox"] {
+  accent-color: var(--accent-green, #22c55e);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .backup-actions {

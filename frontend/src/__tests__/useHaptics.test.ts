@@ -47,12 +47,18 @@ describe('useHaptics composable', () => {
       writable: true,
     })
 
-    const { isSupported, tap, success, warning, error } = useHaptics()
+    const { isSupported, tap, success, warning, error, soundEnabled, setSoundEnabled } = useHaptics()
     expect(isSupported).toBe(false)
 
     expect(() => tap()).not.toThrow()
     expect(() => success()).not.toThrow()
     expect(() => warning()).not.toThrow()
     expect(() => error()).not.toThrow()
+
+    expect(soundEnabled.value).toBe(false)
+    setSoundEnabled(true)
+    expect(soundEnabled.value).toBe(true)
+    setSoundEnabled(false)
+    expect(soundEnabled.value).toBe(false)
   })
 })

@@ -11,6 +11,18 @@
       <span class="start-amount">{{ i18n.formatMoney(startTodayAmount) }}</span>
     </div>
 
+    <!-- Today Spending Gauge Bar -->
+    <div
+      class="today-gauge-track"
+      :title="`${i18n.formatMoney(currentBudget)} / ${i18n.formatMoney(startTodayAmount)}`"
+    >
+      <div
+        class="today-gauge-fill"
+        :class="'fill-' + color"
+        :style="{ width: `${todayProgressPct}%` }"
+      ></div>
+    </div>
+
     <div class="hero-meta">
       <div class="hero-badge-pill" :class="'badge-' + color">
         <span v-if="savings > 0 && currentBudget > 0">
@@ -64,6 +76,12 @@ watch(
 
 const startTodayAmount = computed(() => {
   return props.currentBudget + (props.spentToday || 0)
+})
+
+const todayProgressPct = computed(() => {
+  if (startTodayAmount.value <= 0) return 0
+  const pct = (props.currentBudget / startTodayAmount.value) * 100
+  return Math.min(100, Math.max(0, Math.round(pct)))
 })
 </script>
 
@@ -149,6 +167,38 @@ const startTodayAmount = computed(() => {
   justify-content: center;
   align-items: center;
   width: 100%;
+}
+
+.today-gauge-track {
+  width: 100%;
+  max-width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+  margin: -2px 0 2px;
+}
+
+.today-gauge-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+}
+
+.fill-green {
+  background: var(--accent-green, #22c55e);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.fill-amber {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.fill-red {
+  background: var(--accent-red, #ef4444);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
 
 .hero-badge-pill {

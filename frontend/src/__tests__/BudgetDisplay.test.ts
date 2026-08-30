@@ -12,12 +12,14 @@ describe('BudgetDisplay', () => {
     expect(wrapper.text()).toContain('Perfekt im Plan')
   })
 
-  it('rendert x / y bruch wenn spentToday vorhanden ist', () => {
+  it('rendert x / y bruch und mini gauge bar wenn spentToday vorhanden ist', () => {
     const wrapper = mount(BudgetDisplay, {
       props: { currentBudget: 9.14, baseBudget: 10.14, savings: 0, color: 'green', spentToday: 1.0 }
     })
     expect(wrapper.find('.current-amount').text()).toContain('9,14 €')
     expect(wrapper.find('.start-amount').text()).toContain('10,14 €')
+    expect(wrapper.find('.today-gauge-track').exists()).toBe(true)
+    expect(wrapper.find('.today-gauge-fill').exists()).toBe(true)
   })
 
   it('farbe gruen bei ersparnis > 0', () => {
