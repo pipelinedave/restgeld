@@ -100,4 +100,30 @@ describe('SettingsModal', () => {
     await accountBtn.trigger('click')
     expect(wrapper.emitted('open-auth')).toBeTruthy()
   })
+
+  it('emits open-about and open-status when clicking info triggers', async () => {
+    const wrapper = mount(SettingsModal, {
+      props: { visible: true },
+    })
+
+    const aboutBtns = wrapper.findAll('.about-trigger-btn')
+    expect(aboutBtns.length).toBeGreaterThanOrEqual(2)
+
+    await aboutBtns[0].trigger('click')
+    expect(wrapper.emitted('open-about')).toBeTruthy()
+
+    await aboutBtns[1].trigger('click')
+    expect(wrapper.emitted('open-status')).toBeTruthy()
+  })
+
+  it('allows choosing theme presets', async () => {
+    const wrapper = mount(SettingsModal, {
+      props: { visible: true },
+    })
+
+    const themeButtons = wrapper.findAll('.theme-color-btn')
+    expect(themeButtons.length).toBeGreaterThanOrEqual(5)
+    await themeButtons[1].trigger('click')
+    expect(themeButtons[1].exists()).toBe(true)
+  })
 })

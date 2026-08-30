@@ -800,6 +800,54 @@ func TestGetBudget_UserScenario_PriorDaySavings(t *testing.T) {
 	}
 }
 
+func TestConcurrentExpenseAdditions(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	count := 20
+	done := make(chan bool, count)
+
+	for i := 0; i < count; i++ {
+		go func(idx int) {
+			body := fmt.Sprintf(`{"amount": %.2f, "note": "Concurrent %d"}`, float64(idx+1), idx)
+			req := httptest.NewRequest(http.MethodPost, "/api/expenses", strings.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			srv.router().ServeHTTP(rec, req)
+			if rec.Code == http.StatusCreated {
+				done <- true
+			} else {
+				done <- false
+			}
+		}(i)
+	}
+
+	successCount := 0
+	for i := 0; i < count; i++ {
+		if <-done {
+			successCount++
+		}
+	}
+
+	if successCount != count {
+		t.Errorf("erwartet %d erfolgreiche parallele Buchungen, bekommen %d", count, successCount)
+	}
+}
+
+func TestCreateExpenseMalformedJSON(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/expenses", strings.NewReader(`{invalid json`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("erwartet 400 für malformed json, bekommen %d", rec.Code)
+	}
+}
+
 func decodeJSON(t *testing.T, body interface{ Read([]byte) (int, error) }, v interface{}) {
 	t.Helper()
 	b := make([]byte, 4096)

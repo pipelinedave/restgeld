@@ -1,7 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import AuthModal from '../components/AuthModal.vue'
-import { useAuth } from '../composables/useAuth'
+import { useAuth, type User } from '../composables/useAuth'
+
+function makeUser(overrides: Partial<User> = {}): User {
+  return {
+    id: 'usr-12345678',
+    email: 'member@test.de',
+    createdAt: '2026-08-01T12:00:00Z',
+    lastLoginAt: '2026-08-27T12:00:00Z',
+    defaultMonthlyBudget: 450,
+    defaultPeriodDays: 30,
+    theme: 'emerald',
+    language: 'de',
+    currency: 'EUR',
+    plan: 'free',
+    isActive: true,
+    ...overrides,
+  }
+}
 
 describe('AuthModal component', () => {
   beforeEach(() => {
@@ -70,16 +87,7 @@ describe('AuthModal component', () => {
 
   it('renders user details and logout button when logged in', () => {
     const auth = useAuth()
-    auth.user.value = {
-      id: 'usr-12345678',
-      email: 'member@test.de',
-      createdAt: '2026-08-01T12:00:00Z',
-      lastLoginAt: '2026-08-27T12:00:00Z',
-      defaultMonthlyBudget: 450,
-      defaultPeriodDays: 30,
-      theme: 'emerald',
-      isActive: true,
-    }
+    auth.user.value = makeUser()
 
     const wrapper = mount(AuthModal, {
       props: {
@@ -91,5 +99,31 @@ describe('AuthModal component', () => {
     expect(wrapper.text()).toContain('member@test.de')
     expect(wrapper.text()).toContain('🟢 Cloud-Sync aktiv')
     expect(wrapper.find('.auth-logout-btn').exists()).toBe(true)
+  })
+
+  it('triggers logout on logout button click', async () => {
+    const auth = useAuth()
+    auth.user.value = makeUser()
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'ok' }),
+    })
+
+    const wrapper = mount(AuthModal, {
+      props: { visible: true },
+    })
+
+    await wrapper.find('.auth-logout-btn').trigger('click')
+    await flushPromises()
+    expect(auth.isLoggedIn.value).toBe(false)
+    expect(wrapper.emitted('logout-success')).toBeTruthy()
+  })
+
+  it('emits close event on close button click', async () => {
+    const wrapper = mount(AuthModal, {
+      props: { visible: true },
+    })
+    await wrapper.find('.close-btn').trigger('click')
+    expect(wrapper.emitted('close')).toBeTruthy()
   })
 })

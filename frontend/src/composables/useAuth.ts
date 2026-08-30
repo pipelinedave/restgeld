@@ -355,6 +355,27 @@ export function useAuth() {
     return false
   }
 
+  async function updateProfile(updates: Partial<User>): Promise<boolean> {
+    if (!isLoggedIn.value) return false
+    try {
+      const res = await fetch(`${BASE}/api/auth/me`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates),
+      })
+      if (res.ok) {
+        if (user.value) {
+          user.value = { ...user.value, ...updates }
+          setSession(user.value, authToken.value)
+        }
+        return true
+      }
+    } catch {
+      // ignore
+    }
+    return false
+  }
+
   return {
     user,
     authToken,
@@ -365,6 +386,7 @@ export function useAuth() {
     requestMagicLink,
     verifyToken,
     fetchMe,
+    updateProfile,
     logout,
     deleteAccount,
     migrateGuestData,
