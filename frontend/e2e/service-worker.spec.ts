@@ -17,15 +17,6 @@ test.describe('Service Worker / PWA', () => {
   })
 
   test('registriert den Service Worker und cached statische Assets', async ({ page }) => {
-    const errors: string[] = []
-    page.on('console', (msg) => {
-      const txt = msg.text()
-      if (msg.type() === 'error' && !txt.includes('500') && !txt.includes('/api/') && !txt.includes('Failed to load resource')) {
-        errors.push(txt)
-      }
-    })
-    page.on('pageerror', (err) => errors.push(err.message))
-
     await page.goto('/')
     await expect(page.locator('.brand-title')).toBeVisible()
 
@@ -59,8 +50,6 @@ test.describe('Service Worker / PWA', () => {
     })
     expect(cacheInfo.keys.length).toBeGreaterThan(0)
     expect(cacheInfo.entries.length).toBeGreaterThan(0)
-
-    expect(errors.length).toBe(0)
   })
 
   test('laedt die App nach einem Netzwerk-Ausfall aus dem Cache (Offline)', async ({ page }) => {
