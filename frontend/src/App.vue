@@ -42,7 +42,7 @@
         <div v-else class="loading">Lade Budget...</div>
 
         <button class="add-btn" @click="openNumpad">
-          <span class="btn-icon">&minus;</span> Ausgabe buchen
+          <span class="btn-icon">&minus;</span> {{ i18n.t('numpad.title') }}
         </button>
       </section>
 
@@ -243,7 +243,7 @@ async function loadBudget() {
 
 async function handleConfirm(amount: number, note: string) {
   isSavingExpense.value = true
-  const formatted = amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const formatted = i18n.formatMoney(amount)
   const noteText = note ? ` (${note})` : ''
 
   // Fallback / Offline Handling
@@ -263,7 +263,7 @@ async function handleConfirm(amount: number, note: string) {
     showNumpad.value = false
     isSavingExpense.value = false
     haptics.success()
-    showToast(`Offline gespeichert: ${formatted} €${noteText}`, 'info')
+    showToast(`Offline: ${formatted}${noteText}`, 'info')
     return
   }
 
@@ -272,7 +272,7 @@ async function handleConfirm(amount: number, note: string) {
     await loadBudget()
     showNumpad.value = false
     haptics.success()
-    showToast(`✓ ${formatted} € gebucht${noteText}`, 'success')
+    showToast(`✓ ${formatted} gebucht${noteText}`, 'success')
   } catch (e: any) {
     // If request failed (e.g. lost network during request)
     offlineSync.enqueueExpense(amount, note)
@@ -288,7 +288,7 @@ async function handleConfirm(amount: number, note: string) {
     }
     showNumpad.value = false
     haptics.warning()
-    showToast(`Offline gespeichert: ${formatted} €${noteText}`, 'info')
+    showToast(`Offline: ${formatted}${noteText}`, 'info')
   } finally {
     isSavingExpense.value = false
   }

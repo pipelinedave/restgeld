@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import App from '../App.vue'
 import { useApi, type BudgetData } from '../composables/useApi'
+import { useI18n } from '../composables/useI18n'
 
 vi.mock('../composables/useApi')
 
@@ -22,6 +23,10 @@ function makeBudget(overrides: Partial<BudgetData> = {}): BudgetData {
 }
 
 beforeEach(() => {
+  localStorage.clear()
+  const { setLocale, setCurrency } = useI18n()
+  setLocale('de')
+  setCurrency('EUR')
   vi.clearAllMocks()
   mockApi.mockReturnValue({
     getBudget: vi.fn().mockResolvedValue(makeBudget()),

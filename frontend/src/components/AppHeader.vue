@@ -23,7 +23,7 @@
         type="button"
         class="header-icon-btn streak-btn"
         :class="{ active: (streak?.currentStreak ?? 0) > 0 }"
-        title="Streak & Spartage ansehen"
+        :title="i18n.t('header.streak_tooltip')"
         @click="toggleStreakPopover"
       >
         <span class="icon-emoji">🔥</span>
@@ -35,14 +35,14 @@
         type="button"
         class="header-icon-btn projection-btn"
         :class="projection?.status === 'saving' ? 'proj-saving' : 'proj-deficit'"
-        title="Monatsende-Prognose anzeigen"
+        :title="i18n.t('header.proj_tooltip')"
         @click="toggleProjectionPopover"
       >
         <span class="icon-emoji">🔮</span>
       </button>
 
       <!-- 4. Settings Button (⚙️) -->
-      <button class="settings-btn" aria-label="Einstellungen" title="Einstellungen" @click="$emit('open-settings')">
+      <button class="settings-btn" :aria-label="i18n.t('header.settings_tooltip')" :title="i18n.t('header.settings_tooltip')" @click="$emit('open-settings')">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -54,8 +54,8 @@
     <div v-if="activePopover === 'status'" class="popover-backdrop" @click="activePopover = null">
       <div class="header-popover" @click.stop>
         <div class="popover-header">
-          <span class="popover-title">System- & Sync-Status</span>
-          <button class="popover-close" @click="activePopover = null">&times;</button>
+          <span class="popover-title">{{ i18n.t('header.status_title') }}</span>
+          <button class="popover-close" :aria-label="i18n.t('common.close')" @click="activePopover = null">&times;</button>
         </div>
 
         <div class="status-list">
@@ -185,6 +185,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useI18n } from '../composables/useI18n'
 import type { StreakInfo, ProjectionInfo } from '../composables/useApi'
 
 const props = withDefaults(
@@ -208,6 +209,7 @@ defineEmits<{
 }>()
 
 const haptics = useHaptics()
+const i18n = useI18n()
 const activePopover = ref<'status' | 'streak' | 'projection' | null>(null)
 const apiHealthy = ref(true)
 const authHealthy = ref(true)
@@ -236,19 +238,19 @@ const dotClass = computed(() => {
 })
 
 const badgeText = computed(() => {
-  if (props.isOffline) return 'Offline'
-  if (!apiHealthy.value) return 'Server getrennt'
-  if (!isDbConnected.value) return 'DB getrennt'
-  if (props.pendingSyncCount > 0) return `${props.pendingSyncCount} ungesynct`
-  return 'Online'
+  if (props.isOffline) return i18n.t('header.offline')
+  if (!apiHealthy.value) return 'API Offline'
+  if (!isDbConnected.value) return 'DB Offline'
+  if (props.pendingSyncCount > 0) return i18n.t('header.sync_pending', { count: props.pendingSyncCount })
+  return i18n.t('header.online')
 })
 
 const badgeTooltip = computed(() => {
-  if (props.isOffline) return 'Offline - Daten werden lokal gespeichert. Klicke für Details.'
-  if (!apiHealthy.value) return 'API-Server nicht erreichbar. Klicke für Details.'
-  if (!isDbConnected.value) return 'Datenbank-Verbindung unterbrochen. Klicke für Details.'
-  if (props.pendingSyncCount > 0) return 'Ausstehende Synchronisierung. Klicke für Details.'
-  return 'Online - Alle Systeme einsatzbereit. Klicke für Status-Details.'
+  if (props.isOffline) return `${i18n.t('header.offline')} - ${i18n.t('header.status_title')}`
+  if (!apiHealthy.value) return 'API-Server nicht erreichbar'
+  if (!isDbConnected.value) return 'Datenbank nicht erreichbar'
+  if (props.pendingSyncCount > 0) return i18n.t('header.sync_pending', { count: props.pendingSyncCount })
+  return `${i18n.t('header.online')} - ${i18n.t('header.status_title')}`
 })
 
 const isProjectedSaving = computed(() => {
@@ -256,10 +258,7 @@ const isProjectedSaving = computed(() => {
 })
 
 function formatAmount(val: number): string {
-  return val.toLocaleString('de-DE', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
+  return i18n.formatCurrency(val)
 }
 
 function getStreakMotivation(current: number): string {

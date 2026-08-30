@@ -4,22 +4,22 @@
       <div class="streak-flame-wrap" :class="{ 'flame-active': streak.currentStreak > 0 }">
         <span class="flame-icon">🔥</span>
         <div class="streak-info">
-          <span class="streak-count">{{ streak.currentStreak }} {{ streak.currentStreak === 1 ? 'Tag' : 'Tage' }}</span>
-          <span class="streak-label">Aktuelle Spar-Streak</span>
+          <span class="streak-count">{{ streak.currentStreak }} {{ streak.currentStreak === 1 ? (i18n.currentLocale.value === 'en' ? 'Day' : 'Tag') : i18n.t('streak.days_unit') }}</span>
+          <span class="streak-label">{{ i18n.t('streak.current') }}</span>
         </div>
       </div>
 
       <div class="streak-badges">
-        <div class="mini-badge" title="Tage mit 0 € Ausgaben">
+        <div class="mini-badge" :title="i18n.t('streak.zero_days')">
           <span class="badge-icon">🎯</span>
           <span class="badge-val">{{ streak.noSpendDays }}</span>
-          <span class="badge-name">Null-Euro</span>
+          <span class="badge-name">{{ i18n.t('streak.zero_days') }}</span>
         </div>
 
-        <div class="mini-badge" title="Längste Serie im Budget">
+        <div class="mini-badge" :title="i18n.t('streak.longest')">
           <span class="badge-icon">🏆</span>
           <span class="badge-val">{{ streak.longestStreak }}</span>
-          <span class="badge-name">Rekord</span>
+          <span class="badge-name">{{ i18n.t('streak.longest') }}</span>
         </div>
       </div>
     </div>
@@ -27,11 +27,14 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '../composables/useI18n'
 import type { StreakInfo } from '../composables/useApi'
 
 defineProps<{
   streak?: StreakInfo
 }>()
+
+const i18n = useI18n()
 </script>
 
 <style scoped>

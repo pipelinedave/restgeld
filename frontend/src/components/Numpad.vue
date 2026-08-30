@@ -2,13 +2,13 @@
   <div v-if="visible" class="modal-overlay" @click.self="cancel">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Ausgabe buchen</h2>
-        <button class="close-btn" aria-label="Schließen" :disabled="isSaving" @click="cancel">&times;</button>
+        <h2>{{ i18n.t('numpad.title') }}</h2>
+        <button class="close-btn" :aria-label="i18n.t('common.close')" :disabled="isSaving" @click="cancel">&times;</button>
       </div>
 
       <form class="modal-body" @submit.prevent="confirmAll">
         <div class="form-group">
-          <label for="expense-amount-input" class="form-label">Betrag (€)</label>
+          <label for="expense-amount-input" class="form-label">{{ i18n.t('numpad.amount_label') }} ({{ i18n.currencySymbol }})</label>
           <div class="amount-input-wrap">
             <input
               id="expense-amount-input"
@@ -23,7 +23,7 @@
               class="amount-input"
               @keydown="handleAmountKeydown"
             />
-            <span class="currency-symbol">&euro;</span>
+            <span class="currency-symbol">{{ i18n.currencySymbol }}</span>
           </div>
 
           <!-- Live Budget Impact Vorschau -->
@@ -34,7 +34,7 @@
         </div>
 
         <div class="form-group">
-          <label for="expense-note-input" class="form-label">Notiz (optional)</label>
+          <label for="expense-note-input" class="form-label">{{ i18n.t('numpad.note_label') }}</label>
           
           <!-- Quick Note Chips -->
           <div v-if="availableChips.length > 0" class="quick-chips">
@@ -56,7 +56,7 @@
             v-model="noteInput"
             type="text"
             inputmode="text"
-            placeholder="Notiz (z. B. Kaffee, Mittagessen)"
+            :placeholder="i18n.t('numpad.note_placeholder')"
             maxlength="50"
             enterkeyhint="done"
             :disabled="isSaving"
@@ -66,11 +66,11 @@
 
         <div class="form-actions">
           <button type="button" class="btn btn-cancel" :disabled="isSaving" @click="cancel">
-            Abbrechen
+            {{ i18n.t('numpad.btn_cancel') }}
           </button>
           <button type="submit" class="btn btn-confirm" :disabled="!isValidAmount || isSaving">
-            <span v-if="isSaving" class="spinner-inline" aria-label="Wird gespeichert..."></span>
-            <span>{{ isSaving ? 'Wird gebucht...' : 'Speichern' }}</span>
+            <span v-if="isSaving" class="spinner-inline" :aria-label="i18n.t('numpad.btn_saving')"></span>
+            <span>{{ isSaving ? i18n.t('numpad.btn_saving') : i18n.t('numpad.btn_save') }}</span>
           </button>
         </div>
       </form>
@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
+import { useI18n } from '../composables/useI18n'
 import type { Expense } from '../composables/useApi'
 
 const props = withDefaults(
@@ -105,6 +106,7 @@ const emit = defineEmits<{
 }>()
 
 const haptics = useHaptics()
+const i18n = useI18n()
 const amountInput = ref('')
 const noteInput = ref('')
 const amountInputRef = ref<HTMLInputElement | null>(null)
@@ -156,30 +158,30 @@ const isValidAmount = computed(() => parsedAmount.value > 0)
 const liveImpact = computed(() => {
   if (props.currentBudget === undefined) return null
 
-  const currentFormatted = props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const currentFormatted = i18n.formatMoney(props.currentBudget)
 
   if (!isValidAmount.value) {
     return {
       type: 'impact-neutral',
       icon: '💶',
-      text: `Heute verfügbar: ${currentFormatted} €`,
+      text: i18n.t('numpad.impact_available', { amount: currentFormatted }),
     }
   }
 
   const diff = props.currentBudget - parsedAmount.value
-  const diffFormatted = Math.abs(diff).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const diffFormatted = i18n.formatMoney(Math.abs(diff))
 
   if (diff >= 0) {
     return {
       type: 'impact-ok',
       icon: '✓',
-      text: `Heute verfügbar: ${currentFormatted} € ➔ Verbleibt danach: ${diffFormatted} €`,
+      text: i18n.t('numpad.impact_remaining', { current: currentFormatted, diff: diffFormatted }),
     }
   } else {
     return {
       type: 'impact-warning',
       icon: '⚠️',
-      text: `Heute verfügbar: ${currentFormatted} € ➔ Überzieht Tagesbudget um ${diffFormatted} €`,
+      text: i18n.t('numpad.impact_exceeds', { current: currentFormatted, diff: diffFormatted }),
     }
   }
 })

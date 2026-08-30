@@ -1,29 +1,29 @@
 <template>
   <section class="mockup-hero-card">
     <div class="hero-top-row">
-      <span class="hero-label">HEUTE VERFÜGBAR</span>
-      <span class="hero-base-tag">Basis: {{ baseBudgetFormatted }} &euro;</span>
+      <span class="hero-label">{{ i18n.t('budget.available_today') }}</span>
+      <span class="hero-base-tag">{{ i18n.t('budget.base_label', { amount: i18n.formatMoney(baseBudget) }) }}</span>
     </div>
     
     <div class="hero-amount-row" :class="['color-' + color, { 'budget-pulse': isPulsing }]">
-      <span class="current-amount">{{ currentFormatted }}</span>
+      <span class="current-amount">{{ i18n.formatMoney(currentBudget) }}</span>
       <span class="fraction-slash">/</span>
-      <span class="start-amount">{{ startTodayFormatted }}</span>
+      <span class="start-amount">{{ i18n.formatMoney(startTodayAmount) }}</span>
     </div>
 
     <div class="hero-meta">
       <div class="hero-badge-pill" :class="'badge-' + color">
         <span v-if="savings > 0 && currentBudget > 0">
-          +{{ savingsFormatted }} &euro; Spar-Puffer
+          {{ i18n.t('budget.puffer_plus', { amount: i18n.formatMoney(savings) }) }}
         </span>
         <span v-else-if="savings < 0">
-          {{ savingsFormatted }} &euro; überzogen
+          {{ i18n.t('budget.overdrawn', { amount: i18n.formatMoney(Math.abs(savings)) }) }}
         </span>
         <span v-else-if="currentBudget === 0">
-          Kein Tagesbudget mehr übrig
+          {{ i18n.t('budget.empty_today') }}
         </span>
         <span v-else>
-          Perfekt im Plan
+          {{ i18n.t('budget.on_track') }}
         </span>
       </div>
     </div>
@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '../composables/useI18n'
 
 const props = withDefaults(
   defineProps<{
@@ -46,6 +47,7 @@ const props = withDefaults(
   }
 )
 
+const i18n = useI18n()
 const isPulsing = ref(false)
 
 watch(
@@ -60,25 +62,9 @@ watch(
   }
 )
 
-const currentFormatted = computed(() =>
-  props.currentBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-)
-
 const startTodayAmount = computed(() => {
   return props.currentBudget + (props.spentToday || 0)
 })
-
-const startTodayFormatted = computed(() =>
-  startTodayAmount.value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-)
-
-const savingsFormatted = computed(() =>
-  props.savings.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-)
-
-const baseBudgetFormatted = computed(() =>
-  props.baseBudget.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-)
 </script>
 
 <style scoped>

@@ -1,11 +1,18 @@
 import { ref, computed } from 'vue'
 
 export type SupportedLocale = 'de' | 'en' | 'es' | 'fr'
+export type SupportedCurrency = 'EUR' | 'USD' | 'GBP' | 'CHF' | 'JPY'
 
 export interface LanguageOption {
   code: SupportedLocale
   name: string
   flag: string
+}
+
+export interface CurrencyOption {
+  code: SupportedCurrency
+  symbol: string
+  name: string
 }
 
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
@@ -15,32 +22,67 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
 ]
 
-const STORAGE_KEY = 'restgeld_language'
+export const SUPPORTED_CURRENCIES: CurrencyOption[] = [
+  { code: 'EUR', symbol: '€', name: 'Euro (€)' },
+  { code: 'USD', symbol: '$', name: 'US Dollar ($)' },
+  { code: 'GBP', symbol: '£', name: 'Pound (£)' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
+  { code: 'JPY', symbol: '¥', name: 'Yen (¥)' },
+]
+
+const STORAGE_LANG_KEY = 'restgeld_language'
+const STORAGE_CURR_KEY = 'restgeld_currency'
 
 export const translations: Record<SupportedLocale, Record<string, string>> = {
   de: {
-    // Header
+    // Header & Navigation
     'header.online': 'Online',
     'header.offline': 'Offline',
-    'header.sync_pending': '{count} ausstehend',
+    'header.sync_pending': '{count} ungesynct',
+    'header.status_title': 'System- & Sync-Status',
+    'header.network': 'Netzwerk-Verbindung',
+    'header.connected': 'Verbunden (Online)',
+    'header.api_health': 'API Service Health',
+    'header.auth_health': 'Auth Service Health',
+    'header.billing_health': 'Billing Service Health',
+    'header.db_health': 'PostgreSQL Datenbank',
+    'header.db_connected': 'Verbunden & bereit',
+    'header.db_disconnected': 'Nicht erreichbar',
+    'header.queue': 'Offline-Outbox Queue',
+    'header.no_pending': 'Keine ausstehenden Syncs',
+    'header.streak_tooltip': 'Streak & Spartage ansehen',
+    'header.proj_tooltip': 'Monatsende-Prognose anzeigen',
+    'header.settings_tooltip': 'Einstellungen',
 
     // Hero & Budget
     'budget.available_today': 'HEUTE VERFÜGBAR',
     'budget.savings': 'Ersparnis',
     'budget.deficit': 'Überzug',
-    'budget.from_total': 'von {total} € heute',
+    'budget.from_total': 'von {total} heute',
+    'budget.base_label': 'Basis: {amount}',
+    'budget.puffer_plus': '+{amount} Spar-Puffer',
+    'budget.overdrawn': '-{amount} überzogen',
+    'budget.empty_today': 'Kein Tagesbudget mehr übrig',
+    'budget.on_track': 'Perfekt im Plan',
 
     // Numpad / Book Expense
     'numpad.title': 'Ausgabe buchen',
-    'numpad.amount_label': 'Betrag (€)',
+    'numpad.amount_label': 'Betrag',
     'numpad.note_label': 'Notiz (optional)',
     'numpad.note_placeholder': 'Notiz (z. B. Kaffee, Mittagessen)',
     'numpad.btn_cancel': 'Abbrechen',
     'numpad.btn_save': 'Speichern',
     'numpad.btn_saving': 'Wird gebucht...',
-    'numpad.impact_available': 'Heute verfügbar: {amount} €',
-    'numpad.impact_remaining': 'Heute verfügbar: {current} € ➔ Verbleibt danach: {diff} €',
-    'numpad.impact_exceeds': 'Heute verfügbar: {current} € ➔ Überzieht Tagesbudget um {diff} €',
+    'numpad.impact_available': 'Heute verfügbar: {amount}',
+    'numpad.impact_remaining': 'Heute verfügbar: {current} ➔ Verbleibt danach: {diff}',
+    'numpad.impact_exceeds': 'Heute verfügbar: {current} ➔ Überzieht Tagesbudget um {diff}',
+
+    // Recent Expenses
+    'recent.title': 'Letzte Ausgaben',
+    'recent.show_all': 'Alle anzeigen',
+    'recent.empty': 'Noch keine Ausgaben heute',
+    'recent.default_note': 'Ausgabe',
+    'recent.delete_title': 'Löschen',
 
     // Settings
     'settings.title': 'Einstellungen',
@@ -48,24 +90,31 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'settings.period_days': 'Periodendauer (Tage)',
     'settings.desired_daily': 'Wunsch Tages-Budget',
     'settings.calculated_monthly': 'Berechnetes Monatsbudget:',
-    'settings.save_btn': 'Einstellungen speichern',
+    'settings.save_btn': 'Speichern',
     'settings.saved_msg': '✓ Einstellungen gespeichert',
-    'settings.reset_heading': 'Neue Periode starten',
-    'settings.reset_desc': 'Setzt den Tag auf 1 zurück und löscht alle Ausgaben der aktuellen Periode.',
-    'settings.reset_btn': 'Neue Periode starten',
+    'settings.reset_heading': 'Neue Periode ab heute starten',
+    'settings.reset_desc': 'Startet deinen Abrechnungszyklus ab heute bei Tag 1 mit dem konfigurierten Budget.',
+    'settings.reset_btn': 'Neue Periode ab heute starten',
     'settings.reset_confirm_title': 'Sicher?',
-    'settings.reset_confirm_body': 'Alle Ausgaben der aktuellen Periode werden gelöscht!',
-    'settings.reset_confirm_btn': 'Ja, zurücksetzen',
+    'settings.reset_confirm_body': 'Wirklich ab heute neu starten?',
+    'settings.reset_confirm_btn': 'Ja, ab heute starten',
     'settings.reset_cancel_btn': 'Abbrechen',
-    'settings.theme_heading': 'Design & Farbwelt',
+    'settings.theme_heading': 'Design & Akzentfarbe',
     'settings.language_heading': 'Sprache / Language',
-    'settings.backup_heading': 'Daten & Backup',
-    'settings.export_json': 'JSON-Backup exportieren',
-    'settings.export_csv': 'CSV exportieren',
-    'settings.import_backup': 'Backup importieren',
+    'settings.currency_heading': 'Währung / Currency',
+    'settings.backup_heading': 'Daten & Archiv',
+    'settings.backup_desc': 'Sichere deine Ausgaben oder wirf einen Blick in frühere Perioden.',
+    'settings.export_json': 'JSON Backup',
+    'settings.export_csv': 'CSV (Excel)',
+    'settings.import_backup': 'Backup importieren (JSON/CSV)',
+    'settings.importing': 'Importiere...',
+    'settings.archive_trigger': '📜 Frühere Monate / Archiv ansehen',
+    'settings.about_heading': 'App-Info & Philosophie',
+    'settings.about_desc': 'Erfahre mehr über die Prinzipien von Restgeld und Shortcuts.',
+    'settings.about_trigger': 'ℹ️ Über Restgeld öffnen',
 
     // Expenses Modal
-    'expenses.title': 'Ausgaben-Historie',
+    'expenses.title': 'Alle Ausgaben',
     'expenses.empty': 'Keine Ausgaben in dieser Periode vorhanden.',
     'expenses.page_info': 'Seite {page} von {total}',
     'expenses.delete': 'Löschen',
@@ -76,19 +125,26 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.title': 'Perioden-Archiv',
     'archive.subtitle': 'Monatsberichte & historische Ausgaben',
     'archive.empty': 'Noch keine vergangenen Perioden archiviert.',
-    'archive.total_spent': 'Gesamtausgaben:',
+    'archive.kpi_budget': 'Budget',
+    'archive.kpi_spent': 'Ausgaben',
+    'archive.kpi_avg': 'Ø / Tag',
+    'archive.kpi_count': 'Buchungen',
     'archive.savings': 'Ersparnis:',
-    'archive.count': 'Ausgaben:',
-    'archive.avg_daily': 'Ø pro Tag:',
+    'archive.total_spent': 'Gesamtausgaben:',
     'archive.view_report': 'Abschlussbericht ansehen',
     'archive.back_to_list': '← Zurück zum Archiv',
+    'archive.report_details': 'Abschlussbericht & Buchungen',
+    'archive.retry_btn': 'Erneut versuchen',
+    'archive.loading': 'Lade Archiv...',
 
     // Streaks & Projection
     'streak.title': 'Spar-Streak',
-    'streak.current': 'Aktuelle Streak',
-    'streak.longest': 'Rekord-Streak',
-    'streak.zero_days': 'Null-Euro-Tage',
+    'streak.current': 'Aktuelle Spar-Streak',
+    'streak.longest': 'Rekord',
+    'streak.zero_days': 'Null-Euro',
     'streak.days_unit': 'Tage',
+    'streak.subtitle': '🎯 {count} Spartage diese Woche',
+    'streak.in_budget': '{count} Tage im Budget!',
     'projection.title': 'Monatsende-Prognose',
     'projection.savings': 'Voraussichtliche Ersparnis:',
     'projection.deficit': 'Voraussichtlicher Überzug:',
@@ -96,23 +152,26 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'projection.daily_avg': 'Ø Tagesausgabe bisher:',
 
     // Spending Trend
-    'trend.title': 'Ausgabenverlauf',
-    'trend.legend_ok': 'Im Budget',
-    'trend.legend_savings': 'Spar-Tag (€ 0)',
-    'trend.legend_over': 'Über Budget',
-    'trend.avg': 'Ø {amount} € / Tag',
+    'trend.title': 'Tages-Verlauf',
+    'trend.legend_ok': 'im Budget',
+    'trend.legend_savings': 'Null-Ausgaben-Tag',
+    'trend.legend_over': 'über Budget',
+    'trend.avg': 'Ø {amount} / Tag',
 
     // Auth & SaaS
     'auth.title': 'Anmelden / Registrieren',
-    'auth.subtitle': 'Verbinde dein Konto für Cloud-Sync auf allen Geräten.',
+    'auth.subtitle': 'Verbinde dein Konto für Cloud-Sync auf all deinen Geräten.',
     'auth.email_label': 'E-Mail-Adresse',
     'auth.email_placeholder': 'deine@email.de',
     'auth.send_link': 'Magic Link senden',
     'auth.sending': 'Sende Link...',
+    'auth.passkey_btn': '🔐 Mit Passkey / Biometrie anmelden',
+    'auth.register_passkey_btn': '✨ Dieses Gerät als Passkey registrieren',
     'auth.logged_in_as': 'Angemeldet als {email}',
     'auth.logout': 'Abmelden',
     'auth.delete_account': 'Konto löschen',
     'auth.pro_badge': 'PRO TIER',
+    'auth.free_badge': 'FREE TIER',
     'auth.upgrade_pro': 'Auf Pro upgraden (Stripe)',
     'auth.manage_sub': 'Abonnement verwalten',
 
@@ -124,33 +183,64 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'about.close': 'Schließen',
 
     // Footer & Misc
-    'footer.tagline': 'Jeden Tag achtsam sparen.',
+    'footer.tagline': 'Track daily. Stay in budget.',
+    'footer.commit': 'Commit',
     'common.close': 'Schließen',
     'common.back': 'Zurück',
+    'toast.login_success': '✓ Erfolgreich eingeloggt',
+    'toast.passkey_success': '✓ Passkey erfolgreich registriert',
+    'toast.expense_deleted': '✓ Ausgabe gelöscht',
+    'toast.offline_queued': '✓ Offline gespeichert (wird synchronisiert)',
   },
   en: {
-    // Header
+    // Header & Navigation
     'header.online': 'Online',
     'header.offline': 'Offline',
     'header.sync_pending': '{count} pending',
+    'header.status_title': 'System & Sync Status',
+    'header.network': 'Network Connection',
+    'header.connected': 'Connected (Online)',
+    'header.api_health': 'API Service Health',
+    'header.auth_health': 'Auth Service Health',
+    'header.billing_health': 'Billing Service Health',
+    'header.db_health': 'PostgreSQL Database',
+    'header.db_connected': 'Connected & Ready',
+    'header.db_disconnected': 'Unreachable',
+    'header.queue': 'Offline Outbox Queue',
+    'header.no_pending': 'No pending syncs',
+    'header.streak_tooltip': 'View Streak & Savings',
+    'header.proj_tooltip': 'View Month-End Projection',
+    'header.settings_tooltip': 'Settings',
 
     // Hero & Budget
     'budget.available_today': 'AVAILABLE TODAY',
     'budget.savings': 'Savings',
     'budget.deficit': 'Deficit',
-    'budget.from_total': 'from {total} € today',
+    'budget.from_total': 'from {total} today',
+    'budget.base_label': 'Base: {amount}',
+    'budget.puffer_plus': '+{amount} Savings Buffer',
+    'budget.overdrawn': '{amount} overdrawn',
+    'budget.empty_today': 'No daily budget remaining',
+    'budget.on_track': 'Perfect on Track',
 
     // Numpad / Book Expense
     'numpad.title': 'Add Expense',
-    'numpad.amount_label': 'Amount (€)',
+    'numpad.amount_label': 'Amount',
     'numpad.note_label': 'Note (optional)',
     'numpad.note_placeholder': 'Note (e.g. Coffee, Lunch)',
     'numpad.btn_cancel': 'Cancel',
     'numpad.btn_save': 'Save',
     'numpad.btn_saving': 'Saving...',
-    'numpad.impact_available': 'Available today: {amount} €',
-    'numpad.impact_remaining': 'Available today: {current} € ➔ Remaining after: {diff} €',
-    'numpad.impact_exceeds': 'Available today: {current} € ➔ Exceeds daily budget by {diff} €',
+    'numpad.impact_available': 'Available today: {amount}',
+    'numpad.impact_remaining': 'Available today: {current} ➔ Remaining after: {diff}',
+    'numpad.impact_exceeds': 'Available today: {current} ➔ Exceeds daily budget by {diff}',
+
+    // Recent Expenses
+    'recent.title': 'Recent Expenses',
+    'recent.show_all': 'View All',
+    'recent.empty': 'No expenses recorded today',
+    'recent.default_note': 'Expense',
+    'recent.delete_title': 'Delete',
 
     // Settings
     'settings.title': 'Settings',
@@ -161,18 +251,25 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'settings.save_btn': 'Save Settings',
     'settings.saved_msg': '✓ Settings saved',
     'settings.reset_heading': 'Start New Period',
-    'settings.reset_desc': 'Resets day to 1 and clears all expenses of the current period.',
+    'settings.reset_desc': 'Resets day to 1 and archives all current expenses.',
     'settings.reset_btn': 'Start New Period',
     'settings.reset_confirm_title': 'Are you sure?',
-    'settings.reset_confirm_body': 'All expenses of the current period will be deleted!',
-    'settings.reset_confirm_btn': 'Yes, Reset',
+    'settings.reset_confirm_body': 'All expenses of the current period will be closed!',
+    'settings.reset_confirm_btn': 'Yes, Start New Period',
     'settings.reset_cancel_btn': 'Cancel',
     'settings.theme_heading': 'Design & Color Theme',
     'settings.language_heading': 'Language / Sprache',
-    'settings.backup_heading': 'Data & Backup',
-    'settings.export_json': 'Export JSON Backup',
-    'settings.export_csv': 'Export CSV',
-    'settings.import_backup': 'Import Backup',
+    'settings.currency_heading': 'Currency / Währung',
+    'settings.backup_heading': 'Data & Archive',
+    'settings.backup_desc': 'Backup your expenses or explore past monthly reports.',
+    'settings.export_json': 'JSON Backup',
+    'settings.export_csv': 'CSV (Excel)',
+    'settings.import_backup': 'Import Backup (JSON/CSV)',
+    'settings.importing': 'Importing...',
+    'settings.archive_trigger': '📜 View Previous Months / Archive',
+    'settings.about_heading': 'App Info & Philosophy',
+    'settings.about_desc': 'Learn more about Restgeld principles and shortcuts.',
+    'settings.about_trigger': 'ℹ️ Open About Restgeld',
 
     // Expenses Modal
     'expenses.title': 'Expense History',
@@ -186,12 +283,17 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.title': 'Period Archive',
     'archive.subtitle': 'Monthly reports & historical expenses',
     'archive.empty': 'No archived periods yet.',
-    'archive.total_spent': 'Total Spent:',
+    'archive.kpi_budget': 'Budget',
+    'archive.kpi_spent': 'Spent',
+    'archive.kpi_avg': 'Ø / Day',
+    'archive.kpi_count': 'Items',
     'archive.savings': 'Savings:',
-    'archive.count': 'Expenses:',
-    'archive.avg_daily': 'Ø per day:',
+    'archive.total_spent': 'Total Spent:',
     'archive.view_report': 'View Summary Report',
     'archive.back_to_list': '← Back to Archive',
+    'archive.report_details': 'Detailed Report',
+    'archive.retry_btn': 'Try Again',
+    'archive.loading': 'Loading archive...',
 
     // Streaks & Projection
     'streak.title': 'Saving Streak',
@@ -199,6 +301,8 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'streak.longest': 'Best Streak',
     'streak.zero_days': 'Zero-Spend Days',
     'streak.days_unit': 'Days',
+    'streak.subtitle': '🎯 {count} savings days this week',
+    'streak.in_budget': '{count} days within budget!',
     'projection.title': 'Month-End Projection',
     'projection.savings': 'Expected Savings:',
     'projection.deficit': 'Expected Deficit:',
@@ -208,9 +312,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     // Spending Trend
     'trend.title': 'Spending Trend',
     'trend.legend_ok': 'Within Budget',
-    'trend.legend_savings': 'Zero Spend (€ 0)',
+    'trend.legend_savings': 'Zero Spend',
     'trend.legend_over': 'Over Budget',
-    'trend.avg': 'Ø {amount} € / day',
+    'trend.avg': 'Ø {amount} / day',
 
     // Auth & SaaS
     'auth.title': 'Sign In / Register',
@@ -219,10 +323,13 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.email_placeholder': 'your@email.com',
     'auth.send_link': 'Send Magic Link',
     'auth.sending': 'Sending link...',
+    'auth.passkey_btn': '🔐 Sign In with Passkey / Biometrics',
+    'auth.register_passkey_btn': '✨ Register This Device as Passkey',
     'auth.logged_in_as': 'Signed in as {email}',
     'auth.logout': 'Sign Out',
     'auth.delete_account': 'Delete Account',
     'auth.pro_badge': 'PRO TIER',
+    'auth.free_badge': 'FREE TIER',
     'auth.upgrade_pro': 'Upgrade to Pro (Stripe)',
     'auth.manage_sub': 'Manage Subscription',
 
@@ -235,32 +342,63 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
 
     // Footer & Misc
     'footer.tagline': 'Save mindfully every day.',
+    'footer.commit': 'Commit',
     'common.close': 'Close',
     'common.back': 'Back',
+    'toast.login_success': '✓ Successfully logged in',
+    'toast.passkey_success': '✓ Passkey successfully registered',
+    'toast.expense_deleted': '✓ Expense deleted',
+    'toast.offline_queued': '✓ Saved offline (will sync automatically)',
   },
   es: {
-    // Header
+    // Header & Navigation
     'header.online': 'En línea',
     'header.offline': 'Sin conexión',
     'header.sync_pending': '{count} pendiente',
+    'header.status_title': 'Estado del Sistema y Sync',
+    'header.network': 'Conexión de Red',
+    'header.connected': 'Conectado (En línea)',
+    'header.api_health': 'Salud del Servicio API',
+    'header.auth_health': 'Salud del Servicio Auth',
+    'header.billing_health': 'Salud del Servicio Billing',
+    'header.db_health': 'Base de Datos PostgreSQL',
+    'header.db_connected': 'Conectado y Listo',
+    'header.db_disconnected': 'Inaccesible',
+    'header.queue': 'Cola de Salida Offline',
+    'header.no_pending': 'Sin sincronizaciones pendientes',
+    'header.streak_tooltip': 'Ver Racha y Ahorro',
+    'header.proj_tooltip': 'Ver Proyección de Fin de Mes',
+    'header.settings_tooltip': 'Ajustes',
 
     // Hero & Budget
     'budget.available_today': 'DISPONIBLE HOY',
     'budget.savings': 'Ahorro',
     'budget.deficit': 'Déficit',
-    'budget.from_total': 'de {total} € hoy',
+    'budget.from_total': 'de {total} hoy',
+    'budget.base_label': 'Base: {amount}',
+    'budget.puffer_plus': '+{amount} Margen de Ahorro',
+    'budget.overdrawn': '{amount} excedido',
+    'budget.empty_today': 'Sin presupuesto restante para hoy',
+    'budget.on_track': 'Perfecto en Plan',
 
     // Numpad / Book Expense
     'numpad.title': 'Añadir Gasto',
-    'numpad.amount_label': 'Monto (€)',
+    'numpad.amount_label': 'Monto',
     'numpad.note_label': 'Nota (opcional)',
     'numpad.note_placeholder': 'Nota (ej. Café, Almuerzo)',
     'numpad.btn_cancel': 'Cancelar',
     'numpad.btn_save': 'Guardar',
     'numpad.btn_saving': 'Guardando...',
-    'numpad.impact_available': 'Disponible hoy: {amount} €',
-    'numpad.impact_remaining': 'Disponible hoy: {current} € ➔ Quedará después: {diff} €',
-    'numpad.impact_exceeds': 'Disponible hoy: {current} € ➔ Excede el presupuesto diario por {diff} €',
+    'numpad.impact_available': 'Disponible hoy: {amount}',
+    'numpad.impact_remaining': 'Disponible hoy: {current} ➔ Quedará después: {diff}',
+    'numpad.impact_exceeds': 'Disponible hoy: {current} ➔ Excede el presupuesto diario por {diff}',
+
+    // Recent Expenses
+    'recent.title': 'Gastos Recientes',
+    'recent.show_all': 'Ver todos',
+    'recent.empty': 'No hay gastos registrados hoy',
+    'recent.default_note': 'Gasto',
+    'recent.delete_title': 'Eliminar',
 
     // Settings
     'settings.title': 'Ajustes',
@@ -271,18 +409,25 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'settings.save_btn': 'Guardar Ajustes',
     'settings.saved_msg': '✓ Ajustes guardados',
     'settings.reset_heading': 'Iniciar Nuevo Período',
-    'settings.reset_desc': 'Reinicia el día a 1 y borra todos los gastos del período actual.',
+    'settings.reset_desc': 'Reinicia el día a 1 y archiva todos los gastos actuales.',
     'settings.reset_btn': 'Iniciar Nuevo Período',
     'settings.reset_confirm_title': '¿Estás seguro?',
-    'settings.reset_confirm_body': '¡Se borrarán todos los gastos del período actual!',
-    'settings.reset_confirm_btn': 'Sí, Reiniciar',
+    'settings.reset_confirm_body': '¡Todos los gastos del período actual se cerrarán!',
+    'settings.reset_confirm_btn': 'Sí, Iniciar Período',
     'settings.reset_cancel_btn': 'Cancelar',
     'settings.theme_heading': 'Diseño y Color',
     'settings.language_heading': 'Idioma / Language',
-    'settings.backup_heading': 'Datos y Copia de Seguridad',
-    'settings.export_json': 'Exportar Copia JSON',
-    'settings.export_csv': 'Exportar CSV',
-    'settings.import_backup': 'Importar Copia',
+    'settings.currency_heading': 'Moneda / Currency',
+    'settings.backup_heading': 'Datos y Archivo',
+    'settings.backup_desc': 'Haz una copia de seguridad de tus gastos o explora informes anteriores.',
+    'settings.export_json': 'Copia JSON',
+    'settings.export_csv': 'CSV (Excel)',
+    'settings.import_backup': 'Importar Copia (JSON/CSV)',
+    'settings.importing': 'Importando...',
+    'settings.archive_trigger': '📜 Ver Meses Anteriores / Archivo',
+    'settings.about_heading': 'Información y Filosofía',
+    'settings.about_desc': 'Aprende más sobre los principios y atajos de Restgeld.',
+    'settings.about_trigger': 'ℹ️ Abrir Acerca de Restgeld',
 
     // Expenses Modal
     'expenses.title': 'Historial de Gastos',
@@ -296,19 +441,26 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.title': 'Archivo de Períodos',
     'archive.subtitle': 'Informes mensuales y gastos históricos',
     'archive.empty': 'Aún no hay períodos archivados.',
-    'archive.total_spent': 'Gasto Total:',
+    'archive.kpi_budget': 'Presupuesto',
+    'archive.kpi_spent': 'Gastado',
+    'archive.kpi_avg': 'Ø / Día',
+    'archive.kpi_count': 'Elementos',
     'archive.savings': 'Ahorro:',
-    'archive.count': 'Gastos:',
-    'archive.avg_daily': 'Ø por día:',
+    'archive.total_spent': 'Gasto Total:',
     'archive.view_report': 'Ver Informe Resumido',
     'archive.back_to_list': '← Volver al Archivo',
+    'archive.report_details': 'Informe Detallado',
+    'archive.retry_btn': 'Reintentar',
+    'archive.loading': 'Cargando archivo...',
 
     // Streaks & Projection
     'streak.title': 'Racha de Ahorro',
     'streak.current': 'Racha Actual',
     'streak.longest': 'Mejor Racha',
-    'streak.zero_days': 'Días de Cero Gastos',
+    'streak.zero_days': 'Días Sin Gasto',
     'streak.days_unit': 'Días',
+    'streak.subtitle': '🎯 {count} días de ahorro esta semana',
+    'streak.in_budget': '¡{count} días en presupuesto!',
     'projection.title': 'Proyección de Fin de Mes',
     'projection.savings': 'Ahorro Previsto:',
     'projection.deficit': 'Déficit Previsto:',
@@ -318,9 +470,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     // Spending Trend
     'trend.title': 'Tendencia de Gastos',
     'trend.legend_ok': 'En Presupuesto',
-    'trend.legend_savings': 'Cero Gastos (€ 0)',
+    'trend.legend_savings': 'Cero Gastos',
     'trend.legend_over': 'Sobre Presupuesto',
-    'trend.avg': 'Ø {amount} € / día',
+    'trend.avg': 'Ø {amount} / día',
 
     // Auth & SaaS
     'auth.title': 'Iniciar Sesión / Registro',
@@ -329,10 +481,13 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.email_placeholder': 'tu@email.com',
     'auth.send_link': 'Enviar Magic Link',
     'auth.sending': 'Enviando enlace...',
+    'auth.passkey_btn': '🔐 Iniciar con Passkey / Biometría',
+    'auth.register_passkey_btn': '✨ Registrar Este Dispositivo como Passkey',
     'auth.logged_in_as': 'Sesión iniciada como {email}',
     'auth.logout': 'Cerrar Sesión',
     'auth.delete_account': 'Eliminar Cuenta',
     'auth.pro_badge': 'NIVEL PRO',
+    'auth.free_badge': 'NIVEL GRATUITO',
     'auth.upgrade_pro': 'Mejorar a Pro (Stripe)',
     'auth.manage_sub': 'Gestionar Suscripción',
 
@@ -345,32 +500,63 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
 
     // Footer & Misc
     'footer.tagline': 'Ahorra de forma consciente cada día.',
+    'footer.commit': 'Commit',
     'common.close': 'Cerrar',
     'common.back': 'Volver',
+    'toast.login_success': '✓ Sesión iniciada con éxito',
+    'toast.passkey_success': '✓ Passkey registrado con éxito',
+    'toast.expense_deleted': '✓ Gasto eliminado',
+    'toast.offline_queued': '✓ Guardado offline (se sincronizará)',
   },
   fr: {
-    // Header
+    // Header & Navigation
     'header.online': 'En ligne',
     'header.offline': 'Hors ligne',
     'header.sync_pending': '{count} en attente',
+    'header.status_title': 'État du Système et Synchro',
+    'header.network': 'Connexion Réseau',
+    'header.connected': 'Connecté (En ligne)',
+    'header.api_health': 'Santé du Service API',
+    'header.auth_health': 'Santé du Service Auth',
+    'header.billing_health': 'Santé du Service Billing',
+    'header.db_health': 'Base de Données PostgreSQL',
+    'header.db_connected': 'Connecté et Prêt',
+    'header.db_disconnected': 'Inaccessible',
+    'header.queue': 'File d\'attente Hors-ligne',
+    'header.no_pending': 'Aucune synchronisation en attente',
+    'header.streak_tooltip': 'Voir la Série & Économies',
+    'header.proj_tooltip': 'Voir la Projection Fin de Mois',
+    'header.settings_tooltip': 'Paramètres',
 
     // Hero & Budget
     'budget.available_today': 'DISPONIBLE AUJOURD\'HUI',
     'budget.savings': 'Économies',
     'budget.deficit': 'Déficit',
-    'budget.from_total': 'sur {total} € aujourd\'hui',
+    'budget.from_total': 'sur {total} aujourd\'hui',
+    'budget.base_label': 'Base: {amount}',
+    'budget.puffer_plus': '+{amount} Marge d\'Épargne',
+    'budget.overdrawn': '{amount} dépassé',
+    'budget.empty_today': 'Aucun budget quotidien restant',
+    'budget.on_track': 'Parfaitement dans les Clous',
 
     // Numpad / Book Expense
     'numpad.title': 'Ajouter une Dépense',
-    'numpad.amount_label': 'Montant (€)',
+    'numpad.amount_label': 'Montant',
     'numpad.note_label': 'Note (optionnel)',
     'numpad.note_placeholder': 'Note (ex. Café, Déjeuner)',
     'numpad.btn_cancel': 'Annuler',
     'numpad.btn_save': 'Enregistrer',
     'numpad.btn_saving': 'Enregistrement...',
-    'numpad.impact_available': 'Disponible aujourd\'hui: {amount} €',
-    'numpad.impact_remaining': 'Disponible aujourd\'hui: {current} € ➔ Reste ensuite: {diff} €',
-    'numpad.impact_exceeds': 'Disponible aujourd\'hui: {current} € ➔ Dépasse le budget quotidien de {diff} €',
+    'numpad.impact_available': 'Disponible aujourd\'hui: {amount}',
+    'numpad.impact_remaining': 'Disponible aujourd\'hui: {current} ➔ Reste ensuite: {diff}',
+    'numpad.impact_exceeds': 'Disponible aujourd\'hui: {current} ➔ Dépasse le budget quotidien de {diff}',
+
+    // Recent Expenses
+    'recent.title': 'Dépenses Récentes',
+    'recent.show_all': 'Tout afficher',
+    'recent.empty': 'Aucune dépense enregistrée aujourd\'hui',
+    'recent.default_note': 'Dépense',
+    'recent.delete_title': 'Supprimer',
 
     // Settings
     'settings.title': 'Paramètres',
@@ -381,18 +567,25 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'settings.save_btn': 'Enregistrer les Paramètres',
     'settings.saved_msg': '✓ Paramètres enregistrés',
     'settings.reset_heading': 'Démarrer une Nouvelle Période',
-    'settings.reset_desc': 'Réinitialise le jour à 1 et efface toutes les dépenses de la période actuelle.',
+    'settings.reset_desc': 'Réinitialise le jour à 1 et archive toutes les dépenses actuelles.',
     'settings.reset_btn': 'Démarrer une Nouvelle Période',
     'settings.reset_confirm_title': 'Êtes-vous sûr ?',
-    'settings.reset_confirm_body': 'Toutes les dépenses de la période actuelle seront supprimées !',
-    'settings.reset_confirm_btn': 'Oui, Réinitialiser',
+    'settings.reset_confirm_body': 'Toutes les dépenses de la période actuelle seront clôturées !',
+    'settings.reset_confirm_btn': 'Oui, Nouvelle Période',
     'settings.reset_cancel_btn': 'Annuler',
     'settings.theme_heading': 'Thème & Couleurs',
     'settings.language_heading': 'Langue / Language',
-    'settings.backup_heading': 'Données & Sauvegarde',
-    'settings.export_json': 'Exporter la Sauvegarde JSON',
-    'settings.export_csv': 'Exporter CSV',
-    'settings.import_backup': 'Importer une Sauvegarde',
+    'settings.currency_heading': 'Devise / Currency',
+    'settings.backup_heading': 'Données & Archives',
+    'settings.backup_desc': 'Sauvegardez vos dépenses ou consultez les rapports mensuels passés.',
+    'settings.export_json': 'Sauvegarde JSON',
+    'settings.export_csv': 'CSV (Excel)',
+    'settings.import_backup': 'Importer une Sauvegarde (JSON/CSV)',
+    'settings.importing': 'Importation...',
+    'settings.archive_trigger': '📜 Voir les Mois Précédents / Archives',
+    'settings.about_heading': 'Info App & Philosophie',
+    'settings.about_desc': 'En savoir plus sur les principes et raccourcis de Restgeld.',
+    'settings.about_trigger': 'ℹ️ Ouvrir À Propos',
 
     // Expenses Modal
     'expenses.title': 'Historique des Dépenses',
@@ -406,12 +599,17 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.title': 'Archives des Périodes',
     'archive.subtitle': 'Rapports mensuels & dépenses historiques',
     'archive.empty': 'Aucune période archivée pour le moment.',
-    'archive.total_spent': 'Total Dépensé:',
+    'archive.kpi_budget': 'Budget',
+    'archive.kpi_spent': 'Dépensé',
+    'archive.kpi_avg': 'Ø / Jour',
+    'archive.kpi_count': 'Éléments',
     'archive.savings': 'Économies:',
-    'archive.count': 'Dépenses:',
-    'archive.avg_daily': 'Ø par jour:',
+    'archive.total_spent': 'Total Dépensé:',
     'archive.view_report': 'Voir le Rapport Récapitulatif',
     'archive.back_to_list': '← Retour aux Archives',
+    'archive.report_details': 'Rapport Détaillé',
+    'archive.retry_btn': 'Réessayer',
+    'archive.loading': 'Chargement des archives...',
 
     // Streaks & Projection
     'streak.title': 'Série d\'Économies',
@@ -419,6 +617,8 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'streak.longest': 'Meilleure Série',
     'streak.zero_days': 'Jours Sans Dépense',
     'streak.days_unit': 'Jours',
+    'streak.subtitle': '🎯 {count} jours d\'économie cette semaine',
+    'streak.in_budget': '{count} jours dans le budget !',
     'projection.title': 'Projection de Fin de Mois',
     'projection.savings': 'Économies Prévisibles:',
     'projection.deficit': 'Déficit Prévisible:',
@@ -428,9 +628,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     // Spending Trend
     'trend.title': 'Tendance des Dépenses',
     'trend.legend_ok': 'Dans le Budget',
-    'trend.legend_savings': 'Zéro Dépense (€ 0)',
+    'trend.legend_savings': 'Zéro Dépense',
     'trend.legend_over': 'Hors Budget',
-    'trend.avg': 'Ø {amount} € / jour',
+    'trend.avg': 'Ø {amount} / jour',
 
     // Auth & SaaS
     'auth.title': 'Connexion / Inscription',
@@ -439,10 +639,13 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.email_placeholder': 'votre@email.fr',
     'auth.send_link': 'Envoyer un Magic Link',
     'auth.sending': 'Envoi du lien...',
+    'auth.passkey_btn': '🔐 Connexion par Passkey / Biométrie',
+    'auth.register_passkey_btn': '✨ Enregistrer cet Appareil comme Passkey',
     'auth.logged_in_as': 'Connecté en tant que {email}',
     'auth.logout': 'Déconnexion',
     'auth.delete_account': 'Supprimer le Compte',
     'auth.pro_badge': 'NIVEAU PRO',
+    'auth.free_badge': 'NIVEAU GRATUIT',
     'auth.upgrade_pro': 'Passer à Pro (Stripe)',
     'auth.manage_sub': 'Gérer l\'Abonnement',
 
@@ -455,12 +658,18 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
 
     // Footer & Misc
     'footer.tagline': 'Économisez consciemment chaque jour.',
+    'footer.commit': 'Commit',
     'common.close': 'Fermer',
     'common.back': 'Retour',
+    'toast.login_success': '✓ Connexion réussie',
+    'toast.passkey_success': '✓ Passkey enregistré avec succès',
+    'toast.expense_deleted': '✓ Dépense supprimée',
+    'toast.offline_queued': '✓ Sauvegardé hors ligne (sera synchronisé)',
   },
 }
 
 const currentLocale = ref<SupportedLocale>('de')
+const currentCurrency = ref<SupportedCurrency>('EUR')
 
 function detectBrowserLocale(): SupportedLocale {
   if (typeof navigator === 'undefined') return 'de'
@@ -471,11 +680,47 @@ function detectBrowserLocale(): SupportedLocale {
   return 'de'
 }
 
+/**
+ * Automatically detect an emoji category tag from free-text notes
+ * without any user configuration, dropdowns, or friction!
+ */
+export function detectCategoryIcon(note?: string): string {
+  if (!note) return '💶'
+  const clean = note.toLowerCase().trim()
+  if (!clean) return '💶'
+
+  // Leisure & Drinks (Check before generic tickets)
+  if (/kino|cinema|movie|party|club|konzert|concert|festival|event|feiern|bier|beer|bar|drinks|cocktail/.test(clean)) return '🎉'
+  // Coffee & Bakery
+  if (/kaffee|coffee|espresso|cappuccino|latte|bäcker|bakery|croissant|donut|tee|tea/.test(clean)) return '☕'
+  // Food & Dining
+  if (/essen|food|lunch|dinner|mittag|abendessen|pizza|döner|burger|sushi|pasta|restaurant|imbiss|snack|kebab/.test(clean)) return '🍔'
+  // Groceries & Supermarket
+  if (/supermarkt|einkauf|groceries|rewe|aldi|lidl|edeka|dm|rossmann|kaufland|penny|market/.test(clean)) return '🛒'
+  // Transport & Mobility
+  if (/tanken|benzin|fuel|diesel|bahn|zug|train|bus|ticket|uber|taxi|bolt|fahrt|mvv|bvg|flight|flug/.test(clean)) return '🚗'
+  // Tech & Shopping
+  if (/amazon|zalando|kleidung|clothes|tech|apple|electronics|gadget|paket|shopping/.test(clean)) return '📦'
+  // Health & Sports
+  if (/apotheke|pharma|arzt|doctor|gym|fitness|sport|climbing|training|medikament/.test(clean)) return '💊'
+
+  return '💶'
+}
+
 export function useI18n() {
   function setLocale(locale: SupportedLocale) {
     currentLocale.value = locale
     try {
-      localStorage.setItem(STORAGE_KEY, locale)
+      localStorage.setItem(STORAGE_LANG_KEY, locale)
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  function setCurrency(currency: SupportedCurrency) {
+    currentCurrency.value = currency
+    try {
+      localStorage.setItem(STORAGE_CURR_KEY, currency)
     } catch {
       // Ignore storage errors
     }
@@ -483,15 +728,20 @@ export function useI18n() {
 
   function initI18n() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as SupportedLocale | null
-      if (saved && ['de', 'en', 'es', 'fr'].includes(saved)) {
-        currentLocale.value = saved
-        return
+      const savedLang = localStorage.getItem(STORAGE_LANG_KEY) as SupportedLocale | null
+      if (savedLang && ['de', 'en', 'es', 'fr'].includes(savedLang)) {
+        currentLocale.value = savedLang
+      } else {
+        currentLocale.value = detectBrowserLocale()
+      }
+
+      const savedCurr = localStorage.getItem(STORAGE_CURR_KEY) as SupportedCurrency | null
+      if (savedCurr && ['EUR', 'USD', 'GBP', 'CHF', 'JPY'].includes(savedCurr)) {
+        currentCurrency.value = savedCurr
       }
     } catch {
       // Ignore storage errors
     }
-    currentLocale.value = detectBrowserLocale()
   }
 
   function t(key: string, params?: Record<string, string | number>): string {
@@ -519,19 +769,40 @@ export function useI18n() {
     }
   })
 
+  const currencySymbol = computed(() => {
+    const opt = SUPPORTED_CURRENCIES.find((c) => c.code === currentCurrency.value)
+    return opt?.symbol || '€'
+  })
+
   function formatCurrency(val: number): string {
+    const digits = currentCurrency.value === 'JPY' ? 0 : 2
     return val.toLocaleString(localeCode.value, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     })
+  }
+
+  function formatMoney(val: number): string {
+    const formatted = formatCurrency(val)
+    if (currentCurrency.value === 'USD') return `$${formatted}`
+    if (currentCurrency.value === 'GBP') return `£${formatted}`
+    if (currentCurrency.value === 'JPY') return `¥${formatted}`
+    if (currentCurrency.value === 'CHF') return `${formatted} CHF`
+    return `${formatted} €`
   }
 
   return {
     currentLocale,
+    currentCurrency,
+    currencySymbol,
     languages: SUPPORTED_LANGUAGES,
+    currencies: SUPPORTED_CURRENCIES,
     setLocale,
+    setCurrency,
     initI18n,
     t,
     formatCurrency,
+    formatMoney,
+    detectCategoryIcon,
   }
 }

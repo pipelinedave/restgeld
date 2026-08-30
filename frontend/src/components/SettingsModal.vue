@@ -2,8 +2,8 @@
   <div v-if="visible" class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Einstellungen</h2>
-        <button class="close-btn" aria-label="Schließen" @click="$emit('close')">&times;</button>
+        <h2>{{ i18n.t('settings.title') }}</h2>
+        <button class="close-btn" :aria-label="i18n.t('common.close')" @click="$emit('close')">&times;</button>
       </div>
 
       <div class="modal-body">
@@ -11,13 +11,13 @@
         <section class="setting-section account-section">
           <div class="account-header">
             <div class="account-info">
-              <span class="section-title">{{ auth.isLoggedIn.value ? 'Konto & Cloud-Sync' : 'Cloud-Sync & Backup' }}</span>
+              <span class="section-title">{{ auth.isLoggedIn.value ? (auth.user.value?.email) : i18n.t('auth.title') }}</span>
               <p class="description">
-                {{ auth.isLoggedIn.value ? `Angemeldet als ${auth.user.value?.email}` : 'Synchronisiere deine Daten sicher & passwortlos über alle deine Geräte.' }}
+                {{ auth.isLoggedIn.value ? (auth.user.value?.plan === 'pro' ? 'Restgeld PRO Subscribed 👑' : 'Restgeld Free Tier ☁️') : i18n.t('auth.subtitle') }}
               </p>
             </div>
             <button class="account-btn" @click="$emit('open-auth')">
-              {{ auth.isLoggedIn.value ? 'Konto verwalten ⚙️' : 'Anmelden / Registrieren ☁️' }}
+              {{ auth.isLoggedIn.value ? '⚙️' : '☁️' }}
             </button>
           </div>
         </section>
@@ -27,7 +27,7 @@
           <!-- Monatsbudget -->
           <div class="slider-group">
             <div class="slider-header">
-              <label for="monthly-budget-input" class="section-title">Monatsbudget</label>
+              <label for="monthly-budget-input" class="section-title">{{ i18n.t('settings.monthly_budget') }}</label>
               <div class="input-badge">
                 <input
                   id="monthly-budget-input"
@@ -40,7 +40,7 @@
                   class="num-input"
                   @keyup.enter="handleSaveSettings"
                 />
-                <span class="currency-symbol">&euro;</span>
+                <span class="currency-symbol">{{ i18n.currencySymbol }}</span>
               </div>
             </div>
 
@@ -63,7 +63,7 @@
                 :class="{ active: budgetInput === p }"
                 @click="setBudget(p)"
               >
-                {{ p }} &euro;
+                {{ p }} {{ i18n.currencySymbol }}
               </button>
             </div>
           </div>
@@ -71,7 +71,7 @@
           <!-- Periodendauer -->
           <div class="slider-group" style="margin-top: 14px;">
             <div class="slider-header">
-              <label for="period-days-input" class="section-title">Periodendauer</label>
+              <label for="period-days-input" class="section-title">{{ i18n.t('settings.period_days') }}</label>
               <div class="input-badge">
                 <input
                   id="period-days-input"
@@ -84,7 +84,7 @@
                   class="num-input"
                   @keyup.enter="handleSaveSettings"
                 />
-                <span class="currency-symbol">Tage</span>
+                <span class="currency-symbol">{{ i18n.t('streak.days_unit') }}</span>
               </div>
             </div>
 
@@ -115,7 +115,7 @@
           <!-- Tages-Restgeld Slider (Bidirektional) -->
           <div class="slider-group" style="margin-top: 14px;">
             <div class="slider-header">
-              <label for="daily-budget-input" class="section-title">Wunsch Tages-Budget</label>
+              <label for="daily-budget-input" class="section-title">{{ i18n.t('settings.desired_daily') }}</label>
               <div class="input-badge">
                 <input
                   id="daily-budget-input"
@@ -128,7 +128,7 @@
                   class="num-input"
                   @input="handleDailyInputChange"
                 />
-                <span class="currency-symbol">&euro;/Tag</span>
+                <span class="currency-symbol">{{ i18n.currencySymbol }}/{{ i18n.t('streak.days_unit') }}</span>
               </div>
             </div>
 
@@ -146,15 +146,15 @@
           <!-- Live Kalkulator Card -->
           <div class="calc-card">
             <div class="calc-left">
-              <span class="calc-label">Berechnetes Monatsbudget:</span>
-              <span class="calc-value">{{ calculatedMonthlyTotal }} &euro;</span>
+              <span class="calc-label">{{ i18n.t('settings.calculated_monthly') }}</span>
+              <span class="calc-value">{{ calculatedMonthlyTotal }} {{ i18n.currencySymbol }}</span>
             </div>
             <button
               class="save-btn"
               :disabled="!isValidSettings"
               @click="handleSaveSettings"
             >
-              Speichern
+              {{ i18n.t('settings.save_btn') }}
             </button>
           </div>
 
@@ -163,7 +163,7 @@
 
         <!-- Design & Theming -->
         <section class="setting-section theme-section">
-          <span class="section-title">Design & Akzentfarbe</span>
+          <span class="section-title">{{ i18n.t('settings.theme_heading') }}</span>
           <p class="description">
             Wähle dein Lieblings-Farbschema oder stelle eine eigene Farbe ein.
           </p>
@@ -215,19 +215,37 @@
           </div>
         </section>
 
+        <!-- Währung / Currency -->
+        <section class="setting-section currency-zone">
+          <span class="section-title">{{ i18n.t('settings.currency_heading') }}</span>
+          <div class="language-chips">
+            <button
+              v-for="curr in i18n.currencies"
+              :key="curr.code"
+              type="button"
+              class="lang-chip"
+              :class="{ active: i18n.currentCurrency.value === curr.code }"
+              @click="i18n.setCurrency(curr.code)"
+            >
+              <span class="lang-flag">{{ curr.symbol }}</span>
+              <span class="lang-name">{{ curr.name }}</span>
+            </button>
+          </div>
+        </section>
+
         <!-- Backup & Archiv -->
         <section class="setting-section backup-zone">
-          <span class="section-title">Daten & Archiv</span>
+          <span class="section-title">{{ i18n.t('settings.backup_heading') }}</span>
           <p class="description">
-            Sichere deine Ausgaben oder wirf einen Blick in frühere Perioden.
+            {{ i18n.t('settings.backup_desc') }}
           </p>
 
           <div class="backup-actions">
             <button class="backup-btn" :disabled="isExporting" @click="handleExport('csv')">
-              CSV (Excel)
+              {{ i18n.t('settings.export_csv') }}
             </button>
             <button class="backup-btn" :disabled="isExporting" @click="handleExport('json')">
-              JSON Backup
+              {{ i18n.t('settings.export_json') }}
             </button>
           </div>
 
@@ -240,49 +258,49 @@
                 :disabled="isImporting"
                 @change="handleFileInput"
               />
-              <span>{{ isImporting ? 'Importiere...' : 'Backup importieren (JSON/CSV)' }}</span>
+              <span>{{ isImporting ? i18n.t('settings.importing') : i18n.t('settings.import_backup') }}</span>
             </label>
           </div>
           <p v-if="backupMsg" class="backup-msg" :class="backupMsgType">{{ backupMsg }}</p>
 
           <div style="margin-top: 8px;">
             <button type="button" class="archive-trigger-btn" @click="handleOpenArchive">
-              📜 Frühere Monate / Archiv ansehen
+              {{ i18n.t('settings.archive_trigger') }}
             </button>
           </div>
         </section>
 
         <!-- Über Restgeld / Info Zone -->
         <section class="setting-section about-zone">
-          <span class="section-title">App-Info & Philosophie</span>
+          <span class="section-title">{{ i18n.t('settings.about_heading') }}</span>
           <p class="description">
-            Erfahre mehr über die Prinzipien von Restgeld, Shortcuts und Open-Source-Quellcode.
+            {{ i18n.t('settings.about_desc') }}
           </p>
           <button type="button" class="about-trigger-btn" @click="handleOpenAbout">
-            ℹ️ Über Restgeld öffnen
+            {{ i18n.t('settings.about_trigger') }}
           </button>
         </section>
 
         <!-- Danger Zone -->
         <section class="setting-section danger-zone">
-          <span class="section-title danger-title">Neue Periode ab heute starten</span>
+          <span class="section-title danger-title">{{ i18n.t('settings.reset_heading') }}</span>
           <p class="description">
-            Startet deinen Abrechnungszyklus ab heute bei Tag 1 mit dem konfigurierten Budget.
+            {{ i18n.t('settings.reset_desc') }}
           </p>
 
           <div v-if="!confirmReset">
             <button class="danger-btn" @click="confirmReset = true">
-              Neue Periode ab heute starten
+              {{ i18n.t('settings.reset_btn') }}
             </button>
           </div>
           <div v-else class="confirm-box">
-            <p class="confirm-text">Wirklich ab heute neu starten?</p>
+            <p class="confirm-text">{{ i18n.t('settings.reset_confirm_body') }}</p>
             <div class="confirm-actions">
               <button class="danger-btn confirm" @click="handleResetPeriod">
-                Ja, ab heute starten
+                {{ i18n.t('settings.reset_confirm_btn') }}
               </button>
               <button class="cancel-btn" @click="confirmReset = false">
-                Abbrechen
+                {{ i18n.t('settings.reset_cancel_btn') }}
               </button>
             </div>
           </div>

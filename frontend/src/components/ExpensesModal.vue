@@ -3,30 +3,33 @@
     <div class="modal-content">
       <div class="modal-header">
         <div class="header-title-wrap">
-          <h2>Alle Ausgaben</h2>
+          <h2>{{ i18n.t('expenses.title') }}</h2>
           <span v-if="totalCount > 0" class="badge">{{ totalCount }}</span>
         </div>
-        <button class="close-btn" aria-label="Schließen" @click="$emit('close')">&times;</button>
+        <button class="close-btn" :aria-label="i18n.t('common.close')" @click="$emit('close')">&times;</button>
       </div>
 
       <div class="modal-body">
         <div v-if="isLoading" class="loading-state">
-          Lade Ausgaben...
+          ...
         </div>
 
         <div v-else-if="expenses.length === 0" class="empty-state">
-          Keine Ausgaben in dieser Periode vorhanden.
+          {{ i18n.t('expenses.empty') }}
         </div>
 
         <ul v-else class="expense-list">
           <li v-for="exp in expenses" :key="exp.id" class="expense-item">
-            <div class="expense-details">
-              <span class="expense-note">{{ exp.note || 'Ausgabe' }}</span>
-              <span class="expense-date">{{ formatDate(exp.createdAt) }}</span>
+            <div class="expense-left">
+              <span class="category-icon" :title="exp.note || i18n.t('recent.default_note')">{{ detectCategoryIcon(exp.note) }}</span>
+              <div class="expense-details">
+                <span class="expense-note">{{ exp.note || i18n.t('recent.default_note') }}</span>
+                <span class="expense-date">{{ formatDate(exp.createdAt) }}</span>
+              </div>
             </div>
             <div class="expense-right">
-              <span class="expense-amount">-{{ formatAmount(exp.amount) }} &euro;</span>
-              <button class="delete-btn" @click="handleDelete(exp.id)" aria-label="Löschen">
+              <span class="expense-amount">-{{ i18n.formatMoney(exp.amount) }}</span>
+              <button class="delete-btn" @click="handleDelete(exp.id)" :aria-label="i18n.t('expenses.delete')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
@@ -44,9 +47,9 @@
             aria-label="Vorherige Seite"
             @click="changePage(currentPage - 1)"
           >
-            &larr; Zurück
+            &larr; {{ i18n.t('common.back') }}
           </button>
-          <span class="pagination-info">Seite {{ currentPage }} von {{ totalPages }}</span>
+          <span class="pagination-info">{{ i18n.t('expenses.page_info', { page: currentPage, total: totalPages }) }}</span>
           <button
             class="pagination-btn"
             :disabled="currentPage >= totalPages || isLoading"
@@ -65,6 +68,7 @@
 import { ref, watch } from 'vue'
 import { useApi, type Expense } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
+import { useI18n, detectCategoryIcon } from '../composables/useI18n'
 
 const props = defineProps<{
   visible: boolean
@@ -77,6 +81,7 @@ const emit = defineEmits<{
 
 const api = useApi()
 const haptics = useHaptics()
+const i18n = useI18n()
 const expenses = ref<Expense[]>([])
 const currentPage = ref(1)
 const totalPages = ref(1)
@@ -139,7 +144,6 @@ async function handleDelete(id: string) {
     await api.deleteExpense(id)
     haptics.success()
     emit('expense-deleted', id)
-    // Wenn das letzte Element der Seite gelöscht wurde und wir auf einer höheren Seite sind
     if (expenses.value.length === 1 && currentPage.value > 1) {
       await loadExpenses(currentPage.value - 1)
     } else {
@@ -153,15 +157,11 @@ async function handleDelete(id: string) {
   }
 }
 
-function formatAmount(amount: number) {
-  return amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
 function formatDate(dateStr: string) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return ''
-  return date.toLocaleString('de-DE', {
+  return date.toLocaleString(i18n.currentLocale.value === 'en' ? 'en-US' : 'de-DE', {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
@@ -282,6 +282,20 @@ function formatDate(dateStr: string) {
   background: var(--bg-subtle, #1c1c24);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 12px;
+}
+
+.expense-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.category-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .expense-details {

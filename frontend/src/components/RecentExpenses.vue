@@ -1,9 +1,9 @@
 <template>
   <section class="recent-expenses">
     <div class="section-header">
-      <h3 class="section-title">Letzte Ausgaben</h3>
+      <h3 class="section-title">{{ i18n.t('recent.title') }}</h3>
       <button v-if="expenses.length > 0" class="show-all-btn" @click="$emit('open-all')">
-        <span>Alle anzeigen</span>
+        <span>{{ i18n.t('recent.show_all') }}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
@@ -11,9 +11,10 @@
     </div>
     <ul v-if="expenses.length > 0" class="expense-list">
       <li v-for="exp in expenses" :key="exp.id" class="expense-item">
-        <span class="expense-note">{{ exp.note || 'Ausgabe' }}</span>
-        <span class="expense-amount">-{{ formatted(exp.amount) }} &euro;</span>
-        <button class="delete-btn" @click="$emit('delete', exp.id)" aria-label="Löschen">
+        <span class="category-icon" :title="exp.note || i18n.t('recent.default_note')">{{ detectCategoryIcon(exp.note) }}</span>
+        <span class="expense-note">{{ exp.note || i18n.t('recent.default_note') }}</span>
+        <span class="expense-amount">-{{ i18n.formatMoney(exp.amount) }}</span>
+        <button class="delete-btn" :aria-label="i18n.t('recent.delete_title')" @click="$emit('delete', exp.id)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
@@ -21,11 +22,12 @@
         </button>
       </li>
     </ul>
-    <p v-else class="empty-state">Noch keine Ausgaben heute</p>
+    <p v-else class="empty-state">{{ i18n.t('recent.empty') }}</p>
   </section>
 </template>
 
 <script setup lang="ts">
+import { useI18n, detectCategoryIcon } from '../composables/useI18n'
 import type { Expense } from '../composables/useApi'
 
 defineProps<{
@@ -37,9 +39,7 @@ defineEmits<{
   (e: 'open-all'): void
 }>()
 
-function formatted(amount: number) {
-  return amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+const i18n = useI18n()
 </script>
 
 <style scoped>
@@ -122,11 +122,19 @@ function formatted(amount: number) {
 .expense-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 10px 14px;
   background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 12px;
+}
+
+.category-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .expense-note {

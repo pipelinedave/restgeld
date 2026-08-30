@@ -1,9 +1,9 @@
 <template>
   <section v-if="stats && stats.length > 0" class="spending-trend">
     <div class="trend-header">
-      <h3 class="trend-title">Tages-Verlauf</h3>
+      <h3 class="trend-title">{{ i18n.t('trend.title') }}</h3>
       <span class="average-badge">
-        &Oslash; {{ averageSpentFormatted }} &euro; / Tag
+        {{ i18n.t('trend.avg', { amount: i18n.formatMoney(averageSpent) }) }}
       </span>
     </div>
 
@@ -31,7 +31,7 @@
             <div
               class="base-budget-line"
               :style="{ bottom: getBaseLinePercent() + '%' }"
-              title="Basis-Tagesbudget"
+              :title="i18n.t('settings.desired_daily')"
             ></div>
           </div>
           <span class="bar-label">{{ stat.day }}</span>
@@ -51,7 +51,7 @@
         </span>
       </template>
       <template v-else>
-        <span class="detail-hint">Tippe auf einen Tag für Details</span>
+        <span class="detail-hint">...</span>
       </template>
     </div>
   </section>
@@ -61,6 +61,7 @@
 import { ref, computed } from 'vue'
 import type { DailyStat } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
+import { useI18n } from '../composables/useI18n'
 
 const props = defineProps<{
   stats?: DailyStat[]
@@ -69,6 +70,7 @@ const props = defineProps<{
 }>()
 
 const haptics = useHaptics()
+const i18n = useI18n()
 const selectedDay = ref<number | null>(null)
 
 const selectedStat = computed(() => {
@@ -90,12 +92,8 @@ const averageSpent = computed(() => {
   return total / props.stats.length
 })
 
-const averageSpentFormatted = computed(() =>
-  averageSpent.value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-)
-
 function getBarHeightPercent(spent: number): number {
-  if (spent <= 0) return 4 // Minimaler sichtbarer Marker für 0 €
+  if (spent <= 0) return 4
   const pct = (spent / maxSpent.value) * 100
   return Math.min(Math.max(pct, 8), 100)
 }
@@ -120,21 +118,17 @@ function selectDay(stat: DailyStat) {
   }
 }
 
-function formatAmount(amount: number) {
-  return amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
 function getDayDetailText(stat: DailyStat): string {
   if (stat.day === props.currentDay) {
-    return stat.spent > 0 ? `${formatAmount(stat.spent)} € (heute aktiv)` : '0,00 € (heute aktiv)'
+    return stat.spent > 0 ? `${i18n.formatMoney(stat.spent)} (heute aktiv)` : `${i18n.formatMoney(0)} (heute aktiv)`
   }
   if (stat.spent === 0) {
-    return '0,00 € (Null-Ausgaben-Tag 🎯)'
+    return `${i18n.formatMoney(0)} (${i18n.t('trend.legend_savings')} 🎯)`
   }
   if (stat.spent <= props.baseBudget) {
-    return `${formatAmount(stat.spent)} € (im Budget 👍)`
+    return `${i18n.formatMoney(stat.spent)} (${i18n.t('trend.legend_ok')} 👍)`
   }
-  return `${formatAmount(stat.spent)} € (über Budget ⚠️)`
+  return `${i18n.formatMoney(stat.spent)} (${i18n.t('trend.legend_over')} ⚠️)`
 }
 
 function formatDate(dateStr: string) {

@@ -33,6 +33,7 @@ type User struct {
 	DefaultPeriodDays    int       `json:"defaultPeriodDays"`
 	Theme                string    `json:"theme"`
 	Language             string    `json:"language"`
+	Currency             string    `json:"currency"`
 	IsActive             bool      `json:"isActive"`
 }
 
@@ -56,6 +57,7 @@ type UpdateUserSettingsRequest struct {
 	DefaultPeriodDays    int     `json:"defaultPeriodDays,omitempty"`
 	Theme                string  `json:"theme,omitempty"`
 	Language             string  `json:"language,omitempty"`
+	Currency             string  `json:"currency,omitempty"`
 }
 
 type authService struct {
@@ -268,19 +270,19 @@ func (s *authService) handleVerifyMagicLink(w http.ResponseWriter, r *http.Reque
 	var u User
 	isNew := false
 	err = s.db.QueryRow(
-		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active 
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active 
 		 FROM users WHERE email = $1`,
 		email,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 
 	if err == sql.ErrNoRows {
 		isNew = true
 		err = s.db.QueryRow(
-			`INSERT INTO users (email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, language, is_active) 
-			 VALUES ($1, $2, $2, 450.00, 30, 'emerald', 'de', TRUE) 
-			 RETURNING id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active`,
+			`INSERT INTO users (email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, language, currency, is_active) 
+			 VALUES ($1, $2, $2, 450.00, 30, 'emerald', 'de', 'EUR', TRUE) 
+			 RETURNING id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active`,
 			email, now,
-		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
+		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 	} else if err == nil {
 		_, _ = s.db.Exec("UPDATE users SET last_login_at = $1 WHERE id = $2", now, u.ID)
 	}
@@ -336,10 +338,10 @@ func (s *authService) handleMe(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		var u User
 		err := s.db.QueryRow(
-			`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active 
+			`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active 
 			 FROM users WHERE id = $1`,
 			userID,
-		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
+		).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 		if err != nil {
 			writeError(w, http.StatusNotFound, "benutzer nicht gefunden")
 			return
@@ -391,9 +393,10 @@ func (s *authService) handleSettings(w http.ResponseWriter, r *http.Request) {
 		 default_monthly_budget = CASE WHEN $2 > 0 THEN $2 ELSE default_monthly_budget END,
 		 default_period_days = CASE WHEN $3 > 0 THEN $3 ELSE default_period_days END,
 		 theme = CASE WHEN $4 <> '' THEN $4 ELSE theme END,
-		 language = CASE WHEN $5 <> '' THEN $5 ELSE language END
+		 language = CASE WHEN $5 <> '' THEN $5 ELSE language END,
+		 currency = CASE WHEN $6 <> '' THEN $6 ELSE currency END
 		 WHERE id = $1`,
-		userID, req.DefaultMonthlyBudget, req.DefaultPeriodDays, req.Theme, req.Language,
+		userID, req.DefaultMonthlyBudget, req.DefaultPeriodDays, req.Theme, req.Language, req.Currency,
 	)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "fehler beim speichern der einstellungen")
@@ -402,10 +405,10 @@ func (s *authService) handleSettings(w http.ResponseWriter, r *http.Request) {
 
 	var u User
 	_ = s.db.QueryRow(
-		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), is_active 
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active 
 		 FROM users WHERE id = $1`,
 		userID,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 
 	jsonHeader(w)
 	writeJSON(w, http.StatusOK, u)

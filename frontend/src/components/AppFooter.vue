@@ -3,7 +3,7 @@
     <div class="footer-divider"></div>
     <div class="footer-content">
       <div class="footer-left">
-        <span class="footer-tagline">Track daily. Stay in budget.</span>
+        <span class="footer-tagline">{{ i18n.t('footer.tagline') }}</span>
         <span class="footer-energy">
           ⚡ made with high energy by
           <a
@@ -23,7 +23,7 @@
         target="_blank"
         rel="noopener noreferrer"
         class="commit-badge"
-        title="Commit auf GitHub ansehen"
+        :title="`${i18n.t('footer.commit')}: ${commitHash}`"
       >
         <span class="commit-icon">#</span>{{ commitHash }}
       </a>
@@ -33,6 +33,9 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '../composables/useI18n'
+
+const i18n = useI18n()
 const commitHash = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev'
 </script>
 
