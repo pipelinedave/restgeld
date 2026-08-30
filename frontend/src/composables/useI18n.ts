@@ -173,7 +173,15 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.pro_badge': 'PRO TIER',
     'auth.free_badge': 'FREE TIER',
     'auth.upgrade_pro': 'Auf Pro upgraden (Stripe)',
-    'auth.manage_sub': 'Abonnement verwalten',
+    // Categories (Smart Zero-Bloat)
+    'category.coffee': 'Kaffee & Bäckerei',
+    'category.food': 'Essen & Gastro',
+    'category.groceries': 'Supermarkt & Einkauf',
+    'category.transport': 'Mobilität & Transport',
+    'category.leisure': 'Freizeit & Ausgehen',
+    'category.shopping': 'Shopping & Technik',
+    'category.health': 'Gesundheit & Sport',
+    'category.other': 'Sonstiges',
 
     // About
     'about.title': 'Über Restgeld',
@@ -332,6 +340,15 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.free_badge': 'FREE TIER',
     'auth.upgrade_pro': 'Upgrade to Pro (Stripe)',
     'auth.manage_sub': 'Manage Subscription',
+    // Categories (Smart Zero-Bloat)
+    'category.coffee': 'Coffee & Bakery',
+    'category.food': 'Food & Dining',
+    'category.groceries': 'Groceries & Markets',
+    'category.transport': 'Transport & Travel',
+    'category.leisure': 'Leisure & Nightlife',
+    'category.shopping': 'Shopping & Tech',
+    'category.health': 'Health & Fitness',
+    'category.other': 'Other',
 
     // About
     'about.title': 'About Restgeld',
@@ -490,6 +507,15 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.free_badge': 'NIVEL GRATUITO',
     'auth.upgrade_pro': 'Mejorar a Pro (Stripe)',
     'auth.manage_sub': 'Gestionar Suscripción',
+    // Categories (Smart Zero-Bloat)
+    'category.coffee': 'Café y Panadería',
+    'category.food': 'Comida y Restaurantes',
+    'category.groceries': 'Supermercado y Compras',
+    'category.transport': 'Transporte y Movilidad',
+    'category.leisure': 'Ocio y Salidas',
+    'category.shopping': 'Compras y Tecnología',
+    'category.health': 'Salud y Deporte',
+    'category.other': 'Otros',
 
     // About
     'about.title': 'Acerca de Restgeld',
@@ -648,6 +674,15 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'auth.free_badge': 'NIVEAU GRATUIT',
     'auth.upgrade_pro': 'Passer à Pro (Stripe)',
     'auth.manage_sub': 'Gérer l\'Abonnement',
+    // Categories (Smart Zero-Bloat)
+    'category.coffee': 'Café & Boulangerie',
+    'category.food': 'Nourriture & Restaurants',
+    'category.groceries': 'Courses & Supermarché',
+    'category.transport': 'Transports & Mobilité',
+    'category.leisure': 'Loisirs & Sorties',
+    'category.shopping': 'Shopping & High-Tech',
+    'category.health': 'Santé & Bien-être',
+    'category.other': 'Divers',
 
     // About
     'about.title': 'À propos de Restgeld',
@@ -680,31 +715,69 @@ function detectBrowserLocale(): SupportedLocale {
   return 'de'
 }
 
+export interface CategoryStat {
+  key: string
+  icon: string
+  name: string
+  total: number
+  percentage: number
+  count: number
+}
+
+export function detectCategoryKey(note?: string): { key: string; icon: string } {
+  if (!note || note.trim().length === 0) return { key: 'other', icon: '💶' }
+  const clean = note.trim().toLowerCase()
+
+  if (/kino|cinema|movie|party|club|konzert|concert|festival|event|feiern|bier|beer|bar|drinks|cocktail/.test(clean)) return { key: 'leisure', icon: '🎉' }
+  if (/kaffee|coffee|espresso|cappuccino|latte|bäcker|bakery|croissant|donut|tee|tea/.test(clean)) return { key: 'coffee', icon: '☕' }
+  if (/essen|food|lunch|dinner|mittag|abendessen|pizza|döner|burger|sushi|pasta|restaurant|imbiss|snack|kebab/.test(clean)) return { key: 'food', icon: '🍔' }
+  if (/supermarkt|einkauf|groceries|rewe|aldi|lidl|edeka|dm|rossmann|kaufland|penny|market/.test(clean)) return { key: 'groceries', icon: '🛒' }
+  if (/tanken|benzin|fuel|diesel|bahn|zug|train|bus|ticket|uber|taxi|bolt|fahrt|mvv|bvg|flight|flug/.test(clean)) return { key: 'transport', icon: '🚗' }
+  if (/amazon|zalando|kleidung|clothes|tech|apple|electronics|gadget|paket|shopping/.test(clean)) return { key: 'shopping', icon: '📦' }
+  if (/apotheke|pharma|arzt|doctor|gym|fitness|sport|climbing|training|medikament/.test(clean)) return { key: 'health', icon: '💊' }
+
+  return { key: 'other', icon: '💶' }
+}
+
 /**
  * Automatically detect an emoji category tag from free-text notes
  * without any user configuration, dropdowns, or friction!
  */
 export function detectCategoryIcon(note?: string): string {
-  if (!note) return '💶'
-  const clean = note.toLowerCase().trim()
-  if (!clean) return '💶'
+  return detectCategoryKey(note).icon
+}
 
-  // Leisure & Drinks (Check before generic tickets)
-  if (/kino|cinema|movie|party|club|konzert|concert|festival|event|feiern|bier|beer|bar|drinks|cocktail/.test(clean)) return '🎉'
-  // Coffee & Bakery
-  if (/kaffee|coffee|espresso|cappuccino|latte|bäcker|bakery|croissant|donut|tee|tea/.test(clean)) return '☕'
-  // Food & Dining
-  if (/essen|food|lunch|dinner|mittag|abendessen|pizza|döner|burger|sushi|pasta|restaurant|imbiss|snack|kebab/.test(clean)) return '🍔'
-  // Groceries & Supermarket
-  if (/supermarkt|einkauf|groceries|rewe|aldi|lidl|edeka|dm|rossmann|kaufland|penny|market/.test(clean)) return '🛒'
-  // Transport & Mobility
-  if (/tanken|benzin|fuel|diesel|bahn|zug|train|bus|ticket|uber|taxi|bolt|fahrt|mvv|bvg|flight|flug/.test(clean)) return '🚗'
-  // Tech & Shopping
-  if (/amazon|zalando|kleidung|clothes|tech|apple|electronics|gadget|paket|shopping/.test(clean)) return '📦'
-  // Health & Sports
-  if (/apotheke|pharma|arzt|doctor|gym|fitness|sport|climbing|training|medikament/.test(clean)) return '💊'
+export function calculateCategoryBreakdown(
+  expenses: { amount: number; note?: string }[],
+  t: (key: string) => string
+): CategoryStat[] {
+  if (!expenses || expenses.length === 0) return []
 
-  return '💶'
+  const totalSpent = expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0)
+  const map: Record<string, { icon: string; total: number; count: number }> = {}
+
+  for (const exp of expenses) {
+    const { key, icon } = detectCategoryKey(exp.note)
+    if (!map[key]) {
+      map[key] = { icon, total: 0, count: 0 }
+    }
+    map[key].total += exp.amount || 0
+    map[key].count += 1
+  }
+
+  const result: CategoryStat[] = Object.entries(map).map(([key, data]) => {
+    const percentage = totalSpent > 0 ? Math.round((data.total / totalSpent) * 100) : 0
+    return {
+      key,
+      icon: data.icon,
+      name: t(`category.${key}`),
+      total: data.total,
+      percentage,
+      count: data.count,
+    }
+  })
+
+  return result.sort((a, b) => b.total - a.total)
 }
 
 export function useI18n() {
@@ -804,5 +877,7 @@ export function useI18n() {
     formatCurrency,
     formatMoney,
     detectCategoryIcon,
+    detectCategoryKey,
+    calculateCategoryBreakdown: (exps: { amount: number; note?: string }[]) => calculateCategoryBreakdown(exps, t),
   }
 }

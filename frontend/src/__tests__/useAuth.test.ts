@@ -90,7 +90,6 @@ describe('useAuth composable', () => {
 
   it('migrateGuestData calls endpoint with payload', async () => {
     const auth = useAuth()
-    // Mock login first
     auth.verifyToken = vi.fn().mockImplementation(async () => {
       auth.user.value = {
         id: 'u-1',
@@ -118,5 +117,17 @@ describe('useAuth composable', () => {
       []
     )
     expect(count).toBe(2)
+  })
+
+  it('handles passkey methods gracefully when not supported', async () => {
+    const auth = useAuth()
+    expect(typeof auth.isPasskeySupported()).toBe('boolean')
+    
+    // In node/jsdom environment without WebAuthn
+    const regRes = await auth.registerPasskey()
+    expect(regRes.success).toBe(false)
+
+    const loginRes = await auth.loginWithPasskey()
+    expect(loginRes).toBe(false)
   })
 })

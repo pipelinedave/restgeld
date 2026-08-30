@@ -676,6 +676,36 @@ body {
   gap: 32px;
 }
 
+.calc-currency-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.currency-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.currency-chip:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+}
+
+.currency-chip.active {
+  background: var(--accent-green-subtle);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+}
+
 .calc-group {
   display: flex;
   flex-direction: column;

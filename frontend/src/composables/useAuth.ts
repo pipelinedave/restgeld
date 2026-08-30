@@ -9,6 +9,8 @@ export interface User {
   defaultMonthlyBudget: number
   defaultPeriodDays: number
   theme: string
+  language?: string
+  currency?: string
   isActive: boolean
   plan?: 'free' | 'pro'
 }
@@ -38,6 +40,25 @@ if (typeof window !== 'undefined') {
 }
 
 const BASE = typeof window !== 'undefined' && import.meta.env.PROD ? window.location.origin : ''
+
+function bufferToBase64url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function base64urlToBuffer(base64url: string): Uint8Array {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/')
+  const bin = atob(base64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) {
+    bytes[i] = bin.charCodeAt(i)
+  }
+  return bytes
+}
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!user.value)
@@ -199,6 +220,125 @@ export function useAuth() {
     return 0
   }
 
+  function isPasskeySupported(): boolean {
+    return typeof window !== 'undefined' && !!window.PublicKeyCredential && typeof navigator.credentials !== 'undefined'
+  }
+
+  async function registerPasskey(): Promise<{ success: boolean; message?: string }> {
+    if (!isPasskeySupported()) {
+      return { success: false, message: 'Passkeys werden von diesem Gerät nicht unterstützt.' }
+    }
+
+    isLoading.value = true
+    try {
+      const optRes = await fetch(`${BASE}/api/auth/passkey/register-options`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      })
+      if (!optRes.ok) {
+        return { success: false, message: 'Fehler beim Laden der Passkey-Optionen' }
+      }
+
+      const options = await optRes.json()
+      const challengeBuf = base64urlToBuffer(options.challenge)
+      const userBuf = new TextEncoder().encode(options.user?.id || user.value?.id || 'user')
+
+      const credential = (await navigator.credentials.create({
+        publicKey: {
+          challenge: challengeBuf.buffer as ArrayBuffer,
+          rp: {
+            name: options.rp?.name || 'restgeld.',
+            id: typeof window !== 'undefined' ? window.location.hostname : 'restgeld.stillon.top',
+          },
+          user: {
+            id: userBuf.buffer as ArrayBuffer,
+            name: user.value?.email || 'user',
+            displayName: user.value?.email || 'Restgeld User',
+          },
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -7 },
+            { type: 'public-key', alg: -257 },
+          ],
+          timeout: 60000,
+          attestation: 'none',
+        },
+      })) as PublicKeyCredential | null
+
+      if (!credential) {
+        return { success: false, message: 'Registrierung abgebrochen' }
+      }
+
+      const credentialId = bufferToBase64url(credential.rawId)
+      const verifyRes = await fetch(`${BASE}/api/auth/passkey/register-verify`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          credentialId,
+          publicKey: credentialId,
+          attestationType: 'none',
+        }),
+      })
+
+      if (!verifyRes.ok) {
+        return { success: false, message: 'Fehler bei der Passkey-Bestätigung' }
+      }
+
+      return { success: true, message: 'Passkey erfolgreich registriert!' }
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Passkey-Registrierung fehlgeschlagen' }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function loginWithPasskey(): Promise<boolean> {
+    if (!isPasskeySupported()) return false
+
+    isLoading.value = true
+    error.value = null
+    try {
+      const optRes = await fetch(`${BASE}/api/auth/passkey/login-options`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!optRes.ok) return false
+
+      const options = await optRes.json()
+      const challengeBuf = base64urlToBuffer(options.challenge)
+
+      const assertion = (await navigator.credentials.get({
+        publicKey: {
+          challenge: challengeBuf.buffer as ArrayBuffer,
+          timeout: 60000,
+          rpId: typeof window !== 'undefined' ? window.location.hostname : 'restgeld.stillon.top',
+        },
+      })) as PublicKeyCredential | null
+
+      if (!assertion) return false
+
+      const credentialId = bufferToBase64url(assertion.rawId)
+      const verifyRes = await fetch(`${BASE}/api/auth/passkey/login-verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credentialId }),
+      })
+
+      if (!verifyRes.ok) {
+        error.value = 'Passkey-Login fehlgeschlagen'
+        return false
+      }
+
+      const authData = await verifyRes.json()
+      setSession(authData.user, authData.token)
+      return true
+    } catch (e: any) {
+      error.value = e.message || 'Passkey-Login abgebrochen'
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function checkUrlForAuthToken(): Promise<boolean> {
     if (typeof window === 'undefined') return false
     const params = new URLSearchParams(window.location.search)
@@ -206,7 +346,6 @@ export function useAuth() {
     if (token) {
       const success = await verifyToken(token)
       if (success) {
-        // Token aus URL entfernen
         params.delete('auth_token')
         const newSearch = params.toString() ? `?${params.toString()}` : ''
         window.history.replaceState({}, document.title, `${window.location.pathname}${newSearch}`)
@@ -229,6 +368,9 @@ export function useAuth() {
     logout,
     deleteAccount,
     migrateGuestData,
+    isPasskeySupported,
+    registerPasskey,
+    loginWithPasskey,
     checkUrlForAuthToken,
   }
 }

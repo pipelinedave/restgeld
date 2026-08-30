@@ -10,10 +10,7 @@ import (
 )
 
 func TestAuthServiceHealth(t *testing.T) {
-	// mock test
 	svc := &authService{now: time.Now}
-	req := httptest.NewRequest(http.MethodGet, "/api/auth/health", nil)
-	rec := httptest.NewRecorder()
 
 	// Direct call health handler without pinging db
 	req2 := httptest.NewRequest(http.MethodPost, "/api/auth/magic-link", strings.NewReader(`{"email": "invalid"}`))
@@ -32,10 +29,6 @@ func TestAuthServiceHealth(t *testing.T) {
 		// Nil db will return 500 when inserting magic link
 		t.Fatalf("erwartet 500 ohne db, bekommen %d", rec3.Code)
 	}
-
-	_ = req
-	_ = rec
-	_ = json.Marshal
 }
 
 func TestPasskeyLoginOptions(t *testing.T) {
@@ -56,5 +49,41 @@ func TestPasskeyLoginOptions(t *testing.T) {
 
 	if resp["challenge"] == "" {
 		t.Fatalf("challenge sollte nicht leer sein")
+	}
+}
+
+func TestPasskeyRegisterUnauthorized(t *testing.T) {
+	svc := &authService{now: time.Now}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/register-options", nil)
+	rec := httptest.NewRecorder()
+
+	svc.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("erwartet 401 Unauthorized ohne Auth-Header, bekommen %d", rec.Code)
+	}
+}
+
+func TestPasskeyRegisterVerifyInvalid(t *testing.T) {
+	svc := &authService{now: time.Now}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/register-verify", strings.NewReader(`{}`))
+	rec := httptest.NewRecorder()
+
+	svc.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("erwartet 401 Unauthorized ohne Login, bekommen %d", rec.Code)
+	}
+}
+
+func TestPasskeyLoginVerifyInvalid(t *testing.T) {
+	svc := &authService{now: time.Now}
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/login-verify", strings.NewReader(`{}`))
+	rec := httptest.NewRecorder()
+
+	svc.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("erwartet 400 Bad Request ohne credentialId, bekommen %d", rec.Code)
 	}
 }

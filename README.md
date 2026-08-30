@@ -15,8 +15,10 @@
 
 ## 🚀 Key SaaS Features
 
+- 💱 **Multi-Currency Engine**: Globale Währungsunterstützung für **EUR (€), USD ($), GBP (£), CHF und JPY (¥)** mit dynamischer Formatierung und Account-Synchronisation.
+- 🏷️ **Zero-Bloat Smart Tagging & Insights**: Automatische Emoji-Kategorisierung (☕ Kaffee, 🍔 Essen, 🛒 Einkauf, 🚗 Mobilität, 🎉 Freizeit, 📦 Shopping, 💊 Gesundheit) ohne manuelle Kategorieverwaltung oder UX-Reibung.
 - 🌍 **Multi-Language Engine (i18n)**: Nahtloser Sprachwechsel in Echtzeit für **Deutsch 🇩🇪, Englisch 🇬🇧, Spanisch 🇪🇸 und Französisch 🇫🇷** (inkl. automatischer Browser-Spracherkennung und lokalisierter Magic-Link-E-Mails).
-- 🔐 **Passwortlose Authentifizierung**: Standalone Auth-Microservice mit **Passkeys / WebAuthn** und **Magic-Links** für blitzschnellen, sicheren Login ohne Passwörter.
+- 🔐 **Passwortlose Authentifizierung**: Standalone Auth-Microservice mit nativen **Passkeys / WebAuthn (Touch ID, Face ID, Windows Hello)** und **Magic-Links** für blitzschnellen, sicheren Login ohne Passwörter.
 - ⚡ **Multi-Tenant Cloud Sync**: Mandantentrennende Datenarchitektur über Postgres-Schlüssel für synchronisierte Nutzung über Smartphone, Tablet und Desktop hinweg.
 - 📊 **Tägliche Restgeld-Kalkulation**: Statt unübersichtlicher 40-Kategorien-Tabellen berechnet Restgeld jeden Tag präzise eine Kennzahl: *Dein verbleibendes Tagesbudget*.
 - 🔄 **Automatischer Sparpuffer-Rollover**: Ersparnisse fließen direkt in den Folgetages-Puffer; Überziehungen werden sanft über die Restlaufzeit ausgedehnt.
@@ -30,10 +32,10 @@
 
 | Layer | Technologie & Architektur |
 |---|---|
-| **Frontend PWA** | Vue 3, Vite, TypeScript, `useI18n` Composable, Mobile-First Zero-Scroll CSS |
+| **Frontend PWA** | Vue 3, Vite, TypeScript, `useI18n` Multi-Currency Composable, Zero-Scroll Mobile CSS |
 | **Core API Backend** | Go 1.22 REST Microservice (`net/http`, high-throughput, native SQL `lib/pq`) |
 | **Auth Microservice** | Go Standalone Service (Magic Links, Passkeys / WebAuthn, OAuth/JWT Sessions) |
-| **Billing Service** | Go Standalone Subscriptions & Quota Microservice |
+| **Billing Service** | Go Standalone Subscriptions & Stripe Portal Microservice |
 | **Datenbank Layer** | PostgreSQL 16 (Multi-Tenant, getrennte Instanzen `restgeld_core` & `restgeld_auth`) |
 | **Dev SMTP Mailer** | Mailpit (In-Memory Mailserver für lokale Auth-Tests) |
 | **Cloud & Hosting** | Vercel (Preview & Edge Deployments), Docker, Kubernetes (k3s) |
@@ -62,6 +64,24 @@ docker compose -f docker-compose.dev.yml up --build
 - **Auth Microservice:** [http://localhost:8081](http://localhost:8081)
 - **Billing Microservice:** [http://localhost:8082](http://localhost:8082)
 - **PostgreSQL DB:** `localhost:5432`
+
+---
+
+## 🧪 Test Suites ausführen
+
+```bash
+# Frontend Unit & Component Tests (Vitest)
+cd frontend && npm test
+
+# Core Backend Tests
+cd backend && go test ./... -v
+
+# Auth Service Tests
+cd services/auth-service && go test ./... -v
+
+# Billing Service Tests
+cd services/billing-service && go test ./... -v
+```
 
 ---
 

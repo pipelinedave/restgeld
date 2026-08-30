@@ -3,30 +3,44 @@
     <div class="modal-card auth-modal" @click.stop>
       <div class="modal-header">
         <h2 class="modal-title">
-          {{ auth.isLoggedIn.value ? 'Konto & Cloud-Sync' : 'Anmelden / Registrieren' }}
+          {{ auth.isLoggedIn.value ? (i18n.currentLocale.value === 'en' ? 'Account & Cloud Sync' : 'Konto & Cloud-Sync') : i18n.t('auth.title') }}
         </h2>
-        <button class="close-btn" aria-label="Schließen" @click="$emit('close')">&times;</button>
+        <button class="close-btn" :aria-label="i18n.t('common.close')" @click="$emit('close')">&times;</button>
       </div>
 
       <div class="modal-body">
-        <!-- 1. Nicht eingeloggt: Magic Link anfordern -->
+        <!-- 1. Nicht eingeloggt: Magic Link anfordern / Passkey Login -->
         <div v-if="!auth.isLoggedIn.value" class="auth-guest-view">
           <div class="auth-hero">
             <span class="auth-hero-icon">☁️</span>
-            <h3 class="auth-hero-title">Passwortlos & Sicher</h3>
+            <h3 class="auth-hero-title">{{ i18n.currentLocale.value === 'en' ? 'Passwordless & Secure' : 'Passwortlos & Sicher' }}</h3>
             <p class="auth-hero-desc">
-              Gib deine E-Mail-Adresse ein. Wir senden dir einen sicheren Magic Link, mit dem du dich sofort ohne Passwort einloggen kannst.
+              {{ i18n.t('auth.subtitle') }}
             </p>
           </div>
 
           <div v-if="!magicLinkSent" class="auth-form">
+            <!-- 1-Tap Passkey Biometric Login -->
+            <button
+              v-if="auth.isPasskeySupported()"
+              class="auth-passkey-login-btn"
+              :disabled="auth.isLoading.value"
+              @click="handlePasskeyLogin"
+            >
+              {{ i18n.t('auth.passkey_btn') }}
+            </button>
+
+            <div v-if="auth.isPasskeySupported()" class="auth-or-divider">
+              <span>{{ i18n.currentLocale.value === 'en' ? 'or with email' : 'oder per E-Mail' }}</span>
+            </div>
+
             <div class="input-group">
-              <label for="email-input" class="input-label">E-Mail-Adresse</label>
+              <label for="email-input" class="input-label">{{ i18n.t('auth.email_label') }}</label>
               <input
                 id="email-input"
                 v-model="email"
                 type="email"
-                placeholder="deine.email@beispiel.de"
+                :placeholder="i18n.t('auth.email_placeholder')"
                 class="auth-input"
                 :disabled="auth.isLoading.value"
                 @keyup.enter="handleRequestMagicLink"
@@ -42,16 +56,16 @@
               :disabled="!isValidEmail || auth.isLoading.value"
               @click="handleRequestMagicLink"
             >
-              {{ auth.isLoading.value ? 'Wird gesendet...' : 'Magic Link anfordern ✉️' }}
+              {{ auth.isLoading.value ? i18n.t('auth.sending') : i18n.t('auth.send_link') + ' ✉️' }}
             </button>
           </div>
 
           <!-- Magic Link gesendet Bestätigung -->
           <div v-else class="magic-link-sent-box">
             <div class="sent-icon">✉️</div>
-            <h4 class="sent-title">Link ist unterwegs!</h4>
+            <h4 class="sent-title">{{ i18n.currentLocale.value === 'en' ? 'Link is on its way!' : 'Link ist unterwegs!' }}</h4>
             <p class="sent-text">
-              Wir haben einen Login-Link an <strong>{{ email }}</strong> gesendet. Klicke einfach auf den Link in der E-Mail.
+              {{ i18n.currentLocale.value === 'en' ? `We sent a login link to ${email}. Just click the link in your email.` : `Wir haben einen Login-Link an ${email} gesendet. Klicke einfach auf den Link in der E-Mail.` }}
             </p>
 
             <div v-if="debugLink" class="dev-debug-box">
@@ -62,7 +76,7 @@
             </div>
 
             <button class="auth-secondary-btn" @click="magicLinkSent = false">
-              Andere E-Mail verwenden
+              {{ i18n.currentLocale.value === 'en' ? 'Use another email' : 'Andere E-Mail verwenden' }}
             </button>
           </div>
         </div>
@@ -77,26 +91,26 @@
               <span class="user-email">{{ auth.user.value?.email }}</span>
               <div class="user-badges">
                 <span class="user-status-pill">🟢 Cloud-Sync aktiv</span>
-                <span v-if="billing.isPro.value" class="user-pro-pill">⭐ PRO Member</span>
-                <span v-else class="user-free-pill">FREE Tier</span>
+                <span v-if="billing.isPro.value || auth.user.value?.plan === 'pro'" class="user-pro-pill">⭐ {{ i18n.t('auth.pro_badge') }}</span>
+                <span v-else class="user-free-pill">{{ i18n.t('auth.free_badge') }}</span>
               </div>
             </div>
           </div>
 
           <!-- Pro Upgrade Banner -->
-          <div v-if="!billing.isPro.value" class="pro-upgrade-card">
+          <div v-if="!billing.isPro.value && auth.user.value?.plan !== 'pro'" class="pro-upgrade-card">
             <div class="pro-card-content">
               <span class="pro-card-title">⭐⭐⭐ Restgeld PRO ⭐⭐⭐</span>
-              <p class="pro-card-desc">Schalte unbegrenztes Cloud-Backup, Multi-Geräte Sync und erweiterte CSV-Exporte frei.</p>
+              <p class="pro-card-desc">{{ i18n.currentLocale.value === 'en' ? 'Unlock unlimited cloud backup, multi-device sync, and custom exports.' : 'Schalte unbegrenztes Cloud-Backup, Multi-Geräte Sync und erweiterte CSV-Exporte frei.' }}</p>
               <button class="pro-checkout-btn" :disabled="billing.isLoading.value" @click="handleUpgradePro">
-                {{ billing.isLoading.value ? 'Lädt...' : 'Auf PRO upgraden ⭐' }}
+                {{ billing.isLoading.value ? '...' : i18n.t('auth.upgrade_pro') }}
               </button>
             </div>
           </div>
           <div v-else class="pro-active-card">
-            <span>Dein Restgeld PRO Paket ist aktiv!</span>
+            <span>{{ i18n.currentLocale.value === 'en' ? 'Your Restgeld PRO plan is active!' : 'Dein Restgeld PRO Paket ist aktiv!' }}</span>
             <button class="pro-portal-btn" :disabled="billing.isLoading.value" @click="handleOpenPortal">
-              Abo verwalten & Kündigen
+              {{ i18n.t('auth.manage_sub') }}
             </button>
           </div>
 
@@ -106,7 +120,7 @@
               <span class="detail-val mono">{{ auth.user.value?.id.slice(0, 8) }}...</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">Mitglied seit</span>
+              <span class="detail-label">{{ i18n.currentLocale.value === 'en' ? 'Member since' : 'Mitglied seit' }}</span>
               <span class="detail-val">{{ formatDate(auth.user.value?.createdAt) }}</span>
             </div>
           </div>
@@ -116,28 +130,28 @@
             <div class="migrate-info">
               <span class="migrate-icon">📥</span>
               <div class="migrate-text">
-                <strong>Lokale Daten gefunden</strong>
-                <span>Möchtest du deine {{ guestExpenses?.length || 0 }} lokalen Ausgaben in diesen Account übertragen?</span>
+                <strong>{{ i18n.currentLocale.value === 'en' ? 'Local Data Found' : 'Lokale Daten gefunden' }}</strong>
+                <span>{{ i18n.currentLocale.value === 'en' ? `Transfer your ${guestExpenses?.length || 0} local expenses into this account?` : `Möchtest du deine ${guestExpenses?.length || 0} lokalen Ausgaben in diesen Account übertragen?` }}</span>
               </div>
             </div>
             <button class="migrate-btn" :disabled="isMigrating" @click="handleMigrateData">
-              {{ isMigrating ? 'Wird übertragen...' : 'Jetzt synchronisieren' }}
+              {{ isMigrating ? '...' : (i18n.currentLocale.value === 'en' ? 'Sync Now' : 'Jetzt synchronisieren') }}
             </button>
           </div>
 
           <div class="auth-actions">
-            <div class="passkey-section">
-              <span class="passkey-label">Biometrie & Schnell-Login</span>
-              <button class="passkey-btn" @click="handleRegisterPasskey">
-                🔑 Passkey / FaceID aktivieren
+            <div v-if="auth.isPasskeySupported()" class="passkey-section">
+              <span class="passkey-label">{{ i18n.currentLocale.value === 'en' ? 'Biometrics & Fast Login' : 'Biometrie & Schnell-Login' }}</span>
+              <button class="passkey-btn" :disabled="auth.isLoading.value" @click="handleRegisterPasskey">
+                {{ i18n.t('auth.register_passkey_btn') }}
               </button>
             </div>
 
             <button class="auth-logout-btn" @click="handleLogout">
-              Abmelden
+              {{ i18n.t('auth.logout') }}
             </button>
             <button class="auth-delete-btn" @click="handleDeleteAccount">
-              Account & alle Daten löschen (DSGVO)
+              {{ i18n.t('auth.delete_account') }}
             </button>
           </div>
         </div>
@@ -151,6 +165,7 @@ import { ref, computed } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { useBilling } from '../composables/useBilling'
 import { useHaptics } from '../composables/useHaptics'
+import { useI18n } from '../composables/useI18n'
 import type { Expense, Period } from '../composables/useApi'
 
 const props = defineProps<{
@@ -169,6 +184,7 @@ const emit = defineEmits<{
 const auth = useAuth()
 const billing = useBilling()
 const haptics = useHaptics()
+const i18n = useI18n()
 
 async function handleUpgradePro() {
   const res = await billing.createCheckoutSession()
@@ -211,6 +227,17 @@ async function handleRequestMagicLink() {
   }
 }
 
+async function handlePasskeyLogin() {
+  haptics.tap()
+  const ok = await auth.loginWithPasskey()
+  if (ok) {
+    haptics.success()
+    emit('login-success')
+  } else {
+    haptics.warning()
+  }
+}
+
 async function handleDevDirectLogin() {
   if (!debugLink.value) return
   const parts = debugLink.value.split('auth_token=')
@@ -227,24 +254,13 @@ async function handleDevDirectLogin() {
 
 async function handleRegisterPasskey() {
   haptics.tap()
-  if (typeof window === 'undefined' || !window.PublicKeyCredential) {
-    alert('Passkeys werden von diesem Browser oder Gerät nicht unterstützt.')
-    return
-  }
-
-  try {
-    const res = await fetch('/api/auth/passkey/register-options', {
-      method: 'POST',
-      headers: auth.getAuthHeaders(),
-    })
-    if (!res.ok) {
-      alert('Fehler beim Abrufen der Passkey-Optionen')
-      return
-    }
+  const res = await auth.registerPasskey()
+  if (res.success) {
     haptics.success()
-    alert('Passkey-Vorbereitung aktiviert.')
-  } catch {
-    alert('Fehler bei der Passkey-Registrierung')
+    alert(res.message || 'Passkey erfolgreich registriert!')
+  } else {
+    haptics.warning()
+    alert(res.message || 'Passkey-Registrierung fehlgeschlagen')
   }
 }
 
@@ -286,7 +302,7 @@ function handleBackdropClick() {
 function formatDate(dateStr?: string) {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return d.toLocaleDateString(i18n.currentLocale.value === 'en' ? 'en-US' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 </script>
 
@@ -371,6 +387,51 @@ function formatDate(dateStr?: string) {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.auth-passkey-login-btn {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--accent-green, #22c55e);
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.auth-passkey-login-btn:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: var(--accent-green, #22c55e);
+  transform: translateY(-1px);
+}
+
+.auth-or-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--text-dim, #5c5c6e);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 2px 0;
+}
+
+.auth-or-divider::before,
+.auth-or-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-or-divider span {
+  padding: 0 10px;
 }
 
 .input-group {
@@ -545,6 +606,19 @@ function formatDate(dateStr?: string) {
   color: var(--accent-green, #22c55e);
 }
 
+.user-pro-pill {
+  font-size: 0.7rem;
+  color: #f59e0b;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.user-free-pill {
+  font-size: 0.7rem;
+  color: var(--text-dim, #5c5c6e);
+  margin-left: 6px;
+}
+
 .account-details-list {
   display: flex;
   flex-direction: column;
@@ -605,6 +679,33 @@ function formatDate(dateStr?: string) {
   border: none;
   border-radius: 8px;
   padding: 8px;
+  cursor: pointer;
+}
+
+.passkey-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.passkey-label {
+  font-size: 0.72rem;
+  color: var(--text-dim, #5c5c6e);
+  font-weight: 600;
+}
+
+.passkey-btn {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--accent-green, #22c55e);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
 }
 

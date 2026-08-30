@@ -47,7 +47,8 @@
               :disabled="isSaving"
               @click="selectChip(chip)"
             >
-              {{ chip }}
+              <span class="chip-icon">{{ detectCategoryIcon(chip) }}</span>
+              <span>{{ chip }}</span>
             </button>
           </div>
 
@@ -81,7 +82,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useHaptics } from '../composables/useHaptics'
-import { useI18n } from '../composables/useI18n'
+import { useI18n, detectCategoryIcon } from '../composables/useI18n'
 import type { Expense } from '../composables/useApi'
 
 const props = withDefaults(
@@ -113,7 +114,19 @@ const amountInputRef = ref<HTMLInputElement | null>(null)
 const storedNotes = ref<string[]>([])
 
 const RECENT_NOTES_KEY = 'restgeld_recent_notes'
-const DEFAULT_CHIPS = ['Kaffee', 'Mittagessen', 'Einkauf', 'Snack']
+
+const defaultChips = computed(() => {
+  switch (i18n.currentLocale.value) {
+    case 'en':
+      return ['Coffee', 'Lunch', 'Groceries', 'Snack']
+    case 'es':
+      return ['Café', 'Almuerzo', 'Supermercado', 'Snack']
+    case 'fr':
+      return ['Café', 'Déjeuner', 'Courses', 'Snack']
+    default:
+      return ['Kaffee', 'Mittagessen', 'Einkauf', 'Snack']
+  }
+})
 
 function loadStoredNotes() {
   try {
@@ -142,7 +155,7 @@ const availableChips = computed(() => {
   const fromExpenses = props.recentExpenses
     ? props.recentExpenses.map((e) => e.note).filter((n): n is string => Boolean(n && n.trim()))
     : []
-  const combined = Array.from(new Set([...storedNotes.value, ...fromExpenses, ...DEFAULT_CHIPS]))
+  const combined = Array.from(new Set([...storedNotes.value, ...fromExpenses, ...defaultChips.value]))
   return combined.slice(0, 5)
 })
 

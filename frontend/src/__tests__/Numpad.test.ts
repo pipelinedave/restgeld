@@ -114,7 +114,7 @@ describe('Numpad / Ausgabe-Modal', () => {
 
     await chips[0].trigger('click')
     const noteInput = wrapper.find<HTMLInputElement>('#expense-note-input')
-    expect(noteInput.element.value).toBe(chips[0].text())
+    expect(chips[0].text()).toContain(noteInput.element.value)
   })
 })
 

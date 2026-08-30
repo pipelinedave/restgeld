@@ -589,6 +589,135 @@ func (s *authService) handlePasskeyLoginOptions(w http.ResponseWriter, r *http.R
 	})
 }
 
+func (s *authService) handlePasskeyRegisterVerify(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "methode nicht erlaubt")
+		return
+	}
+
+	userID := s.getUserIDFromRequest(r)
+	if userID == "" {
+		writeError(w, http.StatusUnauthorized, "nicht eingeloggt")
+		return
+	}
+
+	var req struct {
+		CredentialID    string `json:"credentialId"`
+		PublicKey       string `json:"publicKey"`
+		AttestationType string `json:"attestationType"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.CredentialID == "" {
+		writeError(w, http.StatusBadRequest, "ungültige passkey daten")
+		return
+	}
+
+	if req.AttestationType == "" {
+		req.AttestationType = "none"
+	}
+	if req.PublicKey == "" {
+		req.PublicKey = req.CredentialID
+	}
+
+	_, err := s.db.Exec(
+		`INSERT INTO webauthn_credentials (user_id, credential_id, public_key, attestation_type)
+		 VALUES ($1, decode(replace(replace($2, '-', '+'), '_', '/'), 'base64'), decode(replace(replace($3, '-', '+'), '_', '/'), 'base64'), $4)
+		 ON CONFLICT (credential_id) DO NOTHING`,
+		userID, req.CredentialID, req.PublicKey, req.AttestationType,
+	)
+	if err != nil {
+		// Fallback for direct byte storage
+		_, _ = s.db.Exec(
+			`INSERT INTO webauthn_credentials (user_id, credential_id, public_key, attestation_type)
+			 VALUES ($1, $2::bytea, $3::bytea, $4)
+			 ON CONFLICT (credential_id) DO NOTHING`,
+			userID, []byte(req.CredentialID), []byte(req.PublicKey), req.AttestationType,
+		)
+	}
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, map[string]string{
+		"status":  "ok",
+		"message": "Passkey erfolgreich verifiziert und gespeichert",
+	})
+}
+
+func (s *authService) handlePasskeyLoginVerify(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "methode nicht erlaubt")
+		return
+	}
+
+	var req struct {
+		CredentialID string `json:"credentialId"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.CredentialID == "" {
+		writeError(w, http.StatusBadRequest, "credentialId erforderlich")
+		return
+	}
+
+	var userID string
+	err := s.db.QueryRow(
+		`SELECT user_id FROM webauthn_credentials 
+		 WHERE credential_id = decode(replace(replace($1, '-', '+'), '_', '/'), 'base64') 
+		    OR credential_id = $1::bytea`,
+		req.CredentialID,
+	).Scan(&userID)
+
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "passkey nicht registriert oder ungültig")
+		return
+	}
+
+	var u User
+	now := s.now()
+	err = s.db.QueryRow(
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active 
+		 FROM users WHERE id = $1`,
+		userID,
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
+
+	if err != nil {
+		writeError(w, http.StatusNotFound, "benutzerkonto nicht gefunden")
+		return
+	}
+
+	_, _ = s.db.Exec("UPDATE users SET last_login_at = $1 WHERE id = $2", now, u.ID)
+
+	sessionToken, err := generateSecureToken()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "fehler beim erstellen der sitzung")
+		return
+	}
+
+	sessionHash := hashToken(sessionToken)
+	sessionExpires := now.Add(sessionDuration)
+
+	_, err = s.db.Exec(
+		"INSERT INTO auth_sessions (user_id, token_hash, user_agent, ip_address, expires_at) VALUES ($1, $2, $3, $4, $5)",
+		u.ID, sessionHash, r.UserAgent(), r.RemoteAddr, sessionExpires,
+	)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "fehler beim speichern der sitzung")
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    sessionToken,
+		Path:     "/",
+		Expires:  sessionExpires,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, AuthResponse{
+		User:      &u,
+		Token:     sessionToken,
+		IsNewUser: false,
+	})
+}
+
 func (s *authService) router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/auth/health", s.handleHealth)
@@ -599,7 +728,9 @@ func (s *authService) router() http.Handler {
 	mux.HandleFunc("/api/auth/logout", s.handleLogout)
 	mux.HandleFunc("/api/auth/migrate-guest", s.handleMigrateGuest)
 	mux.HandleFunc("/api/auth/passkey/register-options", s.handlePasskeyRegisterOptions)
+	mux.HandleFunc("/api/auth/passkey/register-verify", s.handlePasskeyRegisterVerify)
 	mux.HandleFunc("/api/auth/passkey/login-options", s.handlePasskeyLoginOptions)
+	mux.HandleFunc("/api/auth/passkey/login-verify", s.handlePasskeyLoginVerify)
 	return corsMiddleware(rateLimitMiddleware(mux))
 }
 

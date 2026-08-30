@@ -80,21 +80,39 @@
                 <span>{{ i18n.t('expenses.empty') }}</span>
               </div>
 
-              <!-- Ausgaben-Tabelle -->
-              <div v-else class="report-expenses-list">
-                <div
-                  v-for="exp in periodExpenses"
-                  :key="exp.id"
-                  class="report-expense-item"
-                >
-                  <div class="exp-left">
-                    <span class="category-icon">{{ detectCategoryIcon(exp.note) }}</span>
-                    <span class="exp-date">{{ formatExpenseDate(exp.createdAt) }}</span>
-                    <span class="exp-note">{{ exp.note || i18n.t('recent.default_note') }}</span>
+              <template v-else>
+                <!-- Category Insights Breakdown -->
+                <div v-if="categoryStats.length > 0" class="category-breakdown-wrap">
+                  <div class="category-pills-row">
+                    <div
+                      v-for="cat in categoryStats"
+                      :key="cat.key"
+                      class="category-stat-pill"
+                    >
+                      <span class="cat-icon">{{ cat.icon }}</span>
+                      <span class="cat-name">{{ cat.name }}</span>
+                      <span class="cat-val">{{ i18n.formatMoney(cat.total) }}</span>
+                      <span class="cat-pct">({{ cat.percentage }}%)</span>
+                    </div>
                   </div>
-                  <span class="exp-amount">-{{ i18n.formatMoney(exp.amount) }}</span>
                 </div>
-              </div>
+
+                <!-- Ausgaben-Tabelle -->
+                <div class="report-expenses-list">
+                  <div
+                    v-for="exp in periodExpenses"
+                    :key="exp.id"
+                    class="report-expense-item"
+                  >
+                    <div class="exp-left">
+                      <span class="category-icon">{{ detectCategoryIcon(exp.note) }}</span>
+                      <span class="exp-date">{{ formatExpenseDate(exp.createdAt) }}</span>
+                      <span class="exp-note">{{ exp.note || i18n.t('recent.default_note') }}</span>
+                    </div>
+                    <span class="exp-amount">-{{ i18n.formatMoney(exp.amount) }}</span>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
         </div>
@@ -104,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useApi, type PeriodSummary, type Expense } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
 import { useI18n, detectCategoryIcon } from '../composables/useI18n'
@@ -127,6 +145,10 @@ const error = ref('')
 const selectedPeriodId = ref<string | null>(null)
 const periodExpenses = ref<Expense[]>([])
 const loadingExpenses = ref(false)
+
+const categoryStats = computed(() => {
+  return i18n.calculateCategoryBreakdown(periodExpenses.value)
+})
 
 async function loadPeriods() {
   loading.value = true
@@ -443,7 +465,7 @@ function calcAvgDaily(totalSpent: number, days: number): number {
   padding-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   cursor: default;
 }
 
@@ -471,6 +493,54 @@ function calcAvgDaily(totalSpent: number, days: number): number {
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+/* Category Insights */
+.category-breakdown-wrap {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.category-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.category-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #20202a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 9999px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+}
+
+.cat-icon {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.cat-name {
+  color: var(--text-muted, #8e8e9c);
+  font-weight: 500;
+}
+
+.cat-val {
+  color: var(--text-main, #f4f4f6);
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+
+.cat-pct {
+  color: var(--accent-green, #22c55e);
+  font-size: 0.68rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
 }
 
 .report-expenses-list {
