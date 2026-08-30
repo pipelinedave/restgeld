@@ -1,0 +1,33 @@
+name: Monitoring Service
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['services/monitoring-service/**']
+  pull_request:
+    branches: [main, develop]
+    paths: ['services/monitoring-service/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Vet
+        run: go vet ./...
+        working-directory: services/monitoring-service
+      - name: Unit Tests
+        run: go test -short ./... -v -count=1 -coverprofile=coverage.out
+        working-directory: services/monitoring-service
+      - name: Build
+        run: go build -o /dev/null .
+        working-directory: services/monitoring-service
+      - uses: codecov/codecov-action@v5
+        if: success()
+        with:
+          files: services/monitoring-service/coverage.out
+          flags: monitoring-service
+          fail_ci_if_error: false

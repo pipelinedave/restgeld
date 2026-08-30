@@ -29,7 +29,10 @@ exports[`Snapshot: AppHeader > standard 1`] = `
 exports[`Snapshot: BudgetDisplay > gruen mit ersparnis 1`] = `
 "<section data-v-f796b773="" class="mockup-hero-card">
   <div data-v-f796b773="" class="hero-top-row"><span data-v-f796b773="" class="hero-label">HEUTE VERFÜGBAR</span><span data-v-f796b773="" class="hero-base-tag">Basis: 14,52 €</span></div>
-  <div data-v-f796b773="" class="hero-amount-row color-green"><span data-v-f796b773="" class="current-amount">19,24 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">19,24 €</span></div>
+  <div data-v-f796b773="" class="hero-amount-row color-green"><span data-v-f796b773="" class="current-amount">19,24 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">19,24 €</span></div><!-- Today Spending Gauge Bar -->
+  <div data-v-f796b773="" class="today-gauge-track" title="19,24 € / 19,24 €">
+    <div data-v-f796b773="" class="today-gauge-fill fill-green" style="width: 100%;"></div>
+  </div>
   <div data-v-f796b773="" class="hero-meta">
     <div data-v-f796b773="" class="hero-badge-pill badge-green"><span data-v-f796b773="">+61,36 € Spar-Puffer</span></div>
   </div>
@@ -39,7 +42,10 @@ exports[`Snapshot: BudgetDisplay > gruen mit ersparnis 1`] = `
 exports[`Snapshot: BudgetDisplay > rot bei minus 1`] = `
 "<section data-v-f796b773="" class="mockup-hero-card">
   <div data-v-f796b773="" class="hero-top-row"><span data-v-f796b773="" class="hero-label">HEUTE VERFÜGBAR</span><span data-v-f796b773="" class="hero-base-tag">Basis: 14,52 €</span></div>
-  <div data-v-f796b773="" class="hero-amount-row color-red"><span data-v-f796b773="" class="current-amount">11,55 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">11,55 €</span></div>
+  <div data-v-f796b773="" class="hero-amount-row color-red"><span data-v-f796b773="" class="current-amount">11,55 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">11,55 €</span></div><!-- Today Spending Gauge Bar -->
+  <div data-v-f796b773="" class="today-gauge-track" title="11,55 € / 11,55 €">
+    <div data-v-f796b773="" class="today-gauge-fill fill-red" style="width: 100%;"></div>
+  </div>
   <div data-v-f796b773="" class="hero-meta">
     <div data-v-f796b773="" class="hero-badge-pill badge-red"><span data-v-f796b773="">-38,64 € überzogen</span></div>
   </div>
@@ -49,7 +55,10 @@ exports[`Snapshot: BudgetDisplay > rot bei minus 1`] = `
 exports[`Snapshot: BudgetDisplay > weiss bei 0 ersparnis 1`] = `
 "<section data-v-f796b773="" class="mockup-hero-card">
   <div data-v-f796b773="" class="hero-top-row"><span data-v-f796b773="" class="hero-label">HEUTE VERFÜGBAR</span><span data-v-f796b773="" class="hero-base-tag">Basis: 14,52 €</span></div>
-  <div data-v-f796b773="" class="hero-amount-row color-white"><span data-v-f796b773="" class="current-amount">14,52 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">14,52 €</span></div>
+  <div data-v-f796b773="" class="hero-amount-row color-white"><span data-v-f796b773="" class="current-amount">14,52 €</span><span data-v-f796b773="" class="fraction-slash">/</span><span data-v-f796b773="" class="start-amount">14,52 €</span></div><!-- Today Spending Gauge Bar -->
+  <div data-v-f796b773="" class="today-gauge-track" title="14,52 € / 14,52 €">
+    <div data-v-f796b773="" class="today-gauge-fill fill-white" style="width: 100%;"></div>
+  </div>
   <div data-v-f796b773="" class="hero-meta">
     <div data-v-f796b773="" class="hero-badge-pill badge-white"><span data-v-f796b773="">Perfekt im Plan</span></div>
   </div>
