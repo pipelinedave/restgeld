@@ -15,6 +15,7 @@
       :monthDays="budget?.monthDays"
       :baseBudget="budget?.baseBudget"
       @open-settings="openSettings"
+      @open-status-modal="showStatusModal = true"
     />
 
     <!-- Top Loading Streak -->
@@ -93,6 +94,7 @@
       @open-archive="openArchiveModal"
       @open-about="openAboutModal"
       @open-auth="openAuthModal"
+      @open-status="showStatusModal = true"
       @close="showSettings = false"
     />
 
@@ -113,6 +115,11 @@
     <AboutModal
       :visible="showAboutModal"
       @close="showAboutModal = false"
+    />
+
+    <SystemStatusModal
+      :visible="showStatusModal"
+      @close="showStatusModal = false"
     />
   </div>
 </template>
@@ -136,6 +143,7 @@ import SettingsModal from './components/SettingsModal.vue'
 import PeriodsArchiveModal from './components/PeriodsArchiveModal.vue'
 import AboutModal from './components/AboutModal.vue'
 import AuthModal from './components/AuthModal.vue'
+import SystemStatusModal from './components/SystemStatusModal.vue'
 import AppFooter from './components/AppFooter.vue'
 import ToastNotification from './components/ToastNotification.vue'
 
@@ -158,6 +166,7 @@ const showExpensesModal = ref(false)
 const showArchiveModal = ref(false)
 const showAboutModal = ref(false)
 const showAuthModal = ref(false)
+const showStatusModal = ref(false)
 const isSavingExpense = ref(false)
 const isLoading = ref(false)
 

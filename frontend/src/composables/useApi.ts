@@ -94,10 +94,35 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json()
 }
 
+export interface ServiceTelemetry {
+  id: string
+  name: string
+  status: 'up' | 'degraded' | 'down'
+  latencyMs: number
+  url: string
+  checkedAt: string
+  details?: Record<string, any>
+  error?: string
+}
+
 export function useApi() {
   return {
     getBudget: () => api<BudgetData>('/api/budget'),
     getPeriods: () => api<PeriodSummary[]>('/api/periods'),
+    getMonitoringOverview: () => api<{
+      status: 'healthy' | 'degraded' | 'critical'
+      timestamp: string
+      uptimeSeconds: number
+      services: ServiceTelemetry[]
+      system: {
+        goVersion: string
+        goroutines: number
+        memoryAllocMb: number
+        memorySysMb: number
+        gcCount: number
+        uptimeSeconds: number
+      }
+    }>('/api/monitoring/overview'),
     getExpenses: (page = 1, limit = 10, periodId?: string) => {
       const query = new URLSearchParams({ page: String(page), limit: String(limit) })
       if (periodId) query.set('period_id', periodId)

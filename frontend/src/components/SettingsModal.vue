@@ -276,9 +276,14 @@
           <p class="description">
             {{ i18n.t('settings.about_desc') }}
           </p>
-          <button type="button" class="about-trigger-btn" @click="handleOpenAbout">
-            {{ i18n.t('settings.about_trigger') }}
-          </button>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button type="button" class="about-trigger-btn" @click="handleOpenAbout">
+              {{ i18n.t('settings.about_trigger') }}
+            </button>
+            <button type="button" class="about-trigger-btn" @click="handleOpenStatus">
+              📊 {{ i18n.t('monitoring.title') }}
+            </button>
+          </div>
         </section>
 
         <!-- Danger Zone -->
@@ -332,6 +337,7 @@ const emit = defineEmits<{
   (e: 'open-archive'): void
   (e: 'open-about'): void
   (e: 'open-auth'): void
+  (e: 'open-status'): void
 }>()
 
 const api = useApi()
@@ -512,6 +518,11 @@ function handleOpenArchive() {
 function handleOpenAbout() {
   haptics.tap()
   emit('open-about')
+}
+
+function handleOpenStatus() {
+  haptics.tap()
+  emit('open-status')
 }
 
 function handleResetPeriod() {

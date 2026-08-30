@@ -18,8 +18,11 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
     proxy: {
+      '/api/monitoring': {
+        target: process.env.VITE_MONITORING_PROXY || 'http://localhost:8083',
+        changeOrigin: true,
+      },
       '/api/billing': {
         target: process.env.VITE_BILLING_PROXY || 'http://localhost:8082',
         changeOrigin: true,

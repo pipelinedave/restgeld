@@ -183,6 +183,21 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'category.health': 'Gesundheit & Sport',
     'category.other': 'Sonstiges',
 
+    // Monitoring & Observability
+    'monitoring.title': 'System Observability & Monitoring',
+    'monitoring.cluster_status': 'Cluster Status',
+    'monitoring.healthy': 'Alle Systeme operational',
+    'monitoring.degraded': 'Teilweise beeinträchtigt',
+    'monitoring.critical': 'Kritischer Systemausfall',
+    'monitoring.live_telemetry': 'Live Telemetrie',
+    'monitoring.goroutines': 'Goroutines',
+    'monitoring.memory': 'RAM Allokation',
+    'monitoring.uptime': 'Betriebszeit',
+    'monitoring.services_heading': 'Microservices & Endpunkte',
+    'monitoring.refresh': 'Neu prüfen',
+    'monitoring.auto_refresh': 'Auto-Refresh (5s)',
+    'monitoring.metrics_link': 'Prometheus Metriken',
+
     // About
     'about.title': 'Über Restgeld',
     'about.tagline': 'Minimalistischer Daily Allowance Tracker',
@@ -349,6 +364,21 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'category.shopping': 'Shopping & Tech',
     'category.health': 'Health & Fitness',
     'category.other': 'Other',
+
+    // Monitoring & Observability
+    'monitoring.title': 'System Observability & Monitoring',
+    'monitoring.cluster_status': 'Cluster Status',
+    'monitoring.healthy': 'All systems operational',
+    'monitoring.degraded': 'Partially degraded',
+    'monitoring.critical': 'Critical service outage',
+    'monitoring.live_telemetry': 'Live Telemetry',
+    'monitoring.goroutines': 'Goroutines',
+    'monitoring.memory': 'RAM Allocated',
+    'monitoring.uptime': 'Uptime',
+    'monitoring.services_heading': 'Microservices & Endpoints',
+    'monitoring.refresh': 'Refresh',
+    'monitoring.auto_refresh': 'Auto-Refresh (5s)',
+    'monitoring.metrics_link': 'Prometheus Metrics',
 
     // About
     'about.title': 'About Restgeld',
@@ -517,6 +547,21 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'category.health': 'Salud y Deporte',
     'category.other': 'Otros',
 
+    // Monitoring & Observability
+    'monitoring.title': 'Observabilidad y Monitoreo del Sistema',
+    'monitoring.cluster_status': 'Estado del Clúster',
+    'monitoring.healthy': 'Todos los sistemas operativos',
+    'monitoring.degraded': 'Parcialmente degradado',
+    'monitoring.critical': 'Corte crítico de servicio',
+    'monitoring.live_telemetry': 'Telemetría en Vivo',
+    'monitoring.goroutines': 'Goroutines',
+    'monitoring.memory': 'RAM Asignada',
+    'monitoring.uptime': 'Tiempo de Actividad',
+    'monitoring.services_heading': 'Microservicios y Endpoints',
+    'monitoring.refresh': 'Actualizar',
+    'monitoring.auto_refresh': 'Auto-Actualizar (5s)',
+    'monitoring.metrics_link': 'Métricas Prometheus',
+
     // About
     'about.title': 'Acerca de Restgeld',
     'about.tagline': 'Rastreador Minimalista de Dinero Diario',
@@ -683,6 +728,21 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'category.shopping': 'Shopping & High-Tech',
     'category.health': 'Santé & Bien-être',
     'category.other': 'Divers',
+
+    // Monitoring & Observability
+    'monitoring.title': 'Observabilité & Surveillance du Système',
+    'monitoring.cluster_status': 'État du Cluster',
+    'monitoring.healthy': 'Tous les systèmes opérationnels',
+    'monitoring.degraded': 'Partiellement dégradé',
+    'monitoring.critical': 'Panne critique du service',
+    'monitoring.live_telemetry': 'Télémétrie en Direct',
+    'monitoring.goroutines': 'Goroutines',
+    'monitoring.memory': 'RAM Allouée',
+    'monitoring.uptime': 'Temps de Fonctionnement',
+    'monitoring.services_heading': 'Microservices & Points de Terminaison',
+    'monitoring.refresh': 'Actualiser',
+    'monitoring.auto_refresh': 'Actualisation Auto (5s)',
+    'monitoring.metrics_link': 'Métriques Prometheus',
 
     // About
     'about.title': 'À propos de Restgeld',

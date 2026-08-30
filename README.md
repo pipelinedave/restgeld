@@ -33,9 +33,10 @@
 | Layer | Technologie & Architektur |
 |---|---|
 | **Frontend PWA** | Vue 3, Vite, TypeScript, `useI18n` Multi-Currency Composable, Zero-Scroll Mobile CSS |
-| **Core API Backend** | Go 1.22 REST Microservice (`net/http`, high-throughput, native SQL `lib/pq`) |
-| **Auth Microservice** | Go Standalone Service (Magic Links, Passkeys / WebAuthn, OAuth/JWT Sessions) |
-| **Billing Service** | Go Standalone Subscriptions & Stripe Portal Microservice |
+| **Core API Backend** | Go 1.22 REST Microservice (`net/http`, high-throughput, native SQL `lib/pq`, Port 8080) |
+| **Auth Microservice** | Go Standalone Service (Magic Links, Passkeys / WebAuthn, OAuth/JWT Sessions, Port 8081) |
+| **Billing Service** | Go Standalone Subscriptions & Stripe Portal Microservice (Port 8082) |
+| **Monitoring Service** | Go Standalone Observability, Prometheus Metrics & Health Aggregator (Port 8083) |
 | **Datenbank Layer** | PostgreSQL 16 (Multi-Tenant, getrennte Instanzen `restgeld_core` & `restgeld_auth`) |
 | **Dev SMTP Mailer** | Mailpit (In-Memory Mailserver für lokale Auth-Tests) |
 | **Cloud & Hosting** | Vercel (Preview & Edge Deployments), Docker, Kubernetes (k3s) |
@@ -53,7 +54,7 @@
 
 ### 1-Befehl-Start: Live-Entwicklung mit Compose
 
-Startet die Datenbanken, Backend-Microservices, Auth-Service und den Vite Dev-Server mit Hot-Module-Replacement (HMR):
+Startet die Datenbanken, Backend-Microservices, Auth-Service, Monitoring-Service und den Vite Dev-Server mit Hot-Module-Replacement (HMR):
 
 ```bash
 docker compose -f docker-compose.dev.yml up --build
@@ -63,6 +64,7 @@ docker compose -f docker-compose.dev.yml up --build
 - **Core API Backend:** [http://localhost:8080](http://localhost:8080)
 - **Auth Microservice:** [http://localhost:8081](http://localhost:8081)
 - **Billing Microservice:** [http://localhost:8082](http://localhost:8082)
+- **Monitoring & Observability:** [http://localhost:8083](http://localhost:8083) (`/metrics`, `/api/monitoring/overview`)
 - **PostgreSQL DB:** `localhost:5432`
 
 ---
@@ -81,6 +83,9 @@ cd services/auth-service && go test ./... -v
 
 # Billing Service Tests
 cd services/billing-service && go test ./... -v
+
+# Monitoring Service Tests
+cd services/monitoring-service && go test ./... -v
 ```
 
 ---

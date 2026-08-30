@@ -103,7 +103,7 @@
         </div>
 
         <div class="popover-footer">
-          <span class="uptime-hint">Uptime & Monitoring aktiv</span>
+          <button class="open-dashboard-btn" @click="openStatusModal">📊 Dashboard</button>
           <button class="recheck-btn" @click="checkHealth">Aktualisieren</button>
         </div>
       </div>
@@ -204,13 +204,19 @@ const props = withDefaults(
   }
 )
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'open-settings'): void
+  (e: 'open-status-modal'): void
 }>()
 
 const haptics = useHaptics()
 const i18n = useI18n()
 const activePopover = ref<'status' | 'streak' | 'projection' | null>(null)
+
+function openStatusModal() {
+  activePopover.value = null
+  emit('open-status-modal')
+}
 const apiHealthy = ref(true)
 const authHealthy = ref(true)
 const billingHealthy = ref(true)
@@ -608,6 +614,20 @@ onMounted(() => {
 }
 
 .uptime-hint { color: var(--text-dim, #5c5c6e); }
+.open-dashboard-btn {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--accent-green, #22c55e);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.open-dashboard-btn:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
 .recheck-btn {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
