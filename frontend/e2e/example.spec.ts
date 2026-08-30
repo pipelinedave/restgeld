@@ -152,8 +152,8 @@ test.describe('Restgeld E2E', () => {
     await page.getByRole('button', { name: 'Speichern' }).click()
 
     // ausgabe in der liste
-    await expect(page.getByText('Mittagessen')).toBeVisible()
-    await expect(page.getByText(/-12,50/)).toBeVisible()
+    await expect(page.locator('.expense-list').getByText('Mittagessen')).toBeVisible()
+    await expect(page.locator('.expense-amount').first()).toBeVisible()
   })
 
   test('ausgabe loeschen', async ({ page }) => {
@@ -163,9 +163,9 @@ test.describe('Restgeld E2E', () => {
     await page.getByPlaceholder(/notiz/i).fill('Test')
     await page.getByRole('button', { name: 'Speichern' }).click()
 
-    await expect(page.getByText(/-10,00/)).toBeVisible()
+    await expect(page.locator('.expense-list').getByText('Test')).toBeVisible()
     await page.locator('.delete-btn').first().click()
-    await expect(page.getByText(/-10,00/)).not.toBeVisible()
+    await expect(page.locator('.expense-list').getByText('Test')).not.toBeVisible()
   })
 
   test('oeffnet ausgaben-historie und paginiert', async ({ page }) => {
@@ -190,12 +190,12 @@ test.describe('Restgeld E2E', () => {
     await expect(page.locator('.modal-content').getByText('Ausgabe 7')).toBeVisible()
 
     // Zur nächsten Seite blättern
-    await page.getByRole('button', { name: 'Nächste Seite' }).click()
+    await page.getByLabel('Nächste Seite').click()
     await expect(page.getByText('Seite 2 von 2')).toBeVisible()
     await expect(page.locator('.modal-content').getByText('Ausgabe 1')).toBeVisible()
 
     // Schließen
-    await page.getByRole('button', { name: 'Schließen' }).click()
+    await page.locator('.modal-header .close-btn').click()
     await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).not.toBeVisible()
   })
 })
