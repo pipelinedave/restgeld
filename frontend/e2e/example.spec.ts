@@ -18,8 +18,14 @@ test.describe('Restgeld E2E', () => {
     // Service Worker blockieren um Bypassing der Mocks zu verhindern
     await page.route('**/sw.js', route => route.abort())
 
-    // Service Worker de-registrieren falls vorhanden
+    // Service Worker de-registrieren und Sprache auf DE fixieren
     await page.addInitScript(() => {
+      try {
+        localStorage.setItem('restgeld_language', 'de')
+        localStorage.setItem('restgeld_currency', 'EUR')
+      } catch {
+        // ignore
+      }
       if (window.navigator && window.navigator.serviceWorker) {
         window.navigator.serviceWorker.getRegistrations().then(registrations => {
           for (const registration of registrations) {
@@ -127,14 +133,14 @@ test.describe('Restgeld E2E', () => {
 
   test('modal oeffnet sich bei klick auf ausgabe-button', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: /ausgabe/i }).click()
+    await page.locator('.add-btn').click()
     await expect(page.getByRole('heading', { name: 'Ausgabe buchen' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Speichern' })).toBeVisible()
   })
 
   test('ausgabe buchen ueber modal', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: /ausgabe/i }).click()
+    await page.locator('.add-btn').click()
 
     // betrag eingeben: 12,50
     await page.getByPlaceholder('0,00').fill('12,50')
@@ -152,13 +158,13 @@ test.describe('Restgeld E2E', () => {
 
   test('ausgabe loeschen', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: /ausgabe/i }).click()
+    await page.locator('.add-btn').click()
     await page.getByPlaceholder('0,00').fill('10')
     await page.getByPlaceholder(/notiz/i).fill('Test')
     await page.getByRole('button', { name: 'Speichern' }).click()
 
     await expect(page.getByText(/-10,00/)).toBeVisible()
-    await page.getByRole('button', { name: 'Löschen' }).click()
+    await page.locator('.delete-btn').first().click()
     await expect(page.getByText(/-10,00/)).not.toBeVisible()
   })
 
@@ -175,8 +181,8 @@ test.describe('Restgeld E2E', () => {
     }
 
     await page.goto('/')
-    await expect(page.getByText('Alle anzeigen')).toBeVisible()
-    await page.getByText('Alle anzeigen').click()
+    await expect(page.locator('.show-all-btn')).toBeVisible()
+    await page.locator('.show-all-btn').click()
 
     // Modal geöffnet
     await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).toBeVisible()
