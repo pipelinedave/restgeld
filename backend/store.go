@@ -25,12 +25,14 @@ type Store interface {
 	ValidateAndConsumeMagicLink(tokenHash string) (string, error) // Returns email
 	GetOrCreateUserByEmail(email string) (*User, bool, error)    // Returns user, isNew, error
 	GetUserByID(userID string) (*User, error)
-	UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme string) error
+	UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme, language, currency string) error
 	CreateSession(userID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) error
 	ValidateSession(tokenHash string) (string, error) // Returns userID
 	DeleteSession(tokenHash string) error
 	DeleteUser(userID string) error
 	MigrateGuestData(targetUserID string, guestExpenses []Expense, guestPeriods []Period) (int, error)
+	SavePasskey(userID, credentialID, publicKey, attestationType string) error
+	FindUserIDByPasskey(credentialID string) (string, error)
 
 	Ping() error
 }

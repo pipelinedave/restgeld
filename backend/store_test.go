@@ -421,7 +421,7 @@ func (m *memoryStore) GetUserByID(userID string) (*User, error) {
 	return u, nil
 }
 
-func (m *memoryStore) UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme string) error {
+func (m *memoryStore) UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme, language, currency string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -438,7 +438,21 @@ func (m *memoryStore) UpdateUserSettings(userID string, defaultBudget float64, d
 	if theme != "" {
 		u.Theme = theme
 	}
+	if language != "" {
+		u.Language = language
+	}
+	if currency != "" {
+		u.Currency = currency
+	}
 	return nil
+}
+
+func (m *memoryStore) SavePasskey(userID, credentialID, publicKey, attestationType string) error {
+	return nil
+}
+
+func (m *memoryStore) FindUserIDByPasskey(credentialID string) (string, error) {
+	return "test-user-id", nil
 }
 
 func (m *memoryStore) CreateSession(userID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) error {

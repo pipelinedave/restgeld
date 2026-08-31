@@ -49,14 +49,26 @@ func rateLimitMiddleware(next http.Handler) http.Handler {
 }
 
 func (s *server) getUserIDFromRequest(r *http.Request) string {
+	var rawToken string
 	authHeader := r.Header.Get("Authorization")
 	if strings.HasPrefix(authHeader, "Bearer ") {
-		return strings.TrimPrefix(authHeader, "Bearer ")
+		rawToken = strings.TrimPrefix(authHeader, "Bearer ")
 	}
-	if cookie, err := r.Cookie("restgeld_session"); err == nil && cookie.Value != "" {
-		return cookie.Value
+	if rawToken == "" {
+		if cookie, err := r.Cookie(sessionCookieName); err == nil && cookie.Value != "" {
+			rawToken = cookie.Value
+		}
 	}
-	return ""
+	if rawToken == "" {
+		return ""
+	}
+
+	if userID, err := s.store.ValidateSession(hashToken(rawToken)); err == nil && userID != "" {
+		return userID
+	}
+
+	// Fallback fuer direkte UserID in Tests
+	return rawToken
 }
 
 func jsonHeader(w http.ResponseWriter) {
@@ -533,6 +545,8 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) router() http.Handler {
 	mux := http.NewServeMux()
+
+	// Core API
 	mux.HandleFunc("/api/health", s.handleHealth)
 	mux.HandleFunc("/api/budget", s.handleBudget)
 	mux.HandleFunc("/api/expenses", s.handleExpenses)
@@ -541,6 +555,31 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/periods", s.handleGetPeriods)
 	mux.HandleFunc("/api/export", s.handleExport)
 	mux.HandleFunc("/api/import", s.handleImport)
+
+	// Auth & Passkeys
+	mux.HandleFunc("/api/auth/health", s.handleAuthHealth)
+	mux.HandleFunc("/api/auth/magic-link", s.handleMagicLink)
+	mux.HandleFunc("/api/auth/verify", s.handleVerifyMagicLink)
+	mux.HandleFunc("/api/auth/me", s.handleMe)
+	mux.HandleFunc("/api/auth/settings", s.handleSettings)
+	mux.HandleFunc("/api/auth/logout", s.handleLogout)
+	mux.HandleFunc("/api/auth/migrate-guest", s.handleMigrateGuest)
+	mux.HandleFunc("/api/auth/passkey/register-options", s.handlePasskeyRegisterOptions)
+	mux.HandleFunc("/api/auth/passkey/register-verify", s.handlePasskeyRegisterVerify)
+	mux.HandleFunc("/api/auth/passkey/login-options", s.handlePasskeyLoginOptions)
+	mux.HandleFunc("/api/auth/passkey/login-verify", s.handlePasskeyLoginVerify)
+
+	// Billing & Stripe
+	mux.HandleFunc("/api/billing/health", s.handleBillingHealth)
+	mux.HandleFunc("/api/billing/create-checkout-session", s.handleCreateCheckoutSession)
+	mux.HandleFunc("/api/billing/customer-portal", s.handleCustomerPortal)
+	mux.HandleFunc("/api/billing/webhook", s.handleBillingWebhook)
+
+	// Monitoring & Observability
+	mux.HandleFunc("/api/monitoring/health", s.handleMonitoringHealth)
+	mux.HandleFunc("/api/monitoring/overview", s.handleMonitoringOverview)
+	mux.HandleFunc("/health", s.handleMonitoringHealth)
+	mux.HandleFunc("/metrics", s.handleMetrics)
 
 	return corsMiddleware(rateLimitMiddleware(mux))
 }

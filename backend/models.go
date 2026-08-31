@@ -46,6 +46,8 @@ type User struct {
 	DefaultMonthlyBudget float64   `json:"defaultMonthlyBudget"`
 	DefaultPeriodDays    int       `json:"defaultPeriodDays"`
 	Theme                string    `json:"theme"`
+	Language             string    `json:"language"`
+	Currency             string    `json:"currency"`
 	IsActive             bool      `json:"isActive"`
 }
 
@@ -83,6 +85,8 @@ type UpdateUserSettingsRequest struct {
 	DefaultMonthlyBudget float64 `json:"defaultMonthlyBudget,omitempty"`
 	DefaultPeriodDays    int     `json:"defaultPeriodDays,omitempty"`
 	Theme                string  `json:"theme,omitempty"`
+	Language             string  `json:"language,omitempty"`
+	Currency             string  `json:"currency,omitempty"`
 }
 
 type MagicLink struct {

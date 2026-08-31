@@ -848,6 +848,218 @@ func TestCreateExpenseMalformedJSON(t *testing.T) {
 	}
 }
 
+func TestAuthHealthEndpoint(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/auth/health", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer auth health, bekommen %d", rec.Code)
+	}
+}
+
+func TestAuthMagicLinkAndVerify(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	// 1. Magic Link anfordern
+	body := strings.NewReader(`{"email":"test@example.com"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/magic-link", body)
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 fuer magic link, bekommen %d", rec.Code)
+	}
+
+	var res map[string]interface{}
+	json.Unmarshal(rec.Body.Bytes(), &res)
+	debugLink, ok := res["debugLink"].(string)
+	if !ok || debugLink == "" {
+		t.Fatalf("kein debugLink zurueckgegeben")
+	}
+
+	token := strings.Split(debugLink, "auth_token=")[1]
+
+	// 2. Token verifizieren
+	verifyBody := strings.NewReader(fmt.Sprintf(`{"token":"%s"}`, token))
+	req2 := httptest.NewRequest(http.MethodPost, "/api/auth/verify", verifyBody)
+	req2.Header.Set("Content-Type", "application/json")
+	rec2 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 fuer verify, bekommen %d: %s", rec2.Code, rec2.Body.String())
+	}
+
+	var authRes AuthResponse
+	json.Unmarshal(rec2.Body.Bytes(), &authRes)
+	if authRes.User == nil || authRes.User.Email != "test@example.com" {
+		t.Errorf("falscher User zurueckgegeben: %+v", authRes.User)
+	}
+	if authRes.Token == "" {
+		t.Errorf("kein Session Token zurueckgegeben")
+	}
+
+	// 3. User Me abfragen
+	req3 := httptest.NewRequest(http.MethodGet, "/api/auth/me", nil)
+	req3.Header.Set("Authorization", "Bearer "+authRes.Token)
+	rec3 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec3, req3)
+
+	if rec3.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 fuer me, bekommen %d", rec3.Code)
+	}
+
+	// 4. Settings aktualisieren
+	setBody := strings.NewReader(`{"defaultMonthlyBudget":600.0,"defaultPeriodDays":28,"theme":"dark","language":"en","currency":"USD"}`)
+	req4 := httptest.NewRequest(http.MethodPatch, "/api/auth/settings", setBody)
+	req4.Header.Set("Authorization", "Bearer "+authRes.Token)
+	req4.Header.Set("Content-Type", "application/json")
+	rec4 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec4, req4)
+
+	if rec4.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 fuer settings, bekommen %d", rec4.Code)
+	}
+
+	// 5. Logout
+	req5 := httptest.NewRequest(http.MethodPost, "/api/auth/logout", nil)
+	req5.Header.Set("Authorization", "Bearer "+authRes.Token)
+	rec5 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec5, req5)
+
+	if rec5.Code != http.StatusOK {
+		t.Fatalf("erwartet 200 fuer logout, bekommen %d", rec5.Code)
+	}
+}
+
+func TestPasskeyEndpoints(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	// Session fuer Test-User anlegen
+	user, _, _ := store.GetOrCreateUserByEmail("passkey@example.com")
+	sessionToken := "test-session-token"
+	store.CreateSession(user.ID, hashToken(sessionToken), "test-agent", "127.0.0.1", time.Now().Add(time.Hour))
+
+	// 1. Passkey Register Options
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/register-options", nil)
+	req.Header.Set("Authorization", "Bearer "+sessionToken)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer passkey register options, bekommen %d", rec.Code)
+	}
+
+	// 2. Passkey Register Verify
+	regBody := strings.NewReader(`{"credentialId":"test-cred-123","publicKey":"test-key-abc","attestationType":"none"}`)
+	req2 := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/register-verify", regBody)
+	req2.Header.Set("Authorization", "Bearer "+sessionToken)
+	req2.Header.Set("Content-Type", "application/json")
+	rec2 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer passkey register verify, bekommen %d", rec2.Code)
+	}
+
+	// 3. Passkey Login Options
+	req3 := httptest.NewRequest(http.MethodPost, "/api/auth/passkey/login-options", nil)
+	rec3 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec3, req3)
+
+	if rec3.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer passkey login options, bekommen %d", rec3.Code)
+	}
+}
+
+func TestBillingEndpoints(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	// 1. Health
+	req := httptest.NewRequest(http.MethodGet, "/api/billing/health", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer billing health, bekommen %d", rec.Code)
+	}
+
+	// 2. Checkout Session (mit Session)
+	user, _, _ := store.GetOrCreateUserByEmail("billing@example.com")
+	sessionToken := "billing-session-token"
+	store.CreateSession(user.ID, hashToken(sessionToken), "test-agent", "127.0.0.1", time.Now().Add(time.Hour))
+
+	req2 := httptest.NewRequest(http.MethodPost, "/api/billing/create-checkout-session", nil)
+	req2.Header.Set("Authorization", "Bearer "+sessionToken)
+	rec2 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer create checkout session, bekommen %d", rec2.Code)
+	}
+
+	// 3. Customer Portal
+	req3 := httptest.NewRequest(http.MethodPost, "/api/billing/customer-portal", nil)
+	req3.Header.Set("Authorization", "Bearer "+sessionToken)
+	rec3 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec3, req3)
+
+	if rec3.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer customer portal, bekommen %d", rec3.Code)
+	}
+
+	// 4. Webhook
+	webhookBody := strings.NewReader(`{"type":"checkout.session.completed","data":{}}`)
+	req4 := httptest.NewRequest(http.MethodPost, "/api/billing/webhook", webhookBody)
+	req4.Header.Set("Content-Type", "application/json")
+	rec4 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec4, req4)
+
+	if rec4.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer billing webhook, bekommen %d", rec4.Code)
+	}
+}
+
+func TestMonitoringEndpoints(t *testing.T) {
+	store := newMemoryStore()
+	srv := &server{store: store, now: time.Now}
+
+	// 1. Health
+	req := httptest.NewRequest(http.MethodGet, "/api/monitoring/health", nil)
+	rec := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer monitoring health, bekommen %d", rec.Code)
+	}
+
+	// 2. Overview
+	req2 := httptest.NewRequest(http.MethodGet, "/api/monitoring/overview", nil)
+	rec2 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec2, req2)
+
+	if rec2.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer monitoring overview, bekommen %d", rec2.Code)
+	}
+
+	// 3. Metrics
+	req3 := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	rec3 := httptest.NewRecorder()
+	srv.router().ServeHTTP(rec3, req3)
+
+	if rec3.Code != http.StatusOK {
+		t.Errorf("erwartet 200 fuer metrics, bekommen %d", rec3.Code)
+	}
+}
+
 func decodeJSON(t *testing.T, body interface{ Read([]byte) (int, error) }, v interface{}) {
 	t.Helper()
 	b := make([]byte, 4096)

@@ -609,10 +609,10 @@ func (s *postgresStore) ValidateAndConsumeMagicLink(tokenHash string) (string, e
 func (s *postgresStore) GetOrCreateUserByEmail(email string) (*User, bool, error) {
 	var u User
 	err := s.db.QueryRow(
-		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active 
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active 
 		 FROM users WHERE email = $1`,
 		email,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 
 	if err == nil {
 		_, _ = s.db.Exec("UPDATE users SET last_login_at = $1 WHERE id = $2", time.Now(), u.ID)
@@ -626,11 +626,11 @@ func (s *postgresStore) GetOrCreateUserByEmail(email string) (*User, bool, error
 	// Neuer User erstellen
 	now := time.Now()
 	err = s.db.QueryRow(
-		`INSERT INTO users (email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active) 
-		 VALUES ($1, $2, $2, 450.00, 30, 'emerald', TRUE) 
-		 RETURNING id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active`,
+		`INSERT INTO users (email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, language, currency, is_active) 
+		 VALUES ($1, $2, $2, 450.00, 30, 'emerald', 'de', 'EUR', TRUE) 
+		 RETURNING id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active`,
 		email, now,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 
 	if err != nil {
 		return nil, false, fmt.Errorf("user erstellen: %w", err)
@@ -642,10 +642,10 @@ func (s *postgresStore) GetOrCreateUserByEmail(email string) (*User, bool, error
 func (s *postgresStore) GetUserByID(userID string) (*User, error) {
 	var u User
 	err := s.db.QueryRow(
-		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, is_active 
+		`SELECT id, email, created_at, last_login_at, default_monthly_budget, default_period_days, theme, COALESCE(language, 'de'), COALESCE(currency, 'EUR'), is_active 
 		 FROM users WHERE id = $1`,
 		userID,
-	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.IsActive)
+	).Scan(&u.ID, &u.Email, &u.CreatedAt, &u.LastLoginAt, &u.DefaultMonthlyBudget, &u.DefaultPeriodDays, &u.Theme, &u.Language, &u.Currency, &u.IsActive)
 
 	if err != nil {
 		return nil, err
@@ -653,14 +653,51 @@ func (s *postgresStore) GetUserByID(userID string) (*User, error) {
 	return &u, nil
 }
 
-func (s *postgresStore) UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme string) error {
+func (s *postgresStore) UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme, language, currency string) error {
 	query := `UPDATE users SET 
 	          default_monthly_budget = CASE WHEN $2 > 0 THEN $2 ELSE default_monthly_budget END,
 	          default_period_days = CASE WHEN $3 > 0 THEN $3 ELSE default_period_days END,
-	          theme = CASE WHEN $4 <> '' THEN $4 ELSE theme END
+	          theme = CASE WHEN $4 <> '' THEN $4 ELSE theme END,
+	          language = CASE WHEN $5 <> '' THEN $5 ELSE language END,
+	          currency = CASE WHEN $6 <> '' THEN $6 ELSE currency END
 	          WHERE id = $1`
-	_, err := s.db.Exec(query, userID, defaultBudget, defaultDays, theme)
+	_, err := s.db.Exec(query, userID, defaultBudget, defaultDays, theme, language, currency)
 	return err
+}
+
+func (s *postgresStore) SavePasskey(userID, credentialID, publicKey, attestationType string) error {
+	if attestationType == "" {
+		attestationType = "none"
+	}
+	if publicKey == "" {
+		publicKey = credentialID
+	}
+	_, err := s.db.Exec(
+		`INSERT INTO webauthn_credentials (user_id, credential_id, public_key, attestation_type)
+		 VALUES ($1, decode(replace(replace($2, '-', '+'), '_', '/'), 'base64'), decode(replace(replace($3, '-', '+'), '_', '/'), 'base64'), $4)
+		 ON CONFLICT (credential_id) DO NOTHING`,
+		userID, credentialID, publicKey, attestationType,
+	)
+	if err != nil {
+		_, err = s.db.Exec(
+			`INSERT INTO webauthn_credentials (user_id, credential_id, public_key, attestation_type)
+			 VALUES ($1, $2::bytea, $3::bytea, $4)
+			 ON CONFLICT (credential_id) DO NOTHING`,
+			userID, []byte(credentialID), []byte(publicKey), attestationType,
+		)
+	}
+	return err
+}
+
+func (s *postgresStore) FindUserIDByPasskey(credentialID string) (string, error) {
+	var userID string
+	err := s.db.QueryRow(
+		`SELECT user_id FROM webauthn_credentials 
+		 WHERE credential_id = decode(replace(replace($1, '-', '+'), '_', '/'), 'base64') 
+		    OR credential_id = $1::bytea`,
+		credentialID,
+	).Scan(&userID)
+	return userID, err
 }
 
 func (s *postgresStore) CreateSession(userID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) error {
