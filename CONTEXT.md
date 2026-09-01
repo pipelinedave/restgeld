@@ -233,3 +233,9 @@ Strukturierte Erfassung der Praxistest-Erkenntnisse und Feature-Wünsche für ko
    - Flux Kustomization Sync in k3s Cluster ausführen.
 2. **Domain verifizieren** (`restgeld.stillon.top`)
 
+---
+
+### Bugfixes
+- **Hero-Number Startbudget ($y$) Fix (`4c25f84`)**: Single Source of Truth für das Tages-Startbudget `$y$` auf `todayBase` umgestellt mit Fallback auf `currentBudget + spentToday`. Verhindert falsche `x / x`-Anzeige bei fehlendem oder leerem `dailyStats`.
+
+
