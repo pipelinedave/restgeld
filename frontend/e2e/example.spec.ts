@@ -38,89 +38,101 @@ test.describe('Restgeld E2E', () => {
     // Reset state vor jedem Test
     expenses = []
 
-    // Mock GET /api/budget
-    await page.route(/\/api\/budget/, async (route) => {
-      if (route.request().method() === 'GET') {
-        const totalSpent = expenses.reduce((acc, exp) => acc + exp.amount, 0)
-        const day = 15
-        const monthDays = 30
-        const baseBudget = 20.0
-        const savings = baseBudget * day - totalSpent
-        const remainingDays = monthDays - day + 1
-        const currentBudget = baseBudget + savings / remainingDays
-
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            day,
-            monthDays,
-            baseBudget,
-            currentBudget,
-            savings,
-            color: savings > 0 ? 'green' : savings === 0 ? 'white' : 'red',
-            periodId: 'test-period-id',
-            expenses: [...expenses].reverse().slice(0, 3),
-          }),
-        })
-      } else {
-        await route.continue()
-      }
-    })
-
-    // Mock /api/expenses endpoints
-    await page.route(/\/api\/expenses/, async (route) => {
+    // Mock all /api endpoints cleanly
+    await page.route('**/api/**', async (route) => {
       const method = route.request().method()
       const url = route.request().url()
 
-      if (method === 'GET') {
-        const urlObj = new URL(url, 'http://localhost')
-        const pageNum = parseInt(urlObj.searchParams.get('page') || '1', 10)
-        const limitNum = parseInt(urlObj.searchParams.get('limit') || '10', 10)
-        const allReversed = [...expenses].reverse()
-        const total = allReversed.length
-        const totalPages = Math.max(1, Math.ceil(total / limitNum))
-        const offset = (pageNum - 1) * limitNum
-        const items = allReversed.slice(offset, offset + limitNum)
+      if (url.includes('/api/budget')) {
+        if (method === 'GET') {
+          const totalSpent = expenses.reduce((acc, exp) => acc + exp.amount, 0)
+          const day = 15
+          const monthDays = 30
+          const baseBudget = 20.0
+          const savings = baseBudget * day - totalSpent
+          const remainingDays = monthDays - day + 1
+          const currentBudget = baseBudget + savings / remainingDays
 
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            items,
-            total,
-            page: pageNum,
-            limit: limitNum,
-            totalPages,
-          }),
-        })
-      } else if (method === 'POST') {
-        const postData = route.request().postDataJSON()
-        const newExpense: Expense = {
-          id: 'exp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
-          periodId: 'test-period-id',
-          amount: Number(postData.amount),
-          note: postData.note || '',
-          createdAt: new Date().toISOString(),
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              day,
+              monthDays,
+              baseBudget,
+              currentBudget,
+              savings,
+              color: savings > 0 ? 'green' : savings === 0 ? 'white' : 'red',
+              periodId: 'test-period-id',
+              expenses: [...expenses].reverse().slice(0, 3),
+            }),
+          })
+        } else {
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ status: 'ok' }),
+          })
         }
-        expenses.push(newExpense)
-        await route.fulfill({
-          status: 201,
-          contentType: 'application/json',
-          body: JSON.stringify(newExpense),
-        })
-      } else if (method === 'DELETE') {
-        const parts = url.split('/api/expenses/')
-        const id = parts[1]?.split('?')[0]
-        expenses = expenses.filter((e) => e.id !== id)
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ status: 'deleted' }),
-        })
-      } else {
-        await route.continue()
+        return
       }
+
+      if (url.includes('/api/expenses')) {
+        if (method === 'GET') {
+          const urlObj = new URL(url, 'http://localhost')
+          const pageNum = parseInt(urlObj.searchParams.get('page') || '1', 10)
+          const limitNum = parseInt(urlObj.searchParams.get('limit') || '10', 10)
+          const allReversed = [...expenses].reverse()
+          const total = allReversed.length
+          const totalPages = Math.max(1, Math.ceil(total / limitNum))
+          const offset = (pageNum - 1) * limitNum
+          const items = allReversed.slice(offset, offset + limitNum)
+
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+              items,
+              total,
+              page: pageNum,
+              limit: limitNum,
+              totalPages,
+            }),
+          })
+        } else if (method === 'POST') {
+          const postData = route.request().postDataJSON()
+          const newExpense: Expense = {
+            id: 'exp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+            periodId: 'test-period-id',
+            amount: Number(postData.amount),
+            note: postData.note || '',
+            createdAt: new Date().toISOString(),
+          }
+          expenses.push(newExpense)
+          await route.fulfill({
+            status: 201,
+            contentType: 'application/json',
+            body: JSON.stringify(newExpense),
+          })
+        } else if (method === 'DELETE') {
+          const parts = url.split('/api/expenses/')
+          const id = parts[1]?.split('?')[0]
+          expenses = expenses.filter((e) => e.id !== id)
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ status: 'deleted' }),
+          })
+        }
+        return
+      }
+
+      // Default fallback for /api/health, /api/auth/*, /api/billing/*, etc.
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ status: 'ok' }),
+      })
     })
   })
 
@@ -168,9 +180,9 @@ test.describe('Restgeld E2E', () => {
     await expect(page.locator('.expense-list').getByText('Test')).not.toBeVisible()
   })
 
-  test('oeffnet ausgaben-historie und paginiert', async ({ page }) => {
-    // 7 Ausgaben anlegen (damit bei PageSize 6 eine 2. Seite entsteht)
-    for (let i = 1; i <= 7; i++) {
+  test('oeffnet ausgaben-historie und laedt weitere ausgaben nach', async ({ page }) => {
+    // 15 Ausgaben anlegen (damit bei PageSize 12 eine 2. Seite zum Nachladen existiert)
+    for (let i = 1; i <= 15; i++) {
       expenses.push({
         id: `exp-${i}`,
         periodId: 'test-period-id',
@@ -184,18 +196,19 @@ test.describe('Restgeld E2E', () => {
     await expect(page.locator('.show-all-btn')).toBeVisible()
     await page.locator('.show-all-btn').click()
 
-    // Modal geöffnet
+    // Bottom Sheet geöffnet
     await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).toBeVisible()
-    await expect(page.getByText('Seite 1 von 2')).toBeVisible()
-    await expect(page.locator('.modal-content').getByText('Ausgabe 7')).toBeVisible()
+    await expect(page.locator('.bottom-sheet').getByText('Ausgabe 15', { exact: true })).toBeVisible()
+    await expect(page.locator('.drag-handle-pill')).toBeVisible()
 
-    // Zur nächsten Seite blättern
-    await page.getByLabel('Nächste Seite').click()
-    await expect(page.getByText('Seite 2 von 2')).toBeVisible()
-    await expect(page.locator('.modal-content').getByText('Ausgabe 1')).toBeVisible()
+    // Weitere Ausgaben nachladen (Infinite Scroll / Load More Hint)
+    if (await page.locator('.load-more-hint').isVisible()) {
+      await page.locator('.load-more-hint').click()
+      await expect(page.locator('.bottom-sheet').getByText('Ausgabe 1', { exact: true })).toBeVisible()
+    }
 
     // Schließen
-    await page.locator('.modal-header .close-btn').click()
+    await page.locator('.sheet-header .close-btn').click()
     await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).not.toBeVisible()
   })
 })

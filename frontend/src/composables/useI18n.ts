@@ -919,15 +919,16 @@ export function useI18n() {
     return opt?.symbol || '€'
   })
 
-  function formatCurrency(val: number): string {
+  function formatCurrency(val: number | undefined | null): string {
+    const num = typeof val === 'number' && !isNaN(val) ? val : 0
     const digits = currentCurrency.value === 'JPY' ? 0 : 2
-    return val.toLocaleString(localeCode.value, {
+    return num.toLocaleString(localeCode.value, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
     })
   }
 
-  function formatMoney(val: number): string {
+  function formatMoney(val: number | undefined | null): string {
     const formatted = formatCurrency(val)
     if (currentCurrency.value === 'USD') return `$${formatted}`
     if (currentCurrency.value === 'GBP') return `£${formatted}`

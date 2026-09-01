@@ -11,7 +11,12 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        locale: 'de-DE',
+        timezoneId: 'Europe/Berlin',
+        serviceWorkers: 'block',
+      },
     },
   ],
   webServer: {

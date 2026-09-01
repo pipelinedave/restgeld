@@ -146,8 +146,8 @@ describe('App', () => {
     await showAllBtn.trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('.modal-content h2').text()).toBe('Alle Ausgaben')
-    expect(api.getExpenses).toHaveBeenCalledWith(1, 6)
+    expect(wrapper.find('.bottom-sheet h2').text()).toBe('Alle Ausgaben')
+    expect(api.getExpenses).toHaveBeenCalledWith(1, 12)
   })
 
   it('zeigt fehler bei api-fehler', async () => {

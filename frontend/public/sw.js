@@ -31,11 +31,26 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
+      // Return cached asset immediately if found (Cache-First for static assets)
+      if (cachedResponse) {
+        // Background revalidate
+        fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const clone = networkResponse.clone()
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+            }
+          })
+          .catch(() => {})
+        return cachedResponse
+      }
+
+      // Network fallback
+      return fetch(event.request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseClone = networkResponse.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone))
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
           }
           return networkResponse
         })
@@ -43,10 +58,8 @@ self.addEventListener('fetch', (event) => {
           if (event.request.mode === 'navigate') {
             return caches.match('/')
           }
-          return cachedResponse
+          return null
         })
-
-      return cachedResponse || fetchPromise
     })
   )
 })

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('Live E2E: oeffnet echte Ausgaben-Historie und prueft Console & Modal', async ({ page }) => {
-  test.skip(!!process.env.CI, 'Skip live integration test on CI since it requires a running backend')
+  test.skip(!process.env.LIVE_BACKEND, 'Skip live integration test unless LIVE_BACKEND is set')
   const consoleErrors: string[] = []
   page.on('console', (msg) => {
     console.log('LIVE BROWSER LOG:', msg.text())
@@ -24,16 +24,16 @@ test('Live E2E: oeffnet echte Ausgaben-Historie und prueft Console & Modal', asy
   await page.getByRole('button', { name: 'Speichern' }).click()
 
   // "Alle anzeigen" Button anklicken
-  const showAllBtn = page.getByRole('button', { name: /alle anzeigen/i })
+  const showAllBtn = page.locator('.show-all-btn')
   await expect(showAllBtn).toBeVisible()
   await showAllBtn.click()
 
-  // Modal muss sichtbar sein und keine Fehler werfen
+  // Bottom Sheet muss sichtbar sein und keine Fehler werfen
   await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).toBeVisible()
-  await expect(page.locator('.modal-card').getByText('Live-Test Kaffee').first()).toBeVisible()
+  await expect(page.locator('.bottom-sheet').getByText('Live-Test Kaffee').first()).toBeVisible()
 
   // Schließen
-  await page.getByRole('button', { name: 'Schließen' }).click()
+  await page.locator('.sheet-header .close-btn').click()
   await expect(page.getByRole('heading', { name: 'Alle Ausgaben' })).not.toBeVisible()
 
   // Console darf 0 Errors enthalten

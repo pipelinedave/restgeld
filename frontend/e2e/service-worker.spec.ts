@@ -5,6 +5,8 @@ import { test, expect } from '@playwright/test'
  */
 
 test.describe('Service Worker / PWA', () => {
+  test.use({ serviceWorkers: 'allow' })
+
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       try {
@@ -69,11 +71,11 @@ test.describe('Service Worker / PWA', () => {
 
     // Netz offline schalten
     await page.context().setOffline(true)
-    await page.reload().catch(() => {})
-    await page.waitForLoadState('domcontentloaded').catch(() => {})
+    await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {})
+    await expect(page.locator('.brand-title')).toBeVisible({ timeout: 10000 })
 
-    const offlineBody = await page.evaluate(() => document.body.innerText)
-    expect(offlineBody).toContain('restgeld')
+    const brandText = await page.locator('.brand-title').innerText()
+    expect(brandText).toContain('restgeld')
 
     await page.context().setOffline(false)
   })
