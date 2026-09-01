@@ -98,7 +98,6 @@ const i18n = useI18n()
   overflow-y: auto;
   flex: 1;
   min-height: 0;
-  max-height: 145px;
   padding-right: 4px;
 }
 
