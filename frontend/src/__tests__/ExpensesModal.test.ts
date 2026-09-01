@@ -32,7 +32,7 @@ function makePaginated(overrides: Partial<PaginatedExpenses> = {}): PaginatedExp
   }
 }
 
-describe('ExpensesModal', () => {
+describe('ExpensesModal (Bottom Sheet Overlay)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockApi.mockReturnValue({
@@ -43,16 +43,17 @@ describe('ExpensesModal', () => {
 
   it('rendert nichts wenn nicht sichtbar', () => {
     const wrapper = mount(ExpensesModal, { props: { visible: false } })
-    expect(wrapper.find('.modal-overlay').exists()).toBe(false)
+    expect(wrapper.find('.sheet-overlay').exists()).toBe(false)
   })
 
   it('laedt und rendert ausgaben wenn sichtbar', async () => {
     const wrapper = mount(ExpensesModal, { props: { visible: true } })
     await flushPromises()
 
-    expect(mockApi().getExpenses).toHaveBeenCalledWith(1, 6)
-    expect(wrapper.find('.modal-content h2').text()).toBe('Alle Ausgaben')
+    expect(mockApi().getExpenses).toHaveBeenCalledWith(1, 12)
+    expect(wrapper.find('.bottom-sheet h2').text()).toBe('Alle Ausgaben')
     expect(wrapper.find('.badge').text()).toBe('8')
+    expect(wrapper.find('.drag-handle-pill').exists()).toBe(true)
     expect(wrapper.text()).toContain('Mittagessen')
     expect(wrapper.text()).toContain('Ausgabe') // Fallback für leere Notiz
     expect(wrapper.text()).toContain('-12,50')
@@ -61,7 +62,7 @@ describe('ExpensesModal', () => {
 
   it('zeigt leere nachricht wenn keine ausgaben vorhanden', async () => {
     mockApi.mockReturnValue({
-      getExpenses: vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, limit: 6, totalPages: 1 }),
+      getExpenses: vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, limit: 12, totalPages: 1 }),
       deleteExpense: vi.fn(),
     } as any)
 
@@ -69,13 +70,12 @@ describe('ExpensesModal', () => {
     await flushPromises()
 
     expect(wrapper.find('.empty-state').text()).toContain('Keine Ausgaben in dieser Periode vorhanden')
-    expect(wrapper.find('.pagination-bar').exists()).toBe(false)
   })
 
-  it('blaettert zur naechsten und vorherigen seite', async () => {
+  it('laedt mehr daten bei infinite scroll / loadNextPage', async () => {
     const getExpensesMock = vi.fn()
       .mockResolvedValueOnce(makePaginated({ page: 1, totalPages: 2 }))
-      .mockResolvedValueOnce(makePaginated({ page: 2, totalPages: 2 }))
+      .mockResolvedValueOnce(makePaginated({ page: 2, totalPages: 2, items: [{ id: 'exp-3', periodId: '2026-08', amount: 5.0, note: 'Kaffee', createdAt: '2026-08-19T10:00:00Z' }] }))
 
     mockApi.mockReturnValue({
       getExpenses: getExpensesMock,
@@ -85,15 +85,14 @@ describe('ExpensesModal', () => {
     const wrapper = mount(ExpensesModal, { props: { visible: true } })
     await flushPromises()
 
-    expect(wrapper.find('.pagination-info').text()).toBe('Seite 1 von 2')
-    const nextBtn = wrapper.find('button[aria-label="Nächste Seite"]')
-    expect(nextBtn.attributes('disabled')).toBeUndefined()
+    expect(wrapper.find('.load-more-hint').exists()).toBe(true)
 
-    // Klick auf Weiter
-    await nextBtn.trigger('click')
+    // Trigger more
+    await wrapper.find('.load-more-hint').trigger('click')
     await flushPromises()
 
-    expect(getExpensesMock).toHaveBeenCalledWith(2, 6)
+    expect(getExpensesMock).toHaveBeenCalledWith(2, 12)
+    expect(wrapper.text()).toContain('Kaffee')
   })
 
   it('loescht ausgabe und emittet expense-deleted', async () => {
@@ -109,19 +108,25 @@ describe('ExpensesModal', () => {
     expect(wrapper.emitted('expense-deleted')![0]).toEqual(['exp-1'])
   })
 
-  it('schliesst modal bei klick auf schliessen-button', async () => {
+  it('schliesst overlay bei klick auf schliessen-button', async () => {
+    vi.useFakeTimers()
     const wrapper = mount(ExpensesModal, { props: { visible: true } })
     await flushPromises()
 
     await wrapper.find('.close-btn').trigger('click')
+    vi.advanceTimersByTime(300)
     expect(wrapper.emitted('close')).toBeTruthy()
+    vi.useRealTimers()
   })
 
-  it('schliesst modal bei klick auf overlay', async () => {
+  it('schliesst overlay bei klick auf overlay-hintergrund', async () => {
+    vi.useFakeTimers()
     const wrapper = mount(ExpensesModal, { props: { visible: true } })
     await flushPromises()
 
-    await wrapper.find('.modal-overlay').trigger('click')
+    await wrapper.find('.sheet-overlay').trigger('click')
+    vi.advanceTimersByTime(300)
     expect(wrapper.emitted('close')).toBeTruthy()
+    vi.useRealTimers()
   })
 })
