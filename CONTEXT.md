@@ -235,6 +235,11 @@ Strukturierte Erfassung der Praxistest-Erkenntnisse und Feature-Wünsche für ko
 
 ---
 
+### Features & UX-Verbesserungen
+- **Material You Bottom Sheet Overlay mit Infinite Scroll (`2edbf3d`)**: Das Modal „Alle Ausgaben“ wurde komplett in ein natives Bottom Sheet Drawer Overlay mit Google / Material You Drag Handle Pill, Touch-/Swipe-to-Dismiss Gesten und nahtlosem paginierten Infinite Scroll (12 Items pro Batch) umgebaut.
+
+---
+
 ### Bugfixes
 - **Hero-Number Startbudget ($y$) Fix (`4c25f84`)**: Single Source of Truth für das Tages-Startbudget `$y$` auf `todayBase` umgestellt mit Fallback auf `currentBudget + spentToday`. Verhindert falsche `x / x`-Anzeige bei fehlendem oder leerem `dailyStats`.
 - **Letzte Ausgaben Layout & Pixel-Viewport Fix (`0d88215`)**: Künstliches `max-height: 145px` entfernt. Die Liste nutzt jetzt den gesamten vertikalen Raum bis zum Footer (`flex: 1`) und scrollt nur dann, wenn der Bildschirm-Viewport zu klein ist. Auf Geräten wie dem Pixel 9a sind alle 3 Ausgaben ohne abgeschnittenes Scrollen vollständig sichtbar.
