@@ -164,6 +164,7 @@ restgeld/
 - 🧪 Umfassende Test-Suite-Expansion & Strikte Edge-Case Absicherung (Phase 9): Neuer `useBilling.test.ts` Suite für Stripe Checkouts & Kundenportal, Ausbau von `useAuth.test.ts` (Profile Updates, Session Restore, Token Validation), Backend-Parallelitäts-Tests (20 parallele Buchungs-Goroutinen), Webhook- & CORS-Tests im Billing-Service sowie Modal-Trigger-Tests mit 151 Vitest- & 55 Go-Tests und ~74% Gesamtabdeckung abgesichert ✅
 - 🚀 GitHub Actions CI/CD Pipeline 100% Green & Multi-Service Integration (Phase 10): Integration-Test Signatur in `backend/api_test.go` gefixt, Go-Multi-File Dockerfile Builds korrigiert, dedizierter `monitoring-service.yml` Workflow und Docker Matrix-Builds aufgesetzt, Service Worker PWA-Caching in `sw.js` gehärtet und Playwright E2E-Tests stabilisiert – alle 6 GitHub Actions Workflows laufen auf `develop` und `main` 100% fehlerfrei und grün ✅
 - 🌐 Vercel Multi-Service Production Deployment & Supabase DB Integration (Phase 11): Vollständige Integration aller Auth-, Passkey-, Billing- und Monitoring-Endpunkte in das Core Go-Backend Gateway, Ausführung der WebAuthn- & User-Preference-Migrationen auf der Live Supabase PostgreSQL Instanz (`db.wddvlnksdflaurjdsvuv.supabase.co`) und erfolgreicher Vercel Production Rollout – alle API-Routen (`/api/health`, `/api/auth/health`, `/api/billing/health`, `/api/monitoring/overview`, `/api/budget`) sind unter `https://restgeld-umber.vercel.app` live und 100% betriebsbereit ✅
+- ☸️ k3s Self-Hosted GitOps Deployment & Ingress (`restgeld.stillon.top`) (Phase 12): K8s Manifeste um `monitoring-service` und Ingress-Routing erweitert, `k3s-config` GitOps Repository mit Flux Kustomization (`apps/restgeld.yaml` & `kustomize/restgeld/`) synchronisiert, Namespace `restgeld` auf dem Cluster initialisiert und Ingress-Routing für `restgeld.stillon.top` aufgesetzt ✅
 
 ---
 
@@ -171,77 +172,23 @@ restgeld/
 
 Strukturierte Erfassung der Praxistest-Erkenntnisse und Feature-Wünsche für kommende Entwicklungs-Zyklen.
 
-### Epic 1: Mobile- & Numpad-UX Polishing
-1. **Android Quick Action Auto-Focus & Virtual Keyboard Trigger**:
-   - Problem: Beim Öffnen via PWA Shortcut (`/?action=add-expense`) öffnet sich das Android-Keyboard nicht sofort automatisch.
-   - Ziel: Zuverlässiges Fokussieren und Aufklappen der Bildschirmtastatur auf Android & iOS.
-2. **Initialer "Heute verfügbar"-Status im Numpad**:
-   - Problem: Die Live-Impact Box erscheint aktuell erst, nachdem eine Ziffer eingetippt wurde.
-   - Ziel: Bereits vor Eingabe den aktuellen Stand anzeigen (z. B. *"Heute verfügbar: 15,00 €"*), der sich beim Tippen nahtlos in *"Verbleibt danach: 6,50 €"* wandelt.
-3. **Hero-Display: "x / y noch übrig"**:
-   - Ziel: Neben dem Restbetrag klar anzeigen, wie viel heute ursprünglich zur Verfügung stand (z. B. `12,50 € / 15,00 €` oder Untertitel *"von 15,00 € heute"*).
+### Epic 1: Notifications & Habit Tracking
+1. **Web Push API / Tägliche Abend-Erinnerung**:
+   - Opt-in Benachrichtigung am Abend (z. B. 20:00 Uhr) mit dem verbleibenden Restgeld des Tages oder sanfter Erinnerung, offene Ausgaben einzutragen.
+2. **Offline-Sync Indicator & Instant Reconnect**:
+   - Visueller Status bei Verbindungswechsel und optimistisches Auto-Re-Sync beim Wiederverbinden.
 
-### Epic 2: Main Dashboard Layout & Zero-Scroll Information Architecture
-1. **Zero-Scroll Viewport Konzept (100dvh)**:
-   - Problem: Die Hauptseite ist auf vielen Smartphones vertikal leicht überschritten und erfordert Scrollen zum Footer.
-   - Ziel: Absolut scroll-freie Hauptseite (`100dvh`). Intelligente Informationsarchitektur:
-     - Kompakte, aufklappbare Widgets oder Tabs (z. B. Streak & Projection als elegante Pill-Widgets).
-     - Ausgaben-Vorschau als elegante Drawer-/Footer-Leiste oder Schnellansicht.
-     - Maximaler Fokus auf Hero-Restgeld und Schnellbuchung.
-2. **Instant-Operations & Top Loading-Streak**:
-   - Ziel: Alle Aktionen passieren optimistisch und instant.
-   - Dezente, pulsierende Ladeleiste ("Loading Streak") direkt unter dem Header für alle asynchronen Background-Syncs.
-3. **Git Commit im Footer**:
-   - Ziel: Statt einer manuellen Versionsnummer den aktuellen Git-Commit-Hash (z. B. `2e783da`) mit Link zum GitHub-Commit anzeigen.
+### Epic 2: Advanced Insights & Reports
+1. **Perioden-Abschlussbericht Modal (Monthly Recap Card)**:
+   - Am Ende einer Periode oder auf Klick im Archiv: Schöne visuelle Zusammenfassung (Gesamtersparnis, bester Spartag, Top-Kategorien, Streak-Rekord) mit Share-/Export-Möglichkeit.
+2. **Yearly / Multi-Month Trend Analysis**:
+   - Langzeit-Ersparnis-Trend über mehrere Monate hinweg.
 
-### Epic 3: Interaktive Settings & Abschlussbericht-Archiv
-1. **Interaktive Slider für Budget & Periode (wie Landing Page)**:
-   - Ziel: Slider für Monatsbudget, Periodendauer und Tages-Restgeld mit bidirektionaler, intelligenter Kopplung (z. B. Verschieben des Tagesbudgets passt das Monatsbudget live an).
-2. **Überarbeitetes Perioden-Archiv ("Abschlussbericht")**:
-   - Problem: Periodennamen sind teilweise kryptisch und genaue Zeitspannen fehlen.
-   - Ziel: Klare Anzeige *"1. Aug 2026 – 31. Aug 2026 (31 Tage)"*.
-   - Detail-Ansicht beim Antippen einer Periode: Kompletter Abschlussbericht (End-Ersparnis, Gesamtausgaben, Tagesdurchschnitt, Streak-Statistiken und Ausgabenliste des Monats).
+### Epic 3: UX & Theming
+1. **Custom Color Themes (OLED Black, Sunset Amber, Cyberpunk)**:
+   - Farbschema-Wähler in Settings mit sofortiger CSS-Variablen-Umschaltung.
+2. **Zero-Scroll Viewport Feinschliff auf kleinen Screens (z. B. iPhone SE / <667px)**:
+   - Noch kompaktere dynamische Skalierung für Minimal-Viewports.
 
-### Epic 4: Theming, Monitoring & Pages
-1. **Custom Color / RGB & Hex Theming**:
-   - Ziel: Farbwähler für Akzentfarben (Emerald, Cyan, Sunset Amber, Cyberpunk) und OLED-Theme-Optionen mit CSS-Variablen & `localStorage`.
-2. **Uptime Monitoring & Health Popover**:
-   - Ziel: Uptime Kuma Status / Service-Health hinter dem Online-Badge im Header. Antippen öffnet ein Popover mit Status aller Komponenten (DB, API, Sync-Queue).
-3. **About Page / Modal**:
-   - Ziel: Kompakte Info-Seite zur Philosophie von Restgeld (Achtsamkeit, Zero-Bloat, Open Source).
-4. **Landing Page Sync**:
-   - Ziel: Aktualisierung des interaktiven Mockups in `docs/index.html` auf das exakte Layout der PWA.
-
-### Epic 5: SaaS Architecture, Microservices & Subscriptions (✅ Umgesetzt)
-1. **User Accounts & Tenant Isolation**:
-   - Multi-Tenant DB Schema mit Tabellen `users`, `magic_links`, `auth_sessions`, `webauthn_credentials` und `user_id` Foreign Keys.
-   - Vollständige Tenant-Isolation auf DB- und Store-Ebene.
-2. **Microservice Isolation**:
-   - `services/auth-service` (Port 8081): Standalone Auth Microservice (Magic Link & WebAuthn Passkey Vorbereitung).
-   - `services/billing-service` (Port 8082): Standalone Billing Microservice (Stripe Checkout & Customer Portal).
-3. **Flächendeckendes Rate Limiting & Abuse Protection**:
-   - `rateLimitMiddleware` über alle Microservices hinweg (`backend/`, `auth-service`, `billing-service`).
-4. **Frontend Billing & Health UI Integration**:
-   - `useBilling.ts` Composable & Stripe Checkout / Portal Buttons in `AuthModal.vue`.
-   - Microservice Health-Checks (`auth-service` & `billing-service`) im Header Popover.
-
----
-
-### 🔄 Nächste Schritte
-1. **Deployment auf k3s**:
-   - SealedSecret für Postgres-Passwort in Produktion verifizieren.
-   - Flux Kustomization Sync in k3s Cluster ausführen.
-2. **Domain verifizieren** (`restgeld.stillon.top`)
-
----
-
-### Features & UX-Verbesserungen
-- **Material You Bottom Sheet Overlay mit Infinite Scroll (`2edbf3d`)**: Das Modal „Alle Ausgaben“ wurde komplett in ein natives Bottom Sheet Drawer Overlay mit Google / Material You Drag Handle Pill, Touch-/Swipe-to-Dismiss Gesten und nahtlosem paginierten Infinite Scroll (12 Items pro Batch) umgebaut.
-
----
-
-### Bugfixes
-- **Hero-Number Startbudget ($y$) Fix (`4c25f84`)**: Single Source of Truth für das Tages-Startbudget `$y$` auf `todayBase` umgestellt mit Fallback auf `currentBudget + spentToday`. Verhindert falsche `x / x`-Anzeige bei fehlendem oder leerem `dailyStats`.
-- **Letzte Ausgaben Layout & Pixel-Viewport Fix (`0d88215`)**: Künstliches `max-height: 145px` entfernt. Die Liste nutzt jetzt den gesamten vertikalen Raum bis zum Footer (`flex: 1`) und scrollt nur dann, wenn der Bildschirm-Viewport zu klein ist. Auf Geräten wie dem Pixel 9a sind alle 3 Ausgaben ohne abgeschnittenes Scrollen vollständig sichtbar.
 
 

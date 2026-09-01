@@ -15,6 +15,13 @@ spec:
     - host: restgeld.stillon.top
       http:
         paths:
+          - path: /api/monitoring
+            pathType: Prefix
+            backend:
+              service:
+                name: restgeld-monitoring-service
+                port:
+                  number: 8083
           - path: /api/billing
             pathType: Prefix
             backend:
