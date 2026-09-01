@@ -38,6 +38,7 @@ export interface BudgetData {
   day: number
   monthDays: number
   baseBudget: number
+  todayBase?: number
   currentBudget: number
   savings: number
   color: string

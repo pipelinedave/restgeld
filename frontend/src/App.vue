@@ -38,6 +38,7 @@
           :baseBudget="budget.baseBudget"
           :savings="budget.savings"
           :color="budget.color"
+          :todayBase="budget.todayBase"
           :spentToday="spentToday"
         />
         <div v-else class="loading">Lade Budget...</div>

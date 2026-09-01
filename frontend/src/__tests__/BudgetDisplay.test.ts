@@ -22,6 +22,14 @@ describe('BudgetDisplay', () => {
     expect(wrapper.find('.today-gauge-fill').exists()).toBe(true)
   })
 
+  it('verwendet todayBase falls bereitgestellt auch wenn spentToday 0 ist', () => {
+    const wrapper = mount(BudgetDisplay, {
+      props: { currentBudget: 2.76, baseBudget: 10.0, todayBase: 7.20, savings: -67.16, color: 'red', spentToday: 0 }
+    })
+    expect(wrapper.find('.current-amount').text()).toContain('2,76 €')
+    expect(wrapper.find('.start-amount').text()).toContain('7,20 €')
+  })
+
   it('farbe gruen bei ersparnis > 0', () => {
     const wrapper = mount(BudgetDisplay, {
       props: { currentBudget: 19.24, baseBudget: 14.52, savings: 61.36, color: 'green' }

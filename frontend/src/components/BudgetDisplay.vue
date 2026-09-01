@@ -52,6 +52,7 @@ const props = withDefaults(
     baseBudget: number
     savings: number
     color: string
+    todayBase?: number
     spentToday?: number
   }>(),
   {
@@ -75,6 +76,9 @@ watch(
 )
 
 const startTodayAmount = computed(() => {
+  if (props.todayBase !== undefined && props.todayBase > 0) {
+    return props.todayBase
+  }
   return props.currentBudget + (props.spentToday || 0)
 })
 
