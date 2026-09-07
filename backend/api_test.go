@@ -199,8 +199,8 @@ func TestAPI_UpdateBudgetAndReset(t *testing.T) {
 		t.Errorf("baseBudget sollte nach update > 14.52 sein, bekommen %.2f", afterUpdate.BaseBudget)
 	}
 
-	// Neue Periode starten (reset)
-	rec = post(router, "/api/period", "")
+	// Neue Periode starten (reset auf 450€ / 31 Tage)
+	rec = post(router, "/api/period", `{"monthlyTotal": 450, "days": 31}`)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("erwartet 201 bei new period, bekommen %d", rec.Code)
 	}
