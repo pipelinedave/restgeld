@@ -181,8 +181,6 @@ func TestAPI_ConcurrentExpenses(t *testing.T) {
 
 func TestAPI_UpdateBudgetAndReset(t *testing.T) {
 	srv := newIntegrationServer(t)
-	fixedDate := time.Date(2026, 3, 1, 12, 0, 0, 0, time.UTC)
-	srv.now = func() time.Time { return fixedDate }
 	router := srv.router()
 
 	// Auf 600 ändern
