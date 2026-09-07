@@ -89,6 +89,10 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
     headers,
   })
   if (!res.ok) {
+    if (res.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('restgeld_auth_token')
+      localStorage.removeItem('restgeld_user')
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }))
     throw new Error(err.error || 'api-fehler')
   }

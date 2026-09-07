@@ -67,8 +67,12 @@ func (s *server) getUserIDFromRequest(r *http.Request) string {
 		return userID
 	}
 
-	// Fallback fuer direkte UserID in Tests
-	return rawToken
+	// Fallback fuer direkte UserID in Tests (nur wenn Store kein PostgreSQL ist)
+	if _, isPG := s.store.(*postgresStore); !isPG {
+		return rawToken
+	}
+
+	return ""
 }
 
 func jsonHeader(w http.ResponseWriter) {
