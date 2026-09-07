@@ -47,9 +47,7 @@ const i18n = useI18n()
   padding: 8px 16px 12px;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
+  min-height: 90px;
 }
 
 .section-header {

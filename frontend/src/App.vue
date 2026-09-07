@@ -154,7 +154,27 @@ const offlineSync = useOfflineSync()
 const theme = useTheme()
 const auth = useAuth()
 const i18n = useI18n()
-const budget = ref<BudgetData | null>(null)
+const CACHED_BUDGET_KEY = 'restgeld_cached_budget'
+
+function getInitialBudget(): BudgetData | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(CACHED_BUDGET_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+function saveCachedBudget(data: BudgetData | null) {
+  if (typeof window === 'undefined' || !data) return
+  try {
+    localStorage.setItem(CACHED_BUDGET_KEY, JSON.stringify(data))
+  } catch {}
+}
+
+const budget = ref<BudgetData | null>(getInitialBudget())
 
 const spentToday = computed(() => {
   if (!budget.value || !budget.value.dailyStats) return 0
@@ -243,9 +263,14 @@ async function handleMigrationComplete(count: number) {
 async function loadBudget() {
   isLoading.value = true
   try {
-    budget.value = await api.getBudget()
+    const fresh = await api.getBudget()
+    budget.value = fresh
+    saveCachedBudget(fresh)
   } catch (e: any) {
     console.error('Fehler beim Laden:', e.message)
+    if (!budget.value) {
+      budget.value = getInitialBudget()
+    }
   } finally {
     isLoading.value = false
   }
@@ -269,6 +294,7 @@ async function handleConfirm(amount: number, note: string) {
         note,
         createdAt: new Date().toISOString(),
       })
+      saveCachedBudget(budget.value)
     }
     showNumpad.value = false
     isSavingExpense.value = false
@@ -295,6 +321,7 @@ async function handleConfirm(amount: number, note: string) {
         note,
         createdAt: new Date().toISOString(),
       })
+      saveCachedBudget(budget.value)
     }
     showNumpad.value = false
     haptics.warning()
@@ -484,12 +511,14 @@ onUnmounted(() => {
 
 <style scoped>
 .app-shell {
+  min-height: 100dvh;
   height: 100dvh;
-  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   z-index: 1;
 }
 
@@ -512,8 +541,6 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
   min-height: 0;
   padding: 4px 0;
   gap: 8px;
@@ -583,9 +610,8 @@ onUnmounted(() => {
 
 .history-section {
   flex: 1;
-  min-height: 0;
+  min-height: 90px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 </style>
