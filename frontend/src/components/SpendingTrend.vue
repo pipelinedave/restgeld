@@ -1,14 +1,14 @@
 <template>
-  <section v-if="stats && stats.length > 0" class="spending-trend">
+  <section class="spending-trend">
     <div class="trend-header">
       <h3 class="trend-title">{{ i18n.t('trend.title') }}</h3>
-      <span class="average-badge">
+      <span v-if="stats && stats.length > 0" class="average-badge">
         {{ i18n.t('trend.avg', { amount: i18n.formatMoney(averageSpent) }) }}
       </span>
     </div>
 
     <!-- Interaktiver Balken-/Sparkline-Graph -->
-    <div class="chart-container">
+    <div v-if="stats && stats.length > 0" class="chart-container">
       <div class="chart-bars">
         <div
           v-for="stat in stats"
@@ -38,9 +38,12 @@
         </div>
       </div>
     </div>
+    <div v-else class="chart-empty-placeholder">
+      <span class="chart-empty-text">{{ i18n.t('recent.empty') }}</span>
+    </div>
 
     <!-- Detail-Anzeige bei Auswahl / Tooltip -->
-    <div class="detail-preview" :class="{ 'has-selection': !!selectedStat }">
+    <div v-if="stats && stats.length > 0" class="detail-preview" :class="{ 'has-selection': !!selectedStat }">
       <template v-if="selectedStat">
         <span class="detail-day">Tag {{ selectedStat.day }} ({{ formatDate(selectedStat.date) }}):</span>
         <span
@@ -302,5 +305,21 @@ function formatDate(dateStr: string) {
 
 .spent-over {
   color: var(--accent-red, #ef4444);
+}
+
+.chart-empty-placeholder {
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.chart-empty-text {
+  font-size: 0.78rem;
+  color: var(--text-dim, #5c5c6e);
+  font-family: var(--font-sans);
 }
 </style>

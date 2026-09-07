@@ -1,5 +1,5 @@
-const CACHE_NAME = 'restgeld-v1'
-const PRECACHE_URLS = ['/', '/manifest.webmanifest']
+const CACHE_NAME = 'restgeld-v2'
+const PRECACHE_URLS = ['/manifest.webmanifest', '/favicon.svg']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -29,23 +29,39 @@ self.addEventListener('fetch', (event) => {
   // API calls are handled separately / network-first by app
   if (url.pathname.startsWith('/api/')) return
 
+  const isNavigation = event.request.mode === 'navigate' || event.request.destination === 'document'
+
+  if (isNavigation) {
+    // Network-First for HTML navigation to always serve the latest build and Vite chunk hashes
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          }
+          return networkResponse
+        })
+        .catch(async () => {
+          const cached = await caches.match(event.request)
+          if (cached) return cached
+          const rootCached = await caches.match('/')
+          if (rootCached) return rootCached
+          return new Response('<h1>Offline</h1><p>restgeld ist momentan offline.</p>', {
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          })
+        })
+    )
+    return
+  }
+
+  // Cache-First for versioned / static assets
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Return cached asset immediately if found (Cache-First for static assets)
       if (cachedResponse) {
-        // Background revalidate
-        fetch(event.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const clone = networkResponse.clone()
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
-            }
-          })
-          .catch(() => {})
         return cachedResponse
       }
 
-      // Network fallback
       return fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
@@ -55,10 +71,8 @@ self.addEventListener('fetch', (event) => {
           return networkResponse
         })
         .catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('/')
-          }
-          return null
+          // Never return null from respondWith
+          return new Response('', { status: 408, statusText: 'Request timed out' })
         })
     })
   )
