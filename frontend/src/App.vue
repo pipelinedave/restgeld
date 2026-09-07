@@ -463,11 +463,15 @@ onMounted(async () => {
   }
 
   // Magic Link Token in URL abfangen
-  const autoLoggedIn = await auth.checkUrlForAuthToken()
-  if (autoLoggedIn) {
-    showToast('✓ Erfolgreich eingeloggt', 'success')
-  } else {
-    await auth.fetchMe()
+  try {
+    const autoLoggedIn = await auth.checkUrlForAuthToken()
+    if (autoLoggedIn) {
+      showToast('✓ Erfolgreich eingeloggt', 'success')
+    } else {
+      await auth.fetchMe()
+    }
+  } catch (err) {
+    console.warn('Auth check skipped:', err)
   }
 
   await loadBudget()
