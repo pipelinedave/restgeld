@@ -25,3 +25,6 @@ frontend/playwright-report/
 # OS
 .DS_Store
 Thumbs.db
+
+# Build-Artefakte
+frontend/coverage/
