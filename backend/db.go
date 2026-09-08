@@ -5,10 +5,27 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
+
+// openDB oeffnet eine Postgres-Verbindung ueber den pgx-stdlib-Treiber.
+// Ergänzt `default_query_exec_mode=simple_protocol`, damit kein Extended-Query-
+// Protocol (Prepared Statements) genutzt wird - noetig fuer den Supabase
+// Transaction-Pooler (Port 6543), der keine Prepared Statements unterstuetzt.
+func openDB(connStr string) (*sql.DB, error) {
+	lower := strings.ToLower(connStr)
+	if !strings.Contains(lower, "default_query_exec_mode=") {
+		if strings.Contains(connStr, "?") {
+			connStr += "&default_query_exec_mode=simple_protocol"
+		} else {
+			connStr += " default_query_exec_mode=simple_protocol"
+		}
+	}
+	return sql.Open("pgx", connStr)
+}
 
 type postgresStore struct {
 	db *sql.DB
@@ -34,7 +51,7 @@ func newPostgresStore() Store {
 			host, port, user, password, dbname)
 	}
 
-	db, err := sql.Open("postgres", connStr)
+	db, err := openDB(connStr)
 	if err != nil {
 		log.Fatalf("fehler beim db-verbindungsaufbau: %v", err)
 	}
