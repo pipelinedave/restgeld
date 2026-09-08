@@ -3,16 +3,11 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 )
-
-func sqlOpen(driver, connStr string) (*sql.DB, error) {
-	return sql.Open(driver, connStr)
-}
 
 func TestIntegrationMigrations(t *testing.T) {
 	host := getEnv("DB_HOST", "localhost")
@@ -24,7 +19,7 @@ func TestIntegrationMigrations(t *testing.T) {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	db, err := sqlOpen("postgres", connStr)
+	db, err := openDB(connStr)
 	if err != nil {
 		t.Fatalf("db open: %v", err)
 	}
@@ -274,7 +269,7 @@ func newIntegrationStore(t *testing.T) Store {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	db, err := sqlOpen("postgres", connStr)
+	db, err := openDB(connStr)
 	if err != nil {
 		t.Fatalf("db open: %v", err)
 	}
