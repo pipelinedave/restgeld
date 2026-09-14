@@ -427,7 +427,7 @@ onMounted(loadStoredNotes)
 .btn-cancel:hover,
 .btn-cancel:active {
   color: var(--text-main, #f4f4f6);
-  background: #242430;
+  background: var(--bg-elevated, #242430);
 }
 
 .btn-confirm {
@@ -504,7 +504,7 @@ onMounted(loadStoredNotes)
 }
 
 .quick-chip {
-  background: #1f1f28;
+  background: var(--bg-input, #1f1f28);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   color: var(--text-main, #f4f4f6);
   font-size: 0.72rem;
@@ -516,7 +516,7 @@ onMounted(loadStoredNotes)
 }
 
 .quick-chip:hover {
-  background: #2a2a36;
+  background: var(--bg-elevated, #2a2a36);
   border-color: var(--accent-green, #22c55e);
 }
 

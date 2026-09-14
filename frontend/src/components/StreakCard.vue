@@ -104,7 +104,7 @@ const i18n = useI18n()
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #1a1a22;
+  background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   padding: 4px 8px;

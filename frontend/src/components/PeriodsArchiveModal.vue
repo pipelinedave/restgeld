@@ -389,12 +389,12 @@ function calcAvgDaily(totalSpent: number, days: number): number {
 
 .period-card:hover {
   border-color: rgba(255, 255, 255, 0.12);
-  background: #1c1c24;
+  background: var(--bg-subtle, #1c1c24);
 }
 
 .period-card.expanded {
   border-color: var(--accent-green, #22c55e);
-  background: #191922;
+  background: var(--bg-card, #191922);
 }
 
 .period-card-header {
@@ -564,7 +564,7 @@ function calcAvgDaily(totalSpent: number, days: number): number {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #20202a;
+  background: var(--bg-input, #20202a);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 9999px;
   padding: 3px 8px;

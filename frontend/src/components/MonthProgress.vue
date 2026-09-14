@@ -53,7 +53,7 @@ const pct = computed(() => Math.round((props.day / props.monthDays) * 100))
 .progress-bar-bg {
   width: 100%;
   height: 6px;
-  background: #1c1c24;
+  background: var(--bg-subtle, #1c1c24);
   border-radius: 9999px;
   overflow: hidden;
 }

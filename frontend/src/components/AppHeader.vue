@@ -540,7 +540,7 @@ onMounted(() => {
 }
 
 .header-popover {
-  background: #18181e;
+  background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
   border-radius: 16px;
   width: 310px;

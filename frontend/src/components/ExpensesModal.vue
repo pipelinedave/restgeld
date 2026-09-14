@@ -493,7 +493,7 @@ function formatDate(dateStr: string) {
 
 .expense-item:active {
   transform: scale(0.99);
-  background: #23232e;
+  background: var(--bg-elevated, #23232e);
 }
 
 .expense-left {

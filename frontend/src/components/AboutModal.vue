@@ -127,7 +127,7 @@ const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev'
 }
 
 .modal-content {
-  background: #121216;
+  background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   width: 100%;
@@ -219,7 +219,7 @@ const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev'
 }
 
 .about-section {
-  background: #18181e;
+  background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 14px;
   padding: 14px;
