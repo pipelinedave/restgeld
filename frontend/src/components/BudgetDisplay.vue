@@ -93,7 +93,7 @@ const todayProgressPct = computed(() => {
 .mockup-hero-card {
   width: 100%;
   max-width: 380px;
-  background: radial-gradient(circle at top, #1c1c24 0%, #121216 100%);
+  background: radial-gradient(circle at top, var(--bg-subtle, #1c1c24) 0%, var(--bg-card, #121216) 100%);
   padding: 18px 16px;
   border-radius: 20px;
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
@@ -238,4 +238,28 @@ const todayProgressPct = computed(() => {
   color: var(--accent-red, #ef4444);
   border-color: rgba(239, 68, 68, 0.25);
 }
+
+/* Epic 3.2 — kompakter Hero auf kurzen Viewports */
+@media (max-height: 660px) {
+  .mockup-hero-card {
+    padding: 12px 14px;
+    gap: 6px;
+  }
+  .current-amount {
+    font-size: 1.9rem;
+  }
+  .start-amount {
+    font-size: 1.1rem;
+  }
+  .fraction-slash {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .current-amount {
+    font-size: 2rem;
+  }
+}
+
 </style>

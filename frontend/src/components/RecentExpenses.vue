@@ -175,4 +175,12 @@ const i18n = useI18n()
   border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
 }
+
+/* Epic 3.2 — kompakter auf kurzen Viewports */
+@media (max-height: 660px) {
+  .history-header {
+    padding-top: 2px;
+  }
+}
+
 </style>
