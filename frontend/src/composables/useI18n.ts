@@ -137,6 +137,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.view_report': 'Abschlussbericht ansehen',
     'archive.back_to_list': '← Zurück zum Archiv',
     'archive.report_details': 'Abschlussbericht & Buchungen',
+    'archive.hl_best_day': 'Bester Spartag',
+    'archive.hl_no_spend': 'Null-Ausgaben-Serie',
+    'archive.hl_active_day': 'Aktivster Tag',
     'archive.retry_btn': 'Erneut versuchen',
     'archive.loading': 'Lade Archiv...',
 
@@ -321,6 +324,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.view_report': 'View Summary Report',
     'archive.back_to_list': '← Back to Archive',
     'archive.report_details': 'Detailed Report',
+    'archive.hl_best_day': 'Best Saving Day',
+    'archive.hl_no_spend': 'No-Spend Streak',
+    'archive.hl_active_day': 'Most Active Day',
     'archive.retry_btn': 'Try Again',
     'archive.loading': 'Loading archive...',
 
@@ -506,6 +512,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.view_report': 'Ver Informe Resumido',
     'archive.back_to_list': '← Volver al Archivo',
     'archive.report_details': 'Informe Detallado',
+    'archive.hl_best_day': 'Mejor Día de Ahorro',
+    'archive.hl_no_spend': 'Racha Sin Gasto',
+    'archive.hl_active_day': 'Día Más Activo',
     'archive.retry_btn': 'Reintentar',
     'archive.loading': 'Cargando archivo...',
 
@@ -691,6 +700,9 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'archive.view_report': 'Voir le Rapport Récapitulatif',
     'archive.back_to_list': '← Retour aux Archives',
     'archive.report_details': 'Rapport Détaillé',
+    'archive.hl_best_day': 'Meilleur Jour d\u2019Économie',
+    'archive.hl_no_spend': 'Série Sans Dépense',
+    'archive.hl_active_day': 'Jour le Plus Actif',
     'archive.retry_btn': 'Réessayer',
     'archive.loading': 'Chargement des archives...',
 
