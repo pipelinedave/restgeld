@@ -96,6 +96,26 @@ func TestIntegrationCreateDuplicatePeriod(t *testing.T) {
 	}
 }
 
+func TestIntegrationGetAllPeriodsGuest(t *testing.T) {
+	store := newIntegrationStore(t)
+	p, _ := store.GetOrCreatePeriod("")
+	store.AddExpense("", p.ID, 8.50, "Frühstück")
+
+	// Regression: Guest-Anfrage (userID == "") darf keinen UUID-Cast-Fehler
+	// ("invalid input syntax for type uuid") mehr werfen, sondern die Perioden
+	// mit user_id IS NULL liefern.
+	periods, err := store.GetAllPeriods("")
+	if err != nil {
+		t.Fatalf("get all periods (guest): %v", err)
+	}
+	if len(periods) == 0 {
+		t.Fatal("erwartet mindestens eine periode, bekommen 0")
+	}
+	if periods[0].ExpenseCount != 1 {
+		t.Errorf("erwartet 1 ausgabe, bekommen %d", periods[0].ExpenseCount)
+	}
+}
+
 func TestIntegrationAddAndListExpenses(t *testing.T) {
 	store := newIntegrationStore(t)
 	p, _ := store.GetOrCreatePeriod("")

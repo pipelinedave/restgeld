@@ -506,16 +506,25 @@ func (s *postgresStore) GetAllExpenses(userID, periodID string) ([]Expense, erro
 func (s *postgresStore) GetAllPeriods(userID string) ([]PeriodSummary, error) {
 	var rows *sql.Rows
 	var err error
-	query := `SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
-	                 COALESCE(SUM(e.amount), 0) as total_spent,
-	                 COUNT(e.id) as expense_count
-	          FROM periods p
-	          LEFT JOIN expenses e ON p.id = e.period_id
-	          WHERE (p.user_id = $1 OR ($1 = '' AND p.user_id IS NULL))
-	          GROUP BY p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total
-	          ORDER BY p.start_date DESC`
-
-	rows, err = s.db.Query(query, userID)
+	if userID == "" {
+		rows, err = s.db.Query(`SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
+		                 COALESCE(SUM(e.amount), 0) as total_spent,
+		                 COUNT(e.id) as expense_count
+		          FROM periods p
+		          LEFT JOIN expenses e ON p.id = e.period_id
+		          WHERE p.user_id IS NULL
+		          GROUP BY p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total
+		          ORDER BY p.start_date DESC`)
+	} else {
+		rows, err = s.db.Query(`SELECT p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total,
+		                 COALESCE(SUM(e.amount), 0) as total_spent,
+		                 COUNT(e.id) as expense_count
+		          FROM periods p
+		          LEFT JOIN expenses e ON p.id = e.period_id
+		          WHERE p.user_id = $1
+		          GROUP BY p.id, p.start_date, p.month_days, p.base_budget, p.monthly_total
+		          ORDER BY p.start_date DESC`, userID)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("perioden abfragen: %w", err)
 	}
