@@ -18,9 +18,15 @@ import (
 func openDB(connStr string) (*sql.DB, error) {
 	lower := strings.ToLower(connStr)
 	if !strings.Contains(lower, "default_query_exec_mode=") {
-		if strings.Contains(connStr, "?") {
-			connStr += "&default_query_exec_mode=simple_protocol"
+		if strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://") {
+			// URL-Format: Query-Parameter mit ? bzw. & anhängen.
+			sep := "?"
+			if strings.Contains(connStr, "?") {
+				sep = "&"
+			}
+			connStr += sep + "default_query_exec_mode=simple_protocol"
 		} else {
+			// DSN-Format (key=value ...): Parameter leerzeichengetrennt anhängen.
 			connStr += " default_query_exec_mode=simple_protocol"
 		}
 	}
