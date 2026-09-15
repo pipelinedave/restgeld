@@ -28,3 +28,6 @@ Thumbs.db
 
 # Build-Artefakte
 frontend/coverage/
+
+# Handoff-/Übergabenotizen (temporär, nicht versioniert)
+HANDOFF_*.md
