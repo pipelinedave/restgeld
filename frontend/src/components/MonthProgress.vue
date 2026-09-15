@@ -53,7 +53,7 @@ const pct = computed(() => Math.round((props.day / props.monthDays) * 100))
 .progress-bar-bg {
   width: 100%;
   height: 6px;
-  background: #1c1c24;
+  background: var(--bg-subtle, #1c1c24);
   border-radius: 9999px;
   overflow: hidden;
 }
@@ -64,4 +64,16 @@ const pct = computed(() => Math.round((props.day / props.monthDays) * 100))
   border-radius: 9999px;
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Epic 3.2 — kompakter auf kurzen Viewports */
+@media (max-height: 660px) {
+  .month-progress-card {
+    margin: 2px 16px 6px;
+    padding: 7px 14px;
+  }
+  .progress-info {
+    margin-bottom: 4px;
+  }
+}
+
 </style>

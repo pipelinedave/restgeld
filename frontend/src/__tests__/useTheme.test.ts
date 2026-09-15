@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useTheme, hexToRgba, THEME_PRESETS } from '../composables/useTheme'
+import { useTheme, hexToRgba, THEME_PRESETS, THEME_SCHEMES } from '../composables/useTheme'
 
 describe('useTheme', () => {
   beforeEach(() => {
@@ -23,5 +23,42 @@ describe('useTheme', () => {
     theme.applyTheme('#06b6d4')
     expect(theme.currentAccent.value).toBe('#06b6d4')
     expect(localStorage.getItem('restgeld_custom_theme')).toBe('#06b6d4')
+  })
+
+  it('bietet mehrere vollstaendige Farbschemata an', () => {
+    expect(THEME_SCHEMES.length).toBeGreaterThanOrEqual(3)
+    for (const s of THEME_SCHEMES) {
+      expect(s.id).toBeTruthy()
+      expect(s.bg).toBeTruthy()
+      expect(s.accent).toBeTruthy()
+    }
+  })
+
+  it('initialisiert das Standard-Schema OLED Black', () => {
+    const theme = useTheme()
+    theme.initTheme()
+    expect(theme.currentScheme.value.id).toBe('oled')
+    expect(theme.currentScheme.value.bg).toBe('#0a0a0c')
+  })
+
+  it('wechslet das Schema und setzt CSS-Variablen', () => {
+    const theme = useTheme()
+    theme.applyScheme('cyberpunk')
+    expect(theme.currentScheme.value.id).toBe('cyberpunk')
+    expect(localStorage.getItem('restgeld_theme_scheme')).toBe('cyberpunk')
+  })
+
+  it('behaelt Custom-Akzent beim Schema-Wechsel', () => {
+    const theme = useTheme()
+    theme.applyTheme('#ff0000')
+    theme.applyScheme('sunset')
+    expect(theme.currentAccent.value).toBe('#ff0000')
+    expect(theme.currentScheme.value.id).toBe('sunset')
+  })
+
+  it('faellt bei unbekanntem Schema auf Standard zurueck', () => {
+    const theme = useTheme()
+    theme.applyScheme('does-not-exist')
+    expect(theme.currentScheme.value.id).toBe('oled')
   })
 })

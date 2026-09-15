@@ -618,4 +618,39 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
 }
+
+/* Epic 3.2 — Zero-Scroll Feinschliff auf kleinen/kompakten Screens */
+@media (max-height: 760px) {
+  .dashboard-viewport {
+    gap: 5px;
+  }
+  .hero-section {
+    gap: 8px;
+    padding: 2px 16px;
+  }
+}
+
+@media (max-height: 660px) {
+  .add-btn {
+    padding: 8px 18px;
+    font-size: 0.88rem;
+  }
+  .hero-section {
+    gap: 5px;
+  }
+  .widgets-section {
+    gap: 4px;
+  }
+  .history-section {
+    min-height: 64px;
+  }
+}
+
+/* Sehr schmale Viewports: Hero-Zahl kompakter */
+@media (max-width: 360px) {
+  .hero-section {
+    padding: 2px 10px;
+  }
+}
+
 </style>

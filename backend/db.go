@@ -5,10 +5,33 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
+
+// openDB oeffnet eine Postgres-Verbindung ueber den pgx-stdlib-Treiber.
+// Ergänzt `default_query_exec_mode=simple_protocol`, damit kein Extended-Query-
+// Protocol (Prepared Statements) genutzt wird - noetig fuer den Supabase
+// Transaction-Pooler (Port 6543), der keine Prepared Statements unterstuetzt.
+func openDB(connStr string) (*sql.DB, error) {
+	lower := strings.ToLower(connStr)
+	if !strings.Contains(lower, "default_query_exec_mode=") {
+		if strings.HasPrefix(lower, "postgres://") || strings.HasPrefix(lower, "postgresql://") {
+			// URL-Format: Query-Parameter mit ? bzw. & anhängen.
+			sep := "?"
+			if strings.Contains(connStr, "?") {
+				sep = "&"
+			}
+			connStr += sep + "default_query_exec_mode=simple_protocol"
+		} else {
+			// DSN-Format (key=value ...): Parameter leerzeichengetrennt anhängen.
+			connStr += " default_query_exec_mode=simple_protocol"
+		}
+	}
+	return sql.Open("pgx", connStr)
+}
 
 type postgresStore struct {
 	db *sql.DB
@@ -34,7 +57,7 @@ func newPostgresStore() Store {
 			host, port, user, password, dbname)
 	}
 
-	db, err := sql.Open("postgres", connStr)
+	db, err := openDB(connStr)
 	if err != nil {
 		log.Fatalf("fehler beim db-verbindungsaufbau: %v", err)
 	}
@@ -778,4 +801,85 @@ func pContainsUser(periodID, userID string) bool {
 
 func (s *postgresStore) Ping() error {
 	return s.db.Ping()
+}
+
+// ---------------------------------------------------------------------------
+// Web Push Subscriptions
+// ---------------------------------------------------------------------------
+
+func (s *postgresStore) SavePushSubscription(userID, endpoint, p256dh, auth string) error {
+	// ON CONFLICT aktualisiert das bestehende Abonnement (Upsert).
+	var uid any
+	if userID != "" {
+		uid = userID
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (endpoint)
+		DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, user_id = EXCLUDED.user_id,
+		              created_at = NOW()
+	`, uid, endpoint, p256dh, auth)
+	if err != nil {
+		return fmt.Errorf("push abonnement speichern: %w", err)
+	}
+	return nil
+}
+
+func (s *postgresStore) ListPushSubscriptions(userID string) ([]PushSubscription, error) {
+	var rows *sql.Rows
+	var err error
+	if userID != "" {
+		rows, err = s.db.Query(`
+			SELECT id, user_id::text, endpoint, p256dh, auth, created_at
+			FROM push_subscriptions
+			WHERE user_id = $1
+		`, userID)
+	} else {
+		// Gäste (kein userID) haben in der Tabelle user_id NULL - nicht ''.
+		rows, err = s.db.Query(`
+			SELECT id, COALESCE(user_id::text, ''), endpoint, p256dh, auth, created_at
+			FROM push_subscriptions
+			WHERE user_id IS NULL
+		`)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("push abonnements lesen: %w", err)
+	}
+	defer rows.Close()
+
+	var subs []PushSubscription
+	for rows.Next() {
+		var s2 PushSubscription
+		if err := rows.Scan(&s2.ID, &s2.UserID, &s2.Endpoint, &s2.P256dh, &s2.Auth, &s2.CreatedAt); err != nil {
+			return nil, fmt.Errorf("push abonnement scannen: %w", err)
+		}
+		subs = append(subs, s2)
+	}
+	if subs == nil {
+		subs = []PushSubscription{}
+	}
+	return subs, nil
+}
+
+func (s *postgresStore) DeletePushSubscription(userID, endpoint string) error {
+	var res sql.Result
+	var err error
+	if userID != "" {
+		res, err = s.db.Exec(
+			`DELETE FROM push_subscriptions WHERE endpoint = $1 AND user_id = $2`,
+			endpoint, userID,
+		)
+	} else {
+		// Gäste (kein userID) haben in der Tabelle user_id NULL - nicht ''.
+		res, err = s.db.Exec(
+			`DELETE FROM push_subscriptions WHERE endpoint = $1 AND user_id IS NULL`,
+			endpoint,
+		)
+	}
+	if err != nil {
+		return fmt.Errorf("push abonnement loeschen: %w", err)
+	}
+	_ = res
+	return nil
 }

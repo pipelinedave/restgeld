@@ -90,6 +90,31 @@
               </div>
 
               <template v-else>
+                <!-- Recap Highlights: bester Spartag & Streak-Rekord -->
+                <div class="recap-highlights-wrap">
+                  <div class="highlight-tile">
+                    <span class="highlight-icon">🏆</span>
+                    <div class="highlight-text">
+                      <span class="highlight-label">{{ i18n.t('archive.hl_best_day') }}</span>
+                      <span class="highlight-value">Tag {{ recapHighlights.bestDay }} · {{ i18n.formatMoney(recapHighlights.bestSpent) }}</span>
+                    </div>
+                  </div>
+                  <div class="highlight-tile">
+                    <span class="highlight-icon">🚫</span>
+                    <div class="highlight-text">
+                      <span class="highlight-label">{{ i18n.t('archive.hl_no_spend') }}</span>
+                      <span class="highlight-value">{{ recapHighlights.noSpendRun }} {{ i18n.t('streak.days_unit') }}</span>
+                    </div>
+                  </div>
+                  <div v-if="recapHighlights.activeDay" class="highlight-tile">
+                    <span class="highlight-icon">🔥</span>
+                    <div class="highlight-text">
+                      <span class="highlight-label">{{ i18n.t('archive.hl_active_day') }}</span>
+                      <span class="highlight-value">Tag {{ recapHighlights.activeDay }} · {{ i18n.formatMoney(recapHighlights.activeSpent!) }}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Category Insights Breakdown -->
                 <div v-if="categoryStats.length > 0" class="category-breakdown-wrap">
                   <div class="category-pills-row">
@@ -158,6 +183,61 @@ const loadingExpenses = ref(false)
 const categoryStats = computed(() => {
   return i18n.calculateCategoryBreakdown(periodExpenses.value)
 })
+
+interface DaySummary {
+  day: number
+  spent: number
+}
+
+function groupByDay(period: PeriodSummary): DaySummary[] {
+  const map = new Map<number, number>()
+  for (const e of periodExpenses.value) {
+    const d = new Date(e.createdAt)
+    const diff = Math.floor((+d - +new Date(period.startDate)) / 86400000) + 1
+    const day = diff > 0 && diff <= period.monthDays ? diff : (new Date(e.createdAt).getDate())
+    map.set(day, (map.get(day) ?? 0) + e.amount)
+  }
+  const days: DaySummary[] = []
+  for (let i = 1; i <= period.monthDays; i++) {
+    days.push({ day: i, spent: map.get(i) ?? 0 })
+  }
+  return days
+}
+
+const recapHighlights = computed(() => {
+  const period = periods.value.find((p) => p.id === selectedPeriodId.value)
+  if (!period || periodExpenses.value.length === 0) {
+    return { bestDay: null, bestSpent: null, activeDay: null, activeSpent: null, noSpendRun: 0 }
+  }
+
+  const days = groupByDay(period)
+  let bestDay: DaySummary = days[0]
+  let activeDay: DaySummary = days[0]
+  for (const d of days) {
+    if (d.spent < bestDay.spent) bestDay = d
+    if (d.spent > activeDay.spent) activeDay = d
+  }
+
+  let noSpendRun = 0
+  let current = 0
+  for (const d of days) {
+    if (d.spent === 0) {
+      current++
+      if (current > noSpendRun) noSpendRun = current
+    } else {
+      current = 0
+    }
+  }
+
+  return {
+    bestDay: bestDay.day,
+    bestSpent: bestDay.spent,
+    activeDay: activeDay.spent > 0 ? activeDay.day : null,
+    activeSpent: activeDay.spent > 0 ? activeDay.spent : null,
+    noSpendRun,
+  }
+})
+
 
 function exportPeriodToCsv(period: PeriodSummary) {
   if (periodExpenses.value.length === 0) return
@@ -389,12 +469,12 @@ function calcAvgDaily(totalSpent: number, days: number): number {
 
 .period-card:hover {
   border-color: rgba(255, 255, 255, 0.12);
-  background: #1c1c24;
+  background: var(--bg-subtle, #1c1c24);
 }
 
 .period-card.expanded {
   border-color: var(--accent-green, #22c55e);
-  background: #191922;
+  background: var(--bg-card, #191922);
 }
 
 .period-card-header {
@@ -554,6 +634,55 @@ function calcAvgDaily(totalSpent: number, days: number): number {
   padding: 8px 10px;
 }
 
+/* Recap Highlights */
+.recap-highlights-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.recap-highlights-wrap .highlight-tile:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.highlight-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-subtle, rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.highlight-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.highlight-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.highlight-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim, #5c5c6e);
+  font-weight: 700;
+}
+
+.highlight-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main, #f4f4f6);
+  font-family: var(--font-mono, monospace);
+}
+
 .category-pills-row {
   display: flex;
   flex-wrap: wrap;
@@ -564,7 +693,7 @@ function calcAvgDaily(totalSpent: number, days: number): number {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #20202a;
+  background: var(--bg-input, #20202a);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 9999px;
   padding: 3px 8px;

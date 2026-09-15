@@ -168,6 +168,23 @@
             Wähle dein Lieblings-Farbschema oder stelle eine eigene Farbe ein.
           </p>
 
+          <div class="theme-scheme-row">
+            <button
+              v-for="scheme in theme.schemes"
+              :key="scheme.id"
+              type="button"
+              class="theme-scheme-chip"
+              :class="{ active: theme.currentScheme.value.id === scheme.id }"
+              @click="theme.applyScheme(scheme.id)"
+            >
+              <span
+                class="scheme-swatch"
+                :style="{ background: `linear-gradient(135deg, ${scheme.bg} 0%, ${scheme.bgCard} 60%, ${scheme.accent} 100%)` }"
+              ></span>
+              <span class="scheme-name">{{ scheme.name }}</span>
+            </button>
+          </div>
+
           <div class="theme-palette-row">
             <button
               v-for="preset in theme.presets"
@@ -211,6 +228,33 @@
             />
             <span>{{ i18n.t('settings.sound_toggle') }}</span>
           </label>
+        </section>
+
+        <!-- Web Push Notifications (Epic 1.1) -->
+        <section v-if="pushSupported" class="setting-section push-section">
+          <span class="section-title">🔔 {{ i18n.t('settings.push_heading') }}</span>
+          <p class="description">
+            {{ i18n.t('settings.push_desc') }}
+          </p>
+          <label class="toggle-control-label">
+            <input
+              type="checkbox"
+              :checked="pushNotif.enabled.value"
+              :disabled="pushNotif.registering.value"
+              @change="handlePushToggle(($event.target as HTMLInputElement).checked)"
+            />
+            <span>{{ i18n.t('settings.push_toggle') }}</span>
+          </label>
+          <button
+            v-if="pushNotif.enabled.value"
+            type="button"
+            class="push-test-btn"
+            :disabled="pushNotif.registering.value"
+            @click="handlePushTest"
+          >
+            {{ i18n.t('settings.push_test_btn') }}
+          </button>
+          <p v-if="pushError" class="push-error-msg">{{ pushError }}</p>
         </section>
 
         <!-- Sprache / Language -->
@@ -338,6 +382,7 @@ import { useApi } from '../composables/useApi'
 import { useTheme } from '../composables/useTheme'
 import { useAuth } from '../composables/useAuth'
 import { useI18n } from '../composables/useI18n'
+import { usePushNotifications, isPushSupported } from '../composables/usePushNotifications'
 
 const props = defineProps<{
   visible: boolean
@@ -361,6 +406,9 @@ const haptics = useHaptics()
 const theme = useTheme()
 const auth = useAuth()
 const i18n = useI18n()
+const pushNotif = usePushNotifications()
+const pushSupported = isPushSupported()
+const pushError = ref('')
 const budgetInput = ref<number>(props.currentMonthlyBudget ?? 450)
 const daysInput = ref<number>(props.currentMonthDays ?? 31)
 const dailyInput = ref<number>(Math.round(((props.currentMonthlyBudget ?? 450) / (props.currentMonthDays ?? 31)) * 100) / 100)
@@ -408,6 +456,8 @@ watch(
       confirmReset.value = false
       budgetSavedMsg.value = ''
       backupMsg.value = ''
+      pushError.value = ''
+      pushNotif.restore()
     }
   }
 )
@@ -526,6 +576,34 @@ function handleCustomColorChange(e: Event) {
   }
 }
 
+async function handlePushToggle(checked: boolean) {
+  haptics.tap()
+  pushError.value = ''
+  if (checked) {
+    const ok = await pushNotif.enable()
+    if (ok) {
+      haptics.success()
+    } else {
+      haptics.error()
+      if (pushNotif.error.value) pushError.value = pushNotif.error.value
+    }
+  } else {
+    await pushNotif.disable()
+    haptics.success()
+  }
+}
+
+async function handlePushTest() {
+  haptics.tap()
+  const ok = await pushNotif.sendTest()
+  if (ok) {
+    haptics.success()
+  } else {
+    haptics.error()
+    pushError.value = 'Test-Benachrichtigung fehlgeschlagen'
+  }
+}
+
 function handleOpenArchive() {
   haptics.tap()
   emit('open-archive')
@@ -570,7 +648,7 @@ function handleResetPeriod() {
 }
 
 .modal-content {
-  background: #121216;
+  background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   width: 100%;
@@ -627,7 +705,7 @@ function handleResetPeriod() {
 }
 
 .setting-section {
-  background: #18181e;
+  background: var(--bg-card, #121216);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.06));
   border-radius: 14px;
   padding: 14px;
@@ -831,6 +909,36 @@ function handleResetPeriod() {
   cursor: pointer;
 }
 
+.push-test-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--accent-green, #22c55e);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.push-test-btn:hover:not(:disabled) {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.2));
+}
+
+.push-test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.push-error-msg {
+  color: var(--accent-red, #ef4444);
+  font-size: 0.72rem;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
 .backup-actions {
   display: flex;
   gap: 8px;
@@ -916,6 +1024,51 @@ function handleResetPeriod() {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.theme-scheme-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.theme-scheme-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: var(--text-main, #f4f4f6);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.theme-scheme-chip:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.theme-scheme-chip.active {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.15));
+  border-color: var(--accent-green, #22c55e);
+  color: var(--accent-green, #22c55e);
+}
+
+.scheme-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.scheme-name {
+  line-height: 1.2;
 }
 
 .theme-color-btn {

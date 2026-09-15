@@ -579,6 +579,11 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/billing/customer-portal", s.handleCustomerPortal)
 	mux.HandleFunc("/api/billing/webhook", s.handleBillingWebhook)
 
+	// Web Push Notifications
+	mux.HandleFunc("/api/push/vapid", s.handlePushVapidKeys)
+	mux.HandleFunc("/api/push/subscribe", s.handlePushSubscribe)
+	mux.HandleFunc("/api/push/send", s.handlePushSend)
+
 	// Monitoring & Observability
 	mux.HandleFunc("/api/monitoring/health", s.handleMonitoringHealth)
 	mux.HandleFunc("/api/monitoring/overview", s.handleMonitoringOverview)

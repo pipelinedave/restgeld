@@ -239,7 +239,7 @@ function formatDate(dateStr: string) {
 }
 
 .bar-zero {
-  background: #2a2a36;
+  background: var(--bg-elevated, #2a2a36);
   opacity: 0.6;
 }
 

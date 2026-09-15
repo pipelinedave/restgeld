@@ -70,10 +70,10 @@ type VerifyMagicLinkRequest struct {
 }
 
 type AuthResponse struct {
-	User        *User  `json:"user"`
-	Token       string `json:"token,omitempty"`
-	DebugLink   string `json:"debugLink,omitempty"`
-	IsNewUser   bool   `json:"isNewUser"`
+	User      *User  `json:"user"`
+	Token     string `json:"token,omitempty"`
+	DebugLink string `json:"debugLink,omitempty"`
+	IsNewUser bool   `json:"isNewUser"`
 }
 
 type MigrateGuestRequest struct {
@@ -110,6 +110,15 @@ type DailyStat struct {
 	Day   int     `json:"day"`
 	Date  string  `json:"date"`
 	Spent float64 `json:"spent"`
+}
+
+type PushSubscription struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId,omitempty"`
+	Endpoint  string    `json:"endpoint"`
+	P256dh    string    `json:"p256dh"`
+	Auth      string    `json:"auth"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type StreakInfo struct {

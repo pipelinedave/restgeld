@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var (
@@ -30,7 +29,7 @@ func initApp() {
 			host, port, user, password, dbname)
 	}
 
-	db, err := sql.Open("postgres", connStr)
+	db, err := openDB(connStr)
 	if err != nil {
 		log.Fatalf("fehler beim db-verbindungsaufbau: %v", err)
 	}
