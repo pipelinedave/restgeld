@@ -796,3 +796,62 @@ func pContainsUser(periodID, userID string) bool {
 func (s *postgresStore) Ping() error {
 	return s.db.Ping()
 }
+
+// ---------------------------------------------------------------------------
+// Web Push Subscriptions
+// ---------------------------------------------------------------------------
+
+func (s *postgresStore) SavePushSubscription(userID, endpoint, p256dh, auth string) error {
+	// ON CONFLICT aktualisiert das bestehende Abonnement (Upsert).
+	var uid any
+	if userID != "" {
+		uid = userID
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (endpoint)
+		DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, user_id = EXCLUDED.user_id,
+		              created_at = NOW()
+	`, uid, endpoint, p256dh, auth)
+	if err != nil {
+		return fmt.Errorf("push abonnement speichern: %w", err)
+	}
+	return nil
+}
+
+func (s *postgresStore) ListPushSubscriptions(userID string) ([]PushSubscription, error) {
+	rows, err := s.db.Query(`
+		SELECT id, COALESCE(user_id::text, ''), endpoint, p256dh, auth, created_at
+		FROM push_subscriptions
+		WHERE user_id = $1 OR ($1 = '' AND user_id IS NULL)
+	`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("push abonnements lesen: %w", err)
+	}
+	defer rows.Close()
+
+	var subs []PushSubscription
+	for rows.Next() {
+		var s2 PushSubscription
+		if err := rows.Scan(&s2.ID, &s2.UserID, &s2.Endpoint, &s2.P256dh, &s2.Auth, &s2.CreatedAt); err != nil {
+			return nil, fmt.Errorf("push abonnement scannen: %w", err)
+		}
+		subs = append(subs, s2)
+	}
+	if subs == nil {
+		subs = []PushSubscription{}
+	}
+	return subs, nil
+}
+
+func (s *postgresStore) DeletePushSubscription(userID, endpoint string) error {
+	_, err := s.db.Exec(
+		`DELETE FROM push_subscriptions WHERE endpoint = $1 AND (user_id = $2 OR ($2 = '' AND user_id IS NULL))`,
+		endpoint, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("push abonnement loeschen: %w", err)
+	}
+	return nil
+}

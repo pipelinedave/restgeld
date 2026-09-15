@@ -23,7 +23,7 @@ type Store interface {
 	// Auth & User Management
 	CreateMagicLink(email, tokenHash string, expiresAt time.Time) error
 	ValidateAndConsumeMagicLink(tokenHash string) (string, error) // Returns email
-	GetOrCreateUserByEmail(email string) (*User, bool, error)    // Returns user, isNew, error
+	GetOrCreateUserByEmail(email string) (*User, bool, error)     // Returns user, isNew, error
 	GetUserByID(userID string) (*User, error)
 	UpdateUserSettings(userID string, defaultBudget float64, defaultDays int, theme, language, currency string) error
 	CreateSession(userID, tokenHash, userAgent, ipAddress string, expiresAt time.Time) error
@@ -33,6 +33,11 @@ type Store interface {
 	MigrateGuestData(targetUserID string, guestExpenses []Expense, guestPeriods []Period) (int, error)
 	SavePasskey(userID, credentialID, publicKey, attestationType string) error
 	FindUserIDByPasskey(credentialID string) (string, error)
+
+	// Web Push Subscriptions
+	SavePushSubscription(userID, endpoint, p256dh, auth string) error
+	ListPushSubscriptions(userID string) ([]PushSubscription, error)
+	DeletePushSubscription(userID, endpoint string) error
 
 	Ping() error
 }

@@ -8,12 +8,13 @@ import (
 
 type memoryStore struct {
 	mu           sync.Mutex
-	periods      map[string]*Period      // key: userID
-	expenses     map[string][]Expense    // key: userID
-	users        map[string]*User        // key: userID
-	usersByEmail map[string]*User        // key: email
-	magicLinks   map[string]*MagicLink   // key: tokenHash
-	sessions     map[string]*AuthSession // key: tokenHash
+	periods      map[string]*Period            // key: userID
+	expenses     map[string][]Expense          // key: userID
+	users        map[string]*User              // key: userID
+	usersByEmail map[string]*User              // key: email
+	magicLinks   map[string]*MagicLink         // key: tokenHash
+	sessions     map[string]*AuthSession       // key: tokenHash
+	pushSubs     map[string][]PushSubscription // key: userID
 	nextID       int
 }
 
@@ -25,6 +26,7 @@ func newMemoryStore() *memoryStore {
 		usersByEmail: make(map[string]*User),
 		magicLinks:   make(map[string]*MagicLink),
 		sessions:     make(map[string]*AuthSession),
+		pushSubs:     make(map[string][]PushSubscription),
 	}
 
 	// Default guest period
@@ -529,5 +531,55 @@ func (m *memoryStore) MigrateGuestData(targetUserID string, guestExpenses []Expe
 }
 
 func (m *memoryStore) Ping() error {
+	return nil
+}
+
+func (m *memoryStore) SavePushSubscription(userID, endpoint, p256dh, auth string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	sub := PushSubscription{
+		ID:        fmt.Sprintf("sub-%d", m.nextID),
+		UserID:    userID,
+		Endpoint:  endpoint,
+		P256dh:    p256dh,
+		Auth:      auth,
+		CreatedAt: time.Now().UTC(),
+	}
+	m.nextID++
+	list := m.pushSubs[userID]
+	for i := range list {
+		if list[i].Endpoint == endpoint {
+			list[i].P256dh = p256dh
+			list[i].Auth = auth
+			list[i].UserID = userID
+			return nil
+		}
+	}
+	m.pushSubs[userID] = append(list, sub)
+	return nil
+}
+
+func (m *memoryStore) ListPushSubscriptions(userID string) ([]PushSubscription, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	list := m.pushSubs[userID]
+	if list == nil {
+		return []PushSubscription{}, nil
+	}
+	out := make([]PushSubscription, len(list))
+	copy(out, list)
+	return out, nil
+}
+
+func (m *memoryStore) DeletePushSubscription(userID, endpoint string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	list := m.pushSubs[userID]
+	for i := range list {
+		if list[i].Endpoint == endpoint {
+			m.pushSubs[userID] = append(list[:i], list[i+1:]...)
+			return nil
+		}
+	}
 	return nil
 }

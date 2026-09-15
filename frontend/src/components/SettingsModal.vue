@@ -230,6 +230,33 @@
           </label>
         </section>
 
+        <!-- Web Push Notifications (Epic 1.1) -->
+        <section v-if="pushSupported" class="setting-section push-section">
+          <span class="section-title">🔔 {{ i18n.t('settings.push_heading') }}</span>
+          <p class="description">
+            {{ i18n.t('settings.push_desc') }}
+          </p>
+          <label class="toggle-control-label">
+            <input
+              type="checkbox"
+              :checked="pushNotif.enabled.value"
+              :disabled="pushNotif.registering.value"
+              @change="handlePushToggle(($event.target as HTMLInputElement).checked)"
+            />
+            <span>{{ i18n.t('settings.push_toggle') }}</span>
+          </label>
+          <button
+            v-if="pushNotif.enabled.value"
+            type="button"
+            class="push-test-btn"
+            :disabled="pushNotif.registering.value"
+            @click="handlePushTest"
+          >
+            {{ i18n.t('settings.push_test_btn') }}
+          </button>
+          <p v-if="pushError" class="push-error-msg">{{ pushError }}</p>
+        </section>
+
         <!-- Sprache / Language -->
         <section class="setting-section language-zone">
           <span class="section-title">{{ i18n.t('settings.language_heading') }}</span>
@@ -355,6 +382,7 @@ import { useApi } from '../composables/useApi'
 import { useTheme } from '../composables/useTheme'
 import { useAuth } from '../composables/useAuth'
 import { useI18n } from '../composables/useI18n'
+import { usePushNotifications, isPushSupported } from '../composables/usePushNotifications'
 
 const props = defineProps<{
   visible: boolean
@@ -378,6 +406,9 @@ const haptics = useHaptics()
 const theme = useTheme()
 const auth = useAuth()
 const i18n = useI18n()
+const pushNotif = usePushNotifications()
+const pushSupported = isPushSupported()
+const pushError = ref('')
 const budgetInput = ref<number>(props.currentMonthlyBudget ?? 450)
 const daysInput = ref<number>(props.currentMonthDays ?? 31)
 const dailyInput = ref<number>(Math.round(((props.currentMonthlyBudget ?? 450) / (props.currentMonthDays ?? 31)) * 100) / 100)
@@ -425,6 +456,8 @@ watch(
       confirmReset.value = false
       budgetSavedMsg.value = ''
       backupMsg.value = ''
+      pushError.value = ''
+      pushNotif.restore()
     }
   }
 )
@@ -540,6 +573,34 @@ function handleCustomColorChange(e: Event) {
   const target = e.target as HTMLInputElement
   if (target && target.value) {
     theme.applyTheme(target.value)
+  }
+}
+
+async function handlePushToggle(checked: boolean) {
+  haptics.tap()
+  pushError.value = ''
+  if (checked) {
+    const ok = await pushNotif.enable()
+    if (ok) {
+      haptics.success()
+    } else {
+      haptics.error()
+      if (pushNotif.error.value) pushError.value = pushNotif.error.value
+    }
+  } else {
+    await pushNotif.disable()
+    haptics.success()
+  }
+}
+
+async function handlePushTest() {
+  haptics.tap()
+  const ok = await pushNotif.sendTest()
+  if (ok) {
+    haptics.success()
+  } else {
+    haptics.error()
+    pushError.value = 'Test-Benachrichtigung fehlgeschlagen'
   }
 }
 
@@ -846,6 +907,36 @@ function handleResetPeriod() {
   width: 16px;
   height: 16px;
   cursor: pointer;
+}
+
+.push-test-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.12));
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--accent-green, #22c55e);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.push-test-btn:hover:not(:disabled) {
+  background: var(--accent-green-subtle, rgba(34, 197, 94, 0.2));
+}
+
+.push-test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.push-error-msg {
+  color: var(--accent-red, #ef4444);
+  font-size: 0.72rem;
+  margin-top: 6px;
+  font-weight: 600;
 }
 
 .backup-actions {
