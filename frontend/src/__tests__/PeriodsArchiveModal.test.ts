@@ -4,10 +4,12 @@ import PeriodsArchiveModal from '../components/PeriodsArchiveModal.vue'
 
 const mockGetPeriods = vi.fn()
 const mockGetExpenses = vi.fn()
+const mockGetTrend = vi.fn()
 vi.mock('../composables/useApi', () => ({
   useApi: () => ({
     getPeriods: mockGetPeriods,
     getExpenses: mockGetExpenses,
+    getTrend: mockGetTrend,
   }),
 }))
 

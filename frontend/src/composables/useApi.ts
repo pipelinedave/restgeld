@@ -68,6 +68,30 @@ export interface PeriodSummary {
   expenseCount: number
 }
 
+export interface MonthlyTrendStat {
+  month: string
+  startDate: string
+  monthlyTotal: number
+  totalSpent: number
+  savings: number
+  expenseCount: number
+  avgDailySpend: number
+}
+
+export interface TrendSummary {
+  monthCount: number
+  totalBudget: number
+  totalSpent: number
+  totalSaved: number
+  avgSavings: number
+  bestSavingsMonth: string
+}
+
+export interface TrendResponse {
+  months: MonthlyTrendStat[]
+  summary: TrendSummary
+}
+
 const BASE = import.meta.env.PROD
   ? window.location.origin
   : ''
@@ -114,6 +138,7 @@ export function useApi() {
   return {
     getBudget: () => api<BudgetData>('/api/budget'),
     getPeriods: () => api<PeriodSummary[]>('/api/periods'),
+    getTrend: () => api<TrendResponse>('/api/trend'),
     getMonitoringOverview: () => api<{
       status: 'healthy' | 'degraded' | 'critical'
       timestamp: string

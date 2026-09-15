@@ -168,6 +168,24 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'trend.legend_over': 'über Budget',
     'trend.avg': 'Ø {amount} / Tag',
 
+    // Monthly Trend (Epic 2.2)
+    'trendMonth.title': '📈 Monats-Verlauf',
+    'trendMonth.subtitle': 'Ersparnis- & Ausgaben-Trend über mehrere Monate',
+    'trendMonth.legend_ok': 'im Budget',
+    'trendMonth.legend_over': 'über Budget',
+    'trendMonth.avg_savings': 'Ø {amount} Ersparnis/Monat',
+    'trendMonth.periods': '{count} Monate',
+    'trendMonth.total_saved': 'Gesamt erspart: {amount}',
+    'trendMonth.best_month': '🏆 Bester Sparmonat',
+    'trendMonth.kpi_budget': 'Budget',
+    'trendMonth.kpi_spent': 'Ausgaben',
+    'trendMonth.kpi_savings': 'Ersparnis',
+    'trendMonth.kpi_avg': 'Ø / Tag',
+    'trendMonth.detail_budget': 'Budget',
+    'trendMonth.detail_spent': 'Ausgaben',
+    'trendMonth.detail_savings': 'Ersparnis',
+    'trendMonth.empty': 'Noch nicht genug Daten — tracke ein paar Monate.',
+
     // Auth & SaaS
     'auth.title': 'Anmelden / Registrieren',
     'auth.subtitle': 'Verbinde dein Konto für Cloud-Sync auf all deinen Geräten.',
@@ -358,6 +376,24 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'trend.legend_savings': 'Zero Spend',
     'trend.legend_over': 'Over Budget',
     'trend.avg': 'Ø {amount} / day',
+
+    // Monthly Trend (Epic 2.2)
+    'trendMonth.title': '📈 Monthly Trend',
+    'trendMonth.subtitle': 'Savings & spending trend across multiple months',
+    'trendMonth.legend_ok': 'Within Budget',
+    'trendMonth.legend_over': 'Over Budget',
+    'trendMonth.avg_savings': 'Ø {amount} saved/month',
+    'trendMonth.periods': '{count} months',
+    'trendMonth.total_saved': 'Total saved: {amount}',
+    'trendMonth.best_month': '🏆 Best Saving Month',
+    'trendMonth.kpi_budget': 'Budget',
+    'trendMonth.kpi_spent': 'Spent',
+    'trendMonth.kpi_savings': 'Saved',
+    'trendMonth.kpi_avg': 'Ø / day',
+    'trendMonth.detail_budget': 'Budget',
+    'trendMonth.detail_spent': 'Spent',
+    'trendMonth.detail_savings': 'Saved',
+    'trendMonth.empty': 'Not enough data yet — track a few months.',
 
     // Auth & SaaS
     'auth.title': 'Sign In / Register',
@@ -551,6 +587,24 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'trend.legend_over': 'Sobre Presupuesto',
     'trend.avg': 'Ø {amount} / día',
 
+    // Monthly Trend (Epic 2.2)
+    'trendMonth.title': '📈 Tendencia Mensual',
+    'trendMonth.subtitle': 'Tendencia de ahorro y gastos durante varios meses',
+    'trendMonth.legend_ok': 'En el presupuesto',
+    'trendMonth.legend_over': 'Por encima',
+    'trendMonth.avg_savings': 'Ø {amount} ahorro/mes',
+    'trendMonth.periods': '{count} meses',
+    'trendMonth.total_saved': 'Ahorro total: {amount}',
+    'trendMonth.best_month': '🏆 Mejor mes de ahorro',
+    'trendMonth.kpi_budget': 'Presupuesto',
+    'trendMonth.kpi_spent': 'Gastos',
+    'trendMonth.kpi_savings': 'Ahorro',
+    'trendMonth.kpi_avg': 'Ø / día',
+    'trendMonth.detail_budget': 'Presupuesto',
+    'trendMonth.detail_spent': 'Gastos',
+    'trendMonth.detail_savings': 'Ahorro',
+    'trendMonth.empty': 'Aún no hay suficientes datos — registra unos meses.',
+
     // Auth & SaaS
     'auth.title': 'Iniciar Sesión / Registro',
     'auth.subtitle': 'Conecta tu cuenta para sincronizar en la nube en todos tus dispositivos.',
@@ -742,6 +796,24 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     'trend.legend_savings': 'Zéro Dépense',
     'trend.legend_over': 'Hors Budget',
     'trend.avg': 'Ø {amount} / jour',
+
+    // Monthly Trend (Epic 2.2)
+    'trendMonth.title': '📈 Tendance Mensuelle',
+    'trendMonth.subtitle': 'Tendance d’épargne et de dépenses sur plusieurs mois',
+    'trendMonth.legend_ok': 'Dans le budget',
+    'trendMonth.legend_over': 'Au-delà',
+    'trendMonth.avg_savings': 'Ø {amount} économis/mois',
+    'trendMonth.periods': '{count} mois',
+    'trendMonth.total_saved': 'Total économisé : {amount}',
+    'trendMonth.best_month': '🏆 Meilleur mois d’épargne',
+    'trendMonth.kpi_budget': 'Budget',
+    'trendMonth.kpi_spent': 'Dépenses',
+    'trendMonth.kpi_savings': 'Épargne',
+    'trendMonth.kpi_avg': 'Ø / jour',
+    'trendMonth.detail_budget': 'Budget',
+    'trendMonth.detail_spent': 'Dépenses',
+    'trendMonth.detail_savings': 'Épargne',
+    'trendMonth.empty': 'Pas encore assez de données — suivez quelques mois.',
 
     // Auth & SaaS
     'auth.title': 'Connexion / Inscription',

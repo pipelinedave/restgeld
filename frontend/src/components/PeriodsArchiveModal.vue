@@ -150,6 +150,9 @@
             </div>
           </div>
         </div>
+
+        <!-- Epic 2.2: Multi-Month Trend -->
+        <MonthlyTrend :visible="visible" />
       </div>
     </div>
   </div>
@@ -160,6 +163,7 @@ import { ref, computed, watch } from 'vue'
 import { useApi, type PeriodSummary, type Expense } from '../composables/useApi'
 import { useHaptics } from '../composables/useHaptics'
 import { useI18n, detectCategoryIcon, detectCategoryKey } from '../composables/useI18n'
+import MonthlyTrend from './MonthlyTrend.vue'
 
 const props = defineProps<{
   visible: boolean
