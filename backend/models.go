@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -27,6 +28,106 @@ type PeriodSummary struct {
 	TotalSpent   float64   `json:"totalSpent"`
 	Savings      float64   `json:"savings"`
 	ExpenseCount int       `json:"expenseCount"`
+}
+
+// MonthlyTrendStat ist eine Monats-Aggregation für den Multi-Month-Verlauf (Epic 2.2).
+type MonthlyTrendStat struct {
+	Month         string    `json:"month"` // "2006-01" = YYYY-MM
+	StartDate     time.Time `json:"startDate"`
+	MonthlyTotal  float64   `json:"monthlyTotal"`
+	TotalSpent    float64   `json:"totalSpent"`
+	Savings       float64   `json:"savings"`
+	ExpenseCount  int       `json:"expenseCount"`
+	AvgDailySpend float64   `json:"avgDailySpend"`
+}
+
+// TrendSummary fasst den Zeitraum des Multi-Month-Verlaufs zusammen.
+type TrendSummary struct {
+	MonthCount       int     `json:"monthCount"`
+	TotalBudget      float64 `json:"totalBudget"`
+	TotalSpent       float64 `json:"totalSpent"`
+	TotalSaved       float64 `json:"totalSaved"`
+	AvgSavings       float64 `json:"avgSavings"`
+	BestSavingsMonth string  `json:"bestSavingsMonth"`
+}
+
+// TrendResponse ist die Antwort von GET /api/trend.
+type TrendResponse struct {
+	Months  []MonthlyTrendStat `json:"months"`
+	Summary TrendSummary       `json:"summary"`
+}
+
+// buildMonthlyTrend aggregiert Perioden zu einem chronologisch aufsteigenden
+// Monats-Verlauf. Planperioden (ohne StartDate) werden übersprungen, ältere
+// Perioden desselben Monats werden zusammengefasst (letzte gewinnt pro Monat).
+func buildMonthlyTrend(periods []PeriodSummary, loc *time.Location) TrendResponse {
+	if loc == nil {
+		loc = time.UTC
+	}
+
+	byMonth := make(map[string]MonthlyTrendStat)
+	for _, p := range periods {
+		if p.StartDate.IsZero() {
+			continue
+		}
+		key := p.StartDate.In(loc).Format("2006-01")
+		avgDaily := 0.0
+		if p.MonthDays > 0 {
+			avgDaily = mathRound(p.TotalSpent/float64(p.MonthDays), 2)
+		}
+		byMonth[key] = MonthlyTrendStat{
+			Month:         key,
+			StartDate:     p.StartDate,
+			MonthlyTotal:  p.MonthlyTotal,
+			TotalSpent:    p.TotalSpent,
+			Savings:       math.Round((p.MonthlyTotal-p.TotalSpent)*100) / 100,
+			ExpenseCount:  p.ExpenseCount,
+			AvgDailySpend: avgDaily,
+		}
+	}
+
+	months := make([]MonthlyTrendStat, 0, len(byMonth))
+	for _, stat := range byMonth {
+		months = append(months, stat)
+	}
+	sort.Slice(months, func(i, j int) bool {
+		return months[i].Month < months[j].Month
+	})
+
+	var totalBudget, totalSpent, totalSaved float64
+	bestMonth := ""
+	bestSavings := math.Inf(-1)
+	for _, m := range months {
+		// Ungerundete Differenz für korrekte Summen unabhängig von Anzeige-Rundung
+		rawSavings := m.MonthlyTotal - m.TotalSpent
+		totalBudget += m.MonthlyTotal
+		totalSpent += m.TotalSpent
+		totalSaved += rawSavings
+		if rawSavings > bestSavings {
+			bestSavings = rawSavings
+			bestMonth = m.Month
+		}
+	}
+
+	monthCount := len(months)
+	avgSavings := 0.0
+	if monthCount > 0 {
+		avgSavings = mathRound(totalSaved/float64(monthCount), 2)
+	}
+
+	summary := TrendSummary{
+		MonthCount:       monthCount,
+		TotalBudget:      mathRound(totalBudget, 2),
+		TotalSpent:       mathRound(totalSpent, 2),
+		TotalSaved:       mathRound(totalSaved, 2),
+		AvgSavings:       avgSavings,
+		BestSavingsMonth: bestMonth,
+	}
+
+	if months == nil {
+		months = []MonthlyTrendStat{}
+	}
+	return TrendResponse{Months: months, Summary: summary}
 }
 
 type Expense struct {

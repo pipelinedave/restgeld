@@ -547,6 +547,26 @@ func (s *server) handleGetPeriods(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, periods)
 }
 
+func (s *server) handleTrend(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	userID := s.getUserIDFromRequest(r)
+
+	periods, err := s.store.GetAllPeriods(userID)
+	if err != nil {
+		log.Printf("fehler beim abrufen des monats-verlaufs: %v", err)
+		writeError(w, http.StatusInternalServerError, "fehler beim abrufen des monats-verlaufs")
+		return
+	}
+
+	trend := buildMonthlyTrend(periods, s.now().Location())
+	jsonHeader(w)
+	writeJSON(w, http.StatusOK, trend)
+}
+
 func (s *server) router() http.Handler {
 	mux := http.NewServeMux()
 
@@ -557,6 +577,7 @@ func (s *server) router() http.Handler {
 	mux.HandleFunc("/api/expenses/", s.handleDeleteExpense)
 	mux.HandleFunc("/api/period", s.handleNewPeriod)
 	mux.HandleFunc("/api/periods", s.handleGetPeriods)
+	mux.HandleFunc("/api/trend", s.handleTrend)
 	mux.HandleFunc("/api/export", s.handleExport)
 	mux.HandleFunc("/api/import", s.handleImport)
 
