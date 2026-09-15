@@ -821,11 +821,22 @@ func (s *postgresStore) SavePushSubscription(userID, endpoint, p256dh, auth stri
 }
 
 func (s *postgresStore) ListPushSubscriptions(userID string) ([]PushSubscription, error) {
-	rows, err := s.db.Query(`
-		SELECT id, COALESCE(user_id::text, ''), endpoint, p256dh, auth, created_at
-		FROM push_subscriptions
-		WHERE user_id = $1 OR ($1 = '' AND user_id IS NULL)
-	`, userID)
+	var rows *sql.Rows
+	var err error
+	if userID != "" {
+		rows, err = s.db.Query(`
+			SELECT id, user_id::text, endpoint, p256dh, auth, created_at
+			FROM push_subscriptions
+			WHERE user_id = $1
+		`, userID)
+	} else {
+		// Gäste (kein userID) haben in der Tabelle user_id NULL - nicht ''.
+		rows, err = s.db.Query(`
+			SELECT id, COALESCE(user_id::text, ''), endpoint, p256dh, auth, created_at
+			FROM push_subscriptions
+			WHERE user_id IS NULL
+		`)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("push abonnements lesen: %w", err)
 	}
@@ -846,12 +857,23 @@ func (s *postgresStore) ListPushSubscriptions(userID string) ([]PushSubscription
 }
 
 func (s *postgresStore) DeletePushSubscription(userID, endpoint string) error {
-	_, err := s.db.Exec(
-		`DELETE FROM push_subscriptions WHERE endpoint = $1 AND (user_id = $2 OR ($2 = '' AND user_id IS NULL))`,
-		endpoint, userID,
-	)
+	var res sql.Result
+	var err error
+	if userID != "" {
+		res, err = s.db.Exec(
+			`DELETE FROM push_subscriptions WHERE endpoint = $1 AND user_id = $2`,
+			endpoint, userID,
+		)
+	} else {
+		// Gäste (kein userID) haben in der Tabelle user_id NULL - nicht ''.
+		res, err = s.db.Exec(
+			`DELETE FROM push_subscriptions WHERE endpoint = $1 AND user_id IS NULL`,
+			endpoint,
+		)
+	}
 	if err != nil {
 		return fmt.Errorf("push abonnement loeschen: %w", err)
 	}
+	_ = res
 	return nil
 }

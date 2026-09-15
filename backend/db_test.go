@@ -258,6 +258,85 @@ func TestIntegrationCreatePeriodWithCustomDays(t *testing.T) {
 	}
 }
 
+// TestIntegrationPushSubscriptionGuest deckt das Gast-Szenario (userID leer)
+// für Save/List/Delete gegen die echte Postgres-UUID-Spalte ab. Vorher schlug
+// die Abfrage mit `user_id = ”` fehl ("invalid input syntax for type uuid: \"\"").
+func TestIntegrationPushSubscriptionGuest(t *testing.T) {
+	store := newIntegrationStore(t)
+
+	// Save (Gast, userID = "") -> user_id muss als NULL gespeichert werden.
+	if err := store.SavePushSubscription("", "https://push.integration/sub/guest1", "G-P256", "G-Auth"); err != nil {
+		t.Fatalf("save guest subscription: %v", err)
+	}
+	if err := store.SavePushSubscription("", "https://push.integration/sub/guest2", "G-P256-2", "G-Auth-2"); err != nil {
+		t.Fatalf("save guest subscription 2: %v", err)
+	}
+
+	// List (Gast) - darf nicht mit UUID-Cast-Fehler scheitern.
+	subs, err := store.ListPushSubscriptions("")
+	if err != nil {
+		t.Fatalf("list guest subscriptions: %v", err)
+	}
+	if len(subs) != 2 {
+		t.Fatalf("erwartet 2 gast-abonnements, bekommen %d", len(subs))
+	}
+	if subs[0].UserID != "" || subs[1].UserID != "" {
+		t.Fatalf("gast-abonnements sollten leere userID haben, bekommen %q und %q", subs[0].UserID, subs[1].UserID)
+	}
+
+	// Delete (Gast) - darf nicht mit UUID-Cast-Fehler scheitern.
+	if err := store.DeletePushSubscription("", "https://push.integration/sub/guest1"); err != nil {
+		t.Fatalf("delete guest subscription: %v", err)
+	}
+	subs, err = store.ListPushSubscriptions("")
+	if err != nil {
+		t.Fatalf("list nach delete: %v", err)
+	}
+	if len(subs) != 1 {
+		t.Fatalf("erwartet 1 abonnement nach loeschung, bekommen %d", len(subs))
+	}
+}
+
+// TestIntegrationPushSubscriptionUser deckt das eingeloggte Szenario (valide UUID)
+// ab, damit Gast- und User-Pfade nicht verwechselt werden.
+func TestIntegrationPushSubscriptionUser(t *testing.T) {
+	store := newIntegrationStore(t)
+
+	user, _, err := store.GetOrCreateUserByEmail("push-user@test.local")
+	if err != nil {
+		t.Fatalf("user anlegen: %v", err)
+	}
+
+	if err := store.SavePushSubscription(user.ID, "https://push.integration/sub/user1", "U-P256", "U-Auth"); err != nil {
+		t.Fatalf("save user subscription: %v", err)
+	}
+
+	// Gast-Liste darf den User-Abo NICHT enthalten (Isolation).
+	guestSubs, err := store.ListPushSubscriptions("")
+	if err != nil {
+		t.Fatalf("list guest: %v", err)
+	}
+	if len(guestSubs) != 0 {
+		t.Fatalf("erwartet 0 gast-abonnements, bekommen %d", len(guestSubs))
+	}
+
+	userSubs, err := store.ListPushSubscriptions(user.ID)
+	if err != nil {
+		t.Fatalf("list user: %v", err)
+	}
+	if len(userSubs) != 1 {
+		t.Fatalf("erwartet 1 user-abonnement, bekommen %d", len(userSubs))
+	}
+
+	if err := store.DeletePushSubscription(user.ID, "https://push.integration/sub/user1"); err != nil {
+		t.Fatalf("delete user subscription: %v", err)
+	}
+	userSubs, _ = store.ListPushSubscriptions(user.ID)
+	if len(userSubs) != 0 {
+		t.Fatalf("erwartet 0 user-abonnements nach delete, bekommen %d", len(userSubs))
+	}
+}
+
 func newIntegrationStore(t *testing.T) Store {
 	t.Helper()
 	host := getEnv("DB_HOST", "localhost")
@@ -280,6 +359,7 @@ func newIntegrationStore(t *testing.T) Store {
 	store := newPostgresStoreFromDB(db)
 
 	// Clean tables
+	db.Exec("DELETE FROM push_subscriptions")
 	db.Exec("DELETE FROM auth_sessions")
 	db.Exec("DELETE FROM magic_links")
 	db.Exec("DELETE FROM expenses")
