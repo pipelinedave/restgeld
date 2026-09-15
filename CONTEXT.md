@@ -171,6 +171,7 @@ restgeld/
 - 📐 Zero-Scroll kompakte Viewports (Epic 3.2, `577fc72`): Minimal-Viewport-Media-Queries (`max-height: 660/760px`, `max-width: 360px`) in App, BudgetDisplay, MonthProgress, RecentExpenses + Hero-Surface-Theming ✅
 - 📊 Perioden-Recap Highlights (Epic 2.1, `8cfaf1a`): Bester Spartag, No-Spend-Streak & aktivster Tag im `PeriodsArchiveModal`-Recap angereichert ✅
 - 🔔 Web Push Notifications (Epic 1.1, `280ab03`): VAPID-Backend-Endpoints (`push.go`, Migration `005_push_subscriptions.sql`, Subscriptions-Table/Store), SW Push- & notificationclick-Handler, `usePushNotifications.ts` Composable + `SettingsModal`-Toggle, 4-Sprachen-i18n. **Hinweis:** VAPID-Keys laufen aktuell als Demo-Fallback (`demoVAPIDPublic`/`demoVAPIDPrivate` in `backend/push.go`) – echte Keys als `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` in Vercel + k3s nötig ✅
+- 📈 Yearly / Multi-Month Trend (Epic 2.2, `5652eb6`/`5637cc1`): `GET /api/trend` Backend-Endpoint (`handleTrend`, pure `buildMonthlyTrend` über `[]PeriodSummary`, korrigierte `math.Round`-Verwendung für negative Ersparnisse) + `MonthlyTrend.vue` Chart im `PeriodsArchiveModal` (Monats-Balken mit Budget-Linie, Summary-Badges, Detail-KPIs bei Auswahl, 4-Sprachen-i18n) + 5 Vitest- & 5 Go-Tests ✅
 
 ---
 
